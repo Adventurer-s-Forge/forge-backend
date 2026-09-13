@@ -1,3 +1,4 @@
+# We referenced some tutorials and guides on how to set up the Docker Compose file for the Redis database and Redis Insight [2] [3] [4] [5].
 services:
     redis:
         image: redis:7-alpine

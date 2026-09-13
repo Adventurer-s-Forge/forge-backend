@@ -25,10 +25,10 @@ jobs:
           uv sync
           docker compose up -d
           
-      - name: Lint with Ruff
+      - name: Run tests
         run: |
           uv run pytest
           
-      - name: Run tests
+      - name: Lint with Ruff
         run: |
           uv run ruff check .
