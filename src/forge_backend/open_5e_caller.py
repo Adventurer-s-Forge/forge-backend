@@ -4,12 +4,30 @@ import requests
 # Gets data from the Open5e API
 class Open5eCaller:
 
+    def pagination_data(self, url):
+        all_data = []
+
+        while url:
+            response = requests.get(url)
+            response.raise_for_status()
+            
+            data = response.json()
+            all_data.extend(data["results"])
+            url = data["next"]
+
+        return all_data
+
     def get_races(self):
-        response = requests.get("https://api.open5e.com/v1/races/")
-        return response.json()
+        return self.pagination_data("https://api.open5e.com/v1/races/")
 
     def get_classes(self):
-        response = requests.get("https://api.open5e.com/v1/classes/")
-        return response.json()
+        return self.pagination_data("https://api.open5e.com/v1/classes/")
 
-    # def get_equipement #TODO: is it the armors? need clarification
+    def get_backgrounds(self):
+        return self.pagination_data("https://api.open5e.com/v1/backgrounds/")
+
+    def get_items(self):
+        return self.pagination_data("https://api.open5e.com/v1/magicitems/")
+
+    def get_spells(self):
+        return self.pagination_data("https://api.open5e.com/v1/spells/")

@@ -28,3 +28,15 @@ class CharacterDataService:
         #     response = list_reference_records(self.redis_client, "class")
         response = list_reference_records(self.redis_client, "class")
         return response
+
+    def get_backgrounds(self):
+        response = list_reference_records(self.redis_client, "background")
+        return response
+
+    def get_items(self):
+        response = list_reference_records(self.redis_client, "item")
+        return response
+
+    def get_spells(self):
+        response = list_reference_records(self.redis_client, "spell")
+        return response
