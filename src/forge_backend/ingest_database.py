@@ -1,5 +1,5 @@
-from forge_backend.storage import get_redis, refresh_reference_type
 from forge_backend.open_5e_caller import Open5eCaller
+from forge_backend.storage import get_redis, refresh_reference_type
 
 # This script is only to populate the database. 
 # It will be backup in case the API is down and the data is retrived from database.

@@ -1,5 +1,6 @@
 import requests
 
+
 # Gets data from the Open5e API
 class Open5eCaller:
 
