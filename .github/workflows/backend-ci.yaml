@@ -2,9 +2,9 @@ name: Backend Tests
 
 on:
   push:
-    branches: [us-22-kaz-redis]
-  # pull_request:
-  #   branches: [main]
+    branches: [*]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
