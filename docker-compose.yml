@@ -1,0 +1,24 @@
+# We referenced some tutorials and guides on how to set up the Docker Compose file for the Redis database and Redis Insight [2] [3] [4] [5].
+services:
+    redis:
+        image: redis:7-alpine
+        container_name: redis
+        ports:
+            - '6379:6379' # Redis server port
+        volumes:
+            - redis-data:/data
+        environment:
+            - REDIS_ARGS=--appendonly yes
+        restart: unless-stopped
+
+    redis-insight:
+        image: redis/redisinsight:latest
+        container_name: redis-insight
+        ports:
+            - '5540:5540' # RedisInsight Web UI port
+        depends_on:
+            - redis
+
+volumes:
+    redis-data:
+        driver: local
