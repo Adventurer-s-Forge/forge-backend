@@ -1,4 +1,4 @@
-# forge-backenda
+# forge-backend
 
 Adventurer's Forge backend: Redis data-access layer, rules engine, FastAPI server.
 
