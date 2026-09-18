@@ -223,14 +223,11 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     Args:
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
-
-    Returns:
-        (int): The count of characters for a certain user in the database
     """
     return conn.scard(char_index_key(uid))
 
 
-def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
+def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> None:
     """
     Add a new character for a user to the database.
 
