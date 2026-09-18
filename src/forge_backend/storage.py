@@ -230,7 +230,7 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     return conn.scard(char_index_key(uid))
 
 
-def create_users_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
+def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
     """
     Add a new character for a user to the database.
 
