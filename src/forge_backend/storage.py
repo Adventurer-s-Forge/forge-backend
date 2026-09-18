@@ -51,8 +51,35 @@ def ref_key(ref_type: str, slug: str) -> str:
     return f"ref:{ref_type}:{slug}"
 
 
+def char_key(uid: str, charid: str) -> str:
+    """
+    Construct the prefix to use to reference the character in the database.
+
+    Args:
+        uid (str): The user's ID from Google Firebase Authentication
+        charid (str): The unique ID of the user's character
+    
+    Returns:
+        (str): The prefix to use to reference the character in the database
+    """
+    return f"char:{uid}:{charid}"
+
+
 def ref_index_key(ref_type: str) -> str:
     return f"ref:idx:{ref_type}"
+
+
+def char_index_key(uid: str) -> str:
+    """
+    Construct the index reference for a user's characters in the database.
+
+    Args:
+        uid (str): The user's ID from Google Firebase Authentication
+
+    Returns:
+        (str): The index reference for a user's characters in the database
+    """
+    return f"char:idx:{uid}"
 
 
 def validate_reference_record(record: Mapping[str, Any], ref_type: str) -> None:
@@ -117,8 +144,42 @@ def get_reference(conn: redis.Redis, ref_type: str, slug: str) -> dict[str, Any]
     return json.loads(raw)
 
 
+def get_user_character(conn: redis.Redis, uid: str, charid: str) -> dct[str, Any] | None:
+    """
+    Retrieve a character for a certain user from the database.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+        charid (str): The unique ID of the user's character
+
+    Returns:
+        (dct[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
+    """
+    raw = conn.get(char_key(uid, charid)) # Construct the prefix to get the user's character
+    # If the user's character is empty, then return None.
+    # Otherwise, continue.
+    if raw is None:
+        return None
+    return json.loads(raw) # deserialize the retrieved JSON and return it
+
+
 def list_reference_keys(conn: redis.Redis, ref_type: str) -> list[str]:
     return sorted(conn.smembers(ref_index_key(ref_type)))
+
+
+def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
+    """
+    Consruct the index and then get the list of the index keys for a user's characters from the database.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+
+    Returns:
+        (list[str]): The list of index keys for a user's characters
+    """
+    return sorted(conn.smembers(char_index_key(uid)))
 
 
 def list_reference_records(conn: redis.Redis, ref_type: str) -> list[dict[str, Any]]:
@@ -129,5 +190,61 @@ def list_reference_records(conn: redis.Redis, ref_type: str) -> list[dict[str, A
     return [json.loads(raw) for raw in raws if raw is not None]
 
 
+def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
+    """
+    Retrieve all characters for a certain user from the database.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+
+    Returns:
+        (list[dict[str, Any]]): The list of a user's characters (including the data for each)
+    """
+    slugs = list_char_keys(conn, uid) # Get the keys for each of the user's characters
+    # If there were no keys, then return an empty list.
+    # Otherwise, continue.
+    if not slugs:
+        return []
+    # Iterate through the slugs, construct the correct prefix for database retrieval, retrieve the character, and add it to the raws list
+    raws = conn.mget([char_key(uid, slug) for slug in slugs])
+    # Iterate through each raw, deserialize the JSON if data exists, and add the result to the list to return
+    return [json.loads(raw) for raw in raws if raw is not None]
+
+
 def count_reference(conn: redis.Redis, ref_type: str) -> int:
     return conn.scard(ref_index_key(ref_type))
+
+
+def count_characters(conn: redis.Redis, uid: str) -> int:
+    """
+    Retrieve the count of characters for a certain user in the database.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+
+    Returns:
+        (int): The count of characters for a certain user in the database
+    """
+    return conn.scard(char_index_key(uid))
+
+
+def create_users_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
+    """
+    Add a new character for a user to the database.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+        charid (str): The unique ID of the user's character
+        user_character (Mapping[str, str]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
+
+    Returns:
+        (int): The number of items added to the database (should only be 1 item)
+    """
+    pipe = conn.pipeline(transaction=True)
+    pipe.set(
+        char_key(uid, charid), # Construct the prefix to add the user's character to the database
+        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")) # Serialize incoming JSON into JSON String before adding to database
+    )
