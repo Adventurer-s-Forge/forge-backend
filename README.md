@@ -33,7 +33,15 @@ docker compose up -d
 ```sh
 uv run pytest        # unit + integration (integration skips if Redis unreachable)
 uv run ruff check .  # lint
+# Seed Redis at app startup (lifespan) and serve the API:
+uv run uvicorn forge_backend.main:app
+curl localhost:8000/health  # {"status":"ok","seed_counts":{...}} (null when seeding failed)
+# Manual/deploy seed fallback (same run_ingestion the lifespan calls):
+uv run python -m forge_backend.ingest_database
 ```
+
+Startup never fails over seeding: if Open5e or Redis is unreachable, the lifespan logs a
+warning and the app still serves (with `seed_counts: null`).
 
 ## Redis Schema
 
@@ -93,20 +101,27 @@ Invariants:
 - Production data lives in the logical DB from `REDIS_URL` (DB 0 locally); the test suite uses
   the separate logical DB from `TEST_REDIS_URL` (DB 15), flushed per test.
 
-Schema behavior is pinned by tests: `test_storage.py` (key formats, envelope validation) and
+Schema behavior is pinned by tests: `test_storage.py` (key formats, envelope validation),
 `test_storage_integration.py` (refresh roundtrip, idempotency, orphan cleanup,
-`ref:*`/`char:*` isolation, wipe).
+`ref:*`/`char:*` isolation, wipe), and `test_startup_seed.py` (ingestion envelope/counts,
+lifespan seed-once, seed-failure-is-nonfatal, seed-level idempotent rerun).
 
 ## Layout
 
 ```text
 src/forge_backend/
-  config.py    # REDIS_URL (env, localhost default)
-  storage.py   # ONLY module allowed to import redis (NFR-16)
+  config.py           # REDIS_URL (env, localhost default)
+  storage.py          # ONLY module allowed to import redis (NFR-16)
+  open_5e_caller.py   # sync Open5e API client (deploy-time only, never at runtime)
+  ingest_database.py  # run_ingestion(): fetch five ref types, full-replace per type
+  main.py             # FastAPI app; lifespan seeds via run_ingestion; GET /health
+  character_data_service.py  # read service over seeded content
 tests/
   conftest.py                # redis_conn fixture (dedicated DB 15 + flush)
   test_storage.py            # unit: key formats, record validation
   test_storage_integration.py# integration: refresh roundtrip, idempotency,
                              # orphan cleanup, type/player-data isolation, wipe
+  test_startup_seed.py       # ingestion formatting/counts, lifespan seed + failure,
+                             # seed-level idempotent rerun (integration)
 docker-compose.yml  # local Redis + RedisInsight
 ```

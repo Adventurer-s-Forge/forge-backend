@@ -3,10 +3,11 @@ name = "forge-backend"
 version = "0.1.0"
 description = "Adventurer's Forge backend: Redis data-access layer, rules engine, FastAPI server"
 requires-python = ">=3.12"
-dependencies = ["redis>=5.2"]
+dependencies = ["redis>=5.2", "fastapi>=0.115", "uvicorn[standard]>=0.32", "requests>=2.32"]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28",
     "pre-commit>=4.6.2",
     "pytest>=8.3",
     "ruff>=0.8",
