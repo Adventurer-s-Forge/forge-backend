@@ -1,11 +1,11 @@
 import pytest
 
 from forge_backend.storage import (
+    char_index_key,
+    char_key,
     ref_index_key,
     ref_key,
     validate_reference_record,
-    char_index_key,
-    char_key,
 )
 
 
