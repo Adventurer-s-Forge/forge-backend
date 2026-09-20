@@ -227,7 +227,7 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     return conn.scard(char_index_key(uid))
 
 
-def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> None:
+def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> 1:
     """
     Add a new character for a user to the database.
 
@@ -238,10 +238,11 @@ def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: 
         user_character (Mapping[str, str]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
 
     Returns:
-        (int): The number of items added to the database (should only be 1 item)
+        (int): Returns 1 since only 1 character is created at a t
     """
     pipe = conn.pipeline(transaction=True)
     pipe.set(
         char_key(uid, charid), # Construct the prefix to add the user's character to the database
         json.dumps(user_character, ensure_ascii=False, separators=(",", ":")) # Serialize incoming JSON into JSON String before adding to database
     )
+    return 1 # Return 1 since only 1 character is created at a time

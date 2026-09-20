@@ -1,8 +1,13 @@
 import pytest
 
 from forge_backend.storage import (
+    add_new_character,
+    count_characters,
     count_reference,
     get_reference,
+    get_user_character,
+    list_char_keys,
+    list_character_records,
     list_reference_keys,
     list_reference_records,
     ref_key,
@@ -69,3 +74,22 @@ def test_empty_refresh_wipes_type(redis_conn):
     assert refresh_reference_type(redis_conn, "race", []) == 0
     assert count_reference(redis_conn, "race") == 0
     assert get_reference(redis_conn, "race", "srd_dragonborn") is None
+
+
+"""Set the test data"""
+TEST_CHARACTER = {
+    "owner": "testUser",
+    "name": "Joe Schmoe"
+}
+
+UID = "4CIZQ94T3ncLcAAizmHcN62V6Q42" # The test user ID
+
+CHARID = "26957" # The test character ID
+
+
+def test_adding_new_character(redis_conn):
+    assert add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 1
+    assert count_characters(redis_conn, UID) == 1
+    assert get_user_character(redis_conn, UID, CHARID) == TEST_CHARACTER
+    assert list_char_keys(redis_conn, UID) == [CHARID]
+    assert list_character_records(redis_conn, UID) == [TEST_CHARACTER]
