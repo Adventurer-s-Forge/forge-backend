@@ -4,6 +4,8 @@ from forge_backend.storage import (
     ref_index_key,
     ref_key,
     validate_reference_record,
+    char_index_key,
+    char_key,
 )
 
 
@@ -23,8 +25,16 @@ def test_ref_key_format():
     assert ref_key("race", "srd_dragonborn") == "ref:race:srd_dragonborn"
 
 
+def test_char_key_format():
+    assert char_key("4CIZQ94T3ncLcAAizmHcN62V6Q42", "26957") == "char:4CIZQ94T3ncLcAAizmHcN62V6Q42:26957"
+
+
 def test_ref_index_key_format():
     assert ref_index_key("spell") == "ref:idx:spell"
+
+
+def test_char_index_key_format():
+    assert char_index_key("4CIZQ94T3ncLcAAizmHcN62V6Q42") == "char:idx:4CIZQ94T3ncLcAAizmHcN62V6Q42"
 
 
 def test_validate_accepts_valid_record_with_extra_fields():
