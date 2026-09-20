@@ -144,7 +144,7 @@ def get_reference(conn: redis.Redis, ref_type: str, slug: str) -> dict[str, Any]
     return json.loads(raw)
 
 
-def get_user_character(conn: redis.Redis, uid: str, charid: str) -> dct[str, Any] | None:
+def get_user_character(conn: redis.Redis, uid: str, charid: str) -> dict[str, Any] | None:
     """
     Retrieve a character for a certain user from the database.
 
@@ -154,7 +154,7 @@ def get_user_character(conn: redis.Redis, uid: str, charid: str) -> dct[str, Any
         charid (str): The unique ID of the user's character
 
     Returns:
-        (dct[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
+        (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
     """
     raw = conn.get(char_key(uid, charid)) # Construct the prefix to get the user's character
     # If the user's character is empty, then return None.

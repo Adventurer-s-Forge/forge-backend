@@ -7,7 +7,7 @@ class UserCharacterDataService:
     def __init__(self):
         self.redis_client = get_redis()
 
-    def create_users_character(self: redis.Redis, user_id: str, character_name: str) -> None:
+    def create_user_character(self: redis.Redis, user_id: str, character_name: str) -> None:
         """
         Create the user's character as an object and add it to the database.
 
