@@ -2,6 +2,8 @@ from unittest.mock import patch
 import pytest
 from forge_backend.character_data_service import CharacterDataService
 
+#TODO: More tests needs to be written. Pausing for now.
+
 @patch("forge_backend.character_data_service.get_redis")
 @patch("forge_backend.character_data_service.get_reference")
 def test_get_race(mock_get_reference, mock_get_redis):
