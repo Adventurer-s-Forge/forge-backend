@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from forge_backend.character_data_routes import router
 from forge_backend.ingest_database import run_ingestion
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(router)
 
 
 @app.get("/health")
