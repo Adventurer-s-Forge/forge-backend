@@ -34,15 +34,17 @@ def run_ingestion() -> dict[str, int]:
     counts: dict[str, int] = {}
     for ref_type in REF_TYPES:
         records = [
-            {
-                "type": ref_type,
-                "key": raw.get("slug"),
-                "name": raw.get("name"),
-                "document": raw.get("document__slug"),
-                "data": raw,
-            }
-            for raw in fetchers[ref_type]()
-        ]
+        {
+            "type": ref_type,
+            "key": raw["key"],
+            "name": raw["name"],
+            "document": raw.get("document", {}).get("key"),
+            "data": raw,
+        }
+        for raw in fetchers[ref_type]()
+        if raw.get("document", {}).get("key") == "srd-2014"
+        and not raw.get("is_subspecies", False)
+    ]
         counts[ref_type] = refresh_reference_type(redis_client, ref_type, records)
     return counts
 

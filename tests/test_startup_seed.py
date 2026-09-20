@@ -7,28 +7,33 @@ from forge_backend.storage import REF_TYPES, count_reference, get_reference
 
 class StubCaller:
     @staticmethod
-    def _rec(prefix, i):
-        return {
-            "slug": f"{prefix}-{i}",
-            "name": f"{prefix} {i}",
-            "document__slug": "srd-2014",
-            "extra": True,
-        }
+    def _rec(key, name, doc, **extra):
+        return {"key": key, "name": name,
+                "document": {"key": doc, "name": doc}, 
+                "desc": "x", **extra}
 
     def get_races(self):
-        return [self._rec("race", 1), self._rec("race", 2)]
+        return [
+            self._rec("srd_elf", "Elf", "srd-2014", is_subspecies=False),
+            self._rec("srd_elf_sub", "Elf (variant)", "srd-2014", is_subspecies=True),
+            self._rec("toh_bugbear", "Bugbear", "toh", is_subspecies=False),
+        ]
 
     def get_classes(self):
-        return [self._rec("class", 1)]
+        return [self._rec("srd_class", "Class", "srd-2014")]
 
     def get_backgrounds(self):
-        return [self._rec("background", 1)]
+        return [self._rec("srd_background", "Background", "srd-2014")]
 
     def get_items(self):
-        return [self._rec("item", 1), self._rec("item", 2), self._rec("item", 3)]
+        return [
+            self._rec("srd_item_1", "Item 1", "srd-2014"),
+            self._rec("srd_item_2", "Item 2", "srd-2014"),
+            self._rec("srd_item_3", "Item 3", "srd-2014"),
+        ]
 
     def get_spells(self):
-        return [self._rec("spell", 1)]
+        return [self._rec("srd_spell", "Spell", "srd-2014")]
 
 
 def _patch_caller(monkeypatch):
@@ -48,7 +53,7 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
     monkeypatch.setattr(ingest_database, "refresh_reference_type", fake_refresh)
 
     assert ingest_database.run_ingestion() == {
-        "race": 2,
+        "race": 1,
         "class": 1,
         "background": 1,
         "item": 3,
@@ -58,10 +63,9 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
     for conn, ref_type, records in calls:
         assert conn == "fake-conn"
         for record in records:
-            assert record["type"] == ref_type
-            assert record["key"] == record["data"]["slug"]
+            assert record["key"] == record["data"]["key"]
             assert record["name"] == record["data"]["name"]
-            assert record["document"] == record["data"]["document__slug"]
+            assert record["document"] == record["data"]["document"]["key"]
 
 
 def test_lifespan_seeds_and_health_reports_counts(monkeypatch):
@@ -92,7 +96,7 @@ def test_run_ingestion_idempotent_against_redis(monkeypatch, redis_conn):
     assert all(n > 0 for n in first.values())
     for ref_type in REF_TYPES:
         assert count_reference(redis_conn, ref_type) == first[ref_type]
-    assert get_reference(redis_conn, "race", "race-1")["name"] == "race 1"
+    assert get_reference(redis_conn, "race", "srd_elf")["name"] == "Elf"
 
     second = ingest_database.run_ingestion()
     assert second == first
