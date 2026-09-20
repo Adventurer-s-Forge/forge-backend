@@ -3,14 +3,13 @@ import requests
 
 # Gets data from the Open5e API
 class Open5eCaller:
-
     def pagination_data(self, url):
         all_data = []
 
         while url:
             response = requests.get(url)
             response.raise_for_status()
-            
+
             data = response.json()
             all_data.extend(data["results"])
             url = data["next"]

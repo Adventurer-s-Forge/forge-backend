@@ -5,7 +5,6 @@ from forge_backend.storage import get_redis, list_reference_records, get_referen
 # This is the getter methods to grab information from the API or the database
 # in case of API is down.
 class CharacterDataService:
-
     def __init__(self):
         self.redis_client = get_redis()
 
