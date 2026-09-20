@@ -23,7 +23,7 @@ class Open5eCaller:
         return self.pagination_data("https://api.open5e.com/v2/classes/")
 
     def get_backgrounds(self):
-        return self.pagination_data("https://api.open5e.com/v2/backgrounds//")
+        return self.pagination_data("https://api.open5e.com/v2/backgrounds/")
 
     def get_items(self):
         return self.pagination_data("https://api.open5e.com/v2/items/")
