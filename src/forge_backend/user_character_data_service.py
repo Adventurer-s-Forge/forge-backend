@@ -27,10 +27,13 @@ class UserCharacterDataService:
         return add_new_character(self.redis_client, user_id, character_id, user_character) # Add the new character to the database
 
 
-    def generate_character_id() -> str:
+    def generate_character_id(self) -> str:
         """
         Generate the unique ID for the new character [3] [4] [5]
 
+        Args:
+            self (redis.Redis): The Redis database connection
+            
         Returns:
             (str): The character ID as a 5 digit number
         """
