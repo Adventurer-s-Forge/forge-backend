@@ -25,7 +25,8 @@ from typing import Any, Final
 
 import redis
 
-from forge_backend import config
+#from forge_backend import config
+import config
 
 REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "item", "spell")
 
@@ -227,7 +228,7 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     return conn.scard(char_index_key(uid))
 
 
-def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> 1:
+def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
     """
     Add a new character for a user to the database.
 
@@ -240,9 +241,13 @@ def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: 
     Returns:
         (int): Returns 1 since only 1 character is created at a t
     """
-    pipe = conn.pipeline(transaction=True)
+    pipe = conn.pipeline(transaction=True) # Create the Redis pipeline
     pipe.set(
-        char_key(uid, charid), # Construct the prefix to add the user's character to the database
-        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")) # Serialize incoming JSON into JSON String before adding to database
+        char_key(uid, charid), # Construct the key for the character char:uid:charid
+        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")), # Ensure that the incoming character has the correct JSON format
     )
+    pipe.delete(char_index_key(uid)) # Delete any existing character index key for the user (char:idx:uid)
+    pipe.sadd(char_index_key(uid), charid) # Add/re-add the character index key for the user
+    pipe.execute() # Actually apply the changes to the Redis database
+
     return 1 # Return 1 since only 1 character is created at a time
