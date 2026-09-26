@@ -1,7 +1,8 @@
-import pytest
-
+from forge_backend.storage import (  # Used for the cleanup at the end of the test
+    char_index_key,
+    char_key,
+)
 from forge_backend.user_character_data_service import UserCharacterDataService
-from forge_backend.storage import char_key, char_index_key # Used for the cleanup at the end of the test
 
 userCharacterDataService = UserCharacterDataService()
 

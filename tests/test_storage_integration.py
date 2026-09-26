@@ -13,7 +13,7 @@ from forge_backend.storage import (
     list_reference_keys,
     list_reference_records,
     ref_key,
-    refresh_reference_type
+    refresh_reference_type,
 )
 
 pytestmark = pytest.mark.integration

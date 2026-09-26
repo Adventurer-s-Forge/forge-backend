@@ -1,7 +1,14 @@
 import uuid
-
-from forge_backend.storage import add_new_character, get_redis, list_character_records, list_char_keys, get_user_character, count_characters
 from typing import Any
+
+from forge_backend.storage import (
+    add_new_character,
+    count_characters,
+    get_redis,
+    get_user_character,
+    list_char_keys,
+    list_character_records,
+)
 
 
 class UserCharacterDataService:
