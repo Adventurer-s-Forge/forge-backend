@@ -2,6 +2,8 @@ import pytest
 
 from forge_backend.storage import (
     add_new_character,
+    char_index_key,
+    char_key,
     count_characters,
     count_reference,
     get_reference,
@@ -11,7 +13,7 @@ from forge_backend.storage import (
     list_reference_keys,
     list_reference_records,
     ref_key,
-    refresh_reference_type,
+    refresh_reference_type
 )
 
 pytestmark = pytest.mark.integration
@@ -93,3 +95,6 @@ def test_adding_new_character(redis_conn):
     assert get_user_character(redis_conn, UID, CHARID) == TEST_CHARACTER
     assert list_char_keys(redis_conn, UID) == [CHARID]
     assert list_character_records(redis_conn, UID) == [TEST_CHARACTER]
+    # Clean up after the test
+    redis_conn.delete(char_key(UID, CHARID))
+    redis_conn.delete(char_index_key(UID)) # Delete any existing character index key for the user (char:idx:uid)
