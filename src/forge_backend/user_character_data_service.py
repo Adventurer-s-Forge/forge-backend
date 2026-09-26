@@ -1,6 +1,7 @@
 import uuid
 
-from forge_backend.storage import add_new_character, get_redis
+from forge_backend.storage import add_new_character, get_redis, list_character_records, list_char_keys, get_user_character, count_characters
+from typing import Any
 
 
 class UserCharacterDataService:
@@ -33,10 +34,62 @@ class UserCharacterDataService:
 
         Args:
             self (redis.Redis): The Redis database connection
-            
+
         Returns:
             (str): The character ID as a 5 digit number
         """
         return str(uuid.uuid1().fields[0])[:5]
 
-        #test success add
+
+    def list_character_ids(self, user_id) -> list[str]:
+        """
+        Helper function to retrieve all the keys for the user's characters in database.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
+
+        Returns:
+            (list[str]): The list of index keys for a user's characters
+        """
+        return list_char_keys(self.redis_client, user_id)
+
+    
+    def list_characters(self, user_id: str) -> list[dict[str, Any]]:
+        """
+        Helper function to retrieve all characters for a certain user from the database.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
+
+        Returns:
+            (list[dict[str, Any]]): The list of a user's characters (including the data for each)
+        """
+        return list_character_records(self.redis_client, user_id)
+
+
+    def get_a_character_by_id(self, user_id, character_id) -> dict[str, Any] | None:
+        """
+        Helper function to retrieve a character for a certain user from the database.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
+            character_id (str): The unique ID of the user's character
+
+        Returns:
+            (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
+        """
+        return get_user_character(self.redis_client, user_id, character_id)
+
+
+    def get_num_user_characters(self, user_id) -> int:
+        """
+        Helper function to retrieve the count of characters for a certain user in the database.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
+        """
+        return count_characters(self.redis_client, user_id)
