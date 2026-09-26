@@ -79,7 +79,7 @@ class UserCharacterDataService:
         return list_character_records(self.redis_client, user_id)
 
 
-    def get_a_character_by_id(self, user_id, character_id) -> dict[str, Any] | None:
+    def get_character_by_id(self, user_id, character_id) -> dict[str, Any] | None:
         """
         Helper function to retrieve a character for a certain user from the database.
 

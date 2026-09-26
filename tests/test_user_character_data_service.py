@@ -27,9 +27,9 @@ def test_create_new_character_roundtrip():
     # Run the tests
     assert userCharacterDataService.create_user_character(user_id, character_name, user_name, character_id) == 1 # Verify that the new character was successfully created
     assert userCharacterDataService.get_num_user_characters(user_id) == 1
-    assert userCharacterDataService.get_a_character_by_id(user_id, character_id) == EXPECTED_RESULT
+    assert userCharacterDataService.get_character_by_id(user_id, character_id) == EXPECTED_RESULT
     assert userCharacterDataService.list_character_ids(user_id) == [character_id]
     assert userCharacterDataService.list_characters(user_id) == [EXPECTED_RESULT]
     # Clean up after the test
-    userCharacterDataService.redis_client.delete(char_key(user_id, character_id))
-    userCharacterDataService.redis_client.delete(char_index_key(user_id)) # Delete any existing character index key for the user (char:idx:uid)
+    userCharacterDataService.redis_client.delete(char_key(user_id, character_id)) # Delete the test character [7]
+    userCharacterDataService.redis_client.delete(char_index_key(user_id)) # Delete any existing character index key for the user (char:idx:uid) [7]
