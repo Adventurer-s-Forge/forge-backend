@@ -21,10 +21,12 @@ docker compose up -d
 
 ## Environment
 
-| Variable        | Default                        | Purpose                                  |
-|-----------------|--------------------------------|------------------------------------------|
-| `REDIS_URL`     | `redis://localhost:6379/0`     | Runtime/seed Redis (production sets this)|
-| `TEST_REDIS_URL`| `redis://localhost:6379/15`    | Test-only Redis DB (flushed per test)    |
+| Variable        | Default                        | Purpose                                                  |
+|-----------------|--------------------------------|----------------------------------------------------------|
+| `REDIS_URL`     | `redis://localhost:6379/0`     | Runtime/seed Redis (production sets this)                |
+| `TEST_REDIS_URL`| `redis://localhost:6379/15`    | Test-only Redis DB (flushed per test)                    |
+| `CORS_ORIGINS`  | `http://localhost:5173`        | Comma-separated browser origins allowed to call the API  |
+
 
 `TEST_REDIS_URL` is never derived from `REDIS_URL`, so the test suite cannot flush dev data.
 

@@ -8,7 +8,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from forge_backend import config
 from forge_backend.character_data_routes import router
 from forge_backend.ingest_database import run_ingestion
 
@@ -33,6 +35,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"]
+)
 
 @app.get("/health")
 def health() -> dict[str, Any]:
