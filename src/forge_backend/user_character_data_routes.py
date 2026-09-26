@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-
-from pydantic import BaseModel # Used for setting the expected schema for new characters [10]
+from pydantic import BaseModel  # Used for setting the expected schema for new characters [10]
 
 from forge_backend.user_character_data_service import UserCharacterDataService
 
