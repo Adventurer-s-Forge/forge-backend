@@ -25,8 +25,7 @@ from typing import Any, Final
 
 import redis
 
-#from forge_backend import config
-import config
+from forge_backend import config
 
 REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "item", "spell")
 
