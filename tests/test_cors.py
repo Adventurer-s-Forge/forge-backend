@@ -5,7 +5,7 @@ from forge_backend import main
 ORIGIN = "http://localhost:5173"
 
 def _client(monkeypatch):
-    monkeypatch.setattr(main, "run_ingestion", lambda: {})
+    monkeypatch.setattr(main, "run_ingestion", dict)
     return TestClient(main.app)
 
 def test_preflight_allows_dev_origin(monkeypatch):
