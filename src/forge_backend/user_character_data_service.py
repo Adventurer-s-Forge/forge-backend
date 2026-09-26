@@ -25,7 +25,10 @@ class UserCharacterDataService:
             (int): The number of items added to the database (should only be 1)
         """
         user_character = {"owner": user_name, "name": character_name}; # Construct the JSON for the new character
-        return add_new_character(self.redis_client, user_id, character_id, user_character) # Add the new character to the database
+        result = add_new_character(self.redis_client, user_id, character_id, user_character) # Try to add the new character to the database
+        if (result == 0):
+            result = add_new_character(self.redis_client, user_id, character_id, user_character) # Adding the character again seems to succeed on the 2nd try if the 1st try fails
+        return result
 
 
     def generate_character_id(self) -> str:
