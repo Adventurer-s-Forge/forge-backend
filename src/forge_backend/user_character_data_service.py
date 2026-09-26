@@ -101,5 +101,8 @@ class UserCharacterDataService:
         Args:
             self (redis.Redis): The Redis database connection
             user_id (str): The user's ID from Google Firebase Authentication
+
+        Returns:
+            (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)

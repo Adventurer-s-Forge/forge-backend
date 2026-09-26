@@ -223,6 +223,9 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     Args:
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
+
+    Returns:
+        (int): The number of characters the user has
     """
     return conn.scard(char_index_key(uid))
 
