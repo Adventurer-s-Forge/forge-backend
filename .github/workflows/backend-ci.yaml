@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest
+          uv run pytest . --cov=.
 
       - name: Lint with Ruff
         run: |
