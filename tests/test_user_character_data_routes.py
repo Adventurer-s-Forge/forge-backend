@@ -14,7 +14,7 @@ from forge_backend.user_character_data_service import (
 )
 
 
-class NewCharacterData():
+class NewCharacterData:
     user_id: str
     character_name: str
     user_name: str
