@@ -37,7 +37,7 @@ def create_new_character(newCharacterData: NewCharacterData):
     }
 
 
-@router.get("/user-character/{user_id}/list-ids")
+@router.get("/user-character/{user_id}/ids")
 def list_character_ids(user_id: str):
     """
     API route for listing all the character IDs for a user.
@@ -68,7 +68,7 @@ def list_characters(user_id: str):
 @router.get("/user-character/{user_id}/{character_id}")
 def get_character_by_id(user_id: str, character_id: str):
     """
-    API route for listing all the character IDs for a user.
+    API route for listing a certain character that a user has based on its character ID
 
     Args:
         uesr_id (str): The user's ID from Google Firebase Authentication
@@ -79,10 +79,10 @@ def get_character_by_id(user_id: str, character_id: str):
     return userCharacterDataService.get_character_by_id(user_id, character_id)
 
 
-@router.get("/user-character/{user_id}/count")
+@router.get("/num-user-characters/{user_id}")
 def get_num_user_characters(user_id: str):
     """
-    API route for listing all the character IDs for a user.
+    API route for listing the number of characters a user has.
 
     Args:
         uesr_id (str): The user's ID from Google Firebase Authentication
