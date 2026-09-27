@@ -42,18 +42,23 @@ EXPECTED_RESULT = {
 def test_create_new_character_via_api_route_roundtrip():
     # Test creating a new character
     response = create_new_character(NEW_CHARACTER_DATA)
-    character_id = response["character_id"]
-    result = response["result"]
+    assert response["status_code"] == 201
+    character_id = response["detail"]["character_id"]
+    result = response["detail"]["result"]
     assert int(character_id, 16) and len(character_id) == 8 # Verify that the output is a hexademcial [14] and is 8 characters
     assert result == 1
     # Test getting the newly created character by ID
-    assert get_character_by_id(NEW_CHARACTER_DATA.user_id, character_id) == EXPECTED_RESULT
+    assert get_character_by_id(NEW_CHARACTER_DATA.user_id, character_id)["status_code"] == 200
+    assert get_character_by_id(NEW_CHARACTER_DATA.user_id, character_id)["detail"] == EXPECTED_RESULT
     # Test getting the user's character IDs
-    assert list_character_ids(NEW_CHARACTER_DATA.user_id) == [character_id]
+    assert list_character_ids(NEW_CHARACTER_DATA.user_id)["status_code"] == 200
+    assert list_character_ids(NEW_CHARACTER_DATA.user_id)["detail"] == [character_id]
     # Test getting a list of the user's characters
-    assert list_characters(NEW_CHARACTER_DATA.user_id) == [EXPECTED_RESULT]
+    assert list_characters(NEW_CHARACTER_DATA.user_id)["status_code"] == 200
+    assert list_characters(NEW_CHARACTER_DATA.user_id)["detail"] == [EXPECTED_RESULT]
     # Test getting the number of characters for the user
-    assert get_num_user_characters(NEW_CHARACTER_DATA.user_id) == 1
+    assert get_num_user_characters(NEW_CHARACTER_DATA.user_id)["status_code"] == 200
+    assert get_num_user_characters(NEW_CHARACTER_DATA.user_id)["detail"] == 1
     # Clean up after the test
     userCharacterDataService = UserCharacterDataService()
     userCharacterDataService.redis_client.delete(char_key(NEW_CHARACTER_DATA.user_id, character_id)) # Delete the test character [7]

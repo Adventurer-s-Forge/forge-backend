@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from forge_backend.user_character_data_service import UserCharacterDataService
+from forge_backend.user_character_data_service import DuplicateCharacterId, UserCharacterDataService
 
 
 class NewCharacterData(BaseModel):
@@ -29,12 +29,16 @@ def create_new_character(newCharacterData: NewCharacterData):
     """
     # Generate the new character's ID
     character_id = userCharacterDataService.generate_character_id(newCharacterData.user_id)
-    result = userCharacterDataService.create_user_character(newCharacterData.user_id, newCharacterData.character_name, newCharacterData.user_name, character_id)
+    try:
+        result = userCharacterDataService.create_user_character(newCharacterData.user_id, newCharacterData.character_name, newCharacterData.user_name, character_id)
+    except DuplicateCharacterId:
+        raise HTTPException(status_code=409, detail="Character ID collision, retry")
     # Ensure that the new character's ID is passed back out, along with the result of adding the character to the database
-    return {
-        "character_id": character_id,
-        "result": result
-    }
+    return {"status_code": 201, "detail": {"character_id": character_id, "result": result}}
+    # return {
+    #     "character_id": character_id,
+    #     "result": result
+    # }
 
 
 @router.get("/user-character/{user_id}/ids")
@@ -46,9 +50,9 @@ def list_character_ids(user_id: str):
         uesr_id (str): The user's ID from Google Firebase Authentication
 
     Returns:
-        (list[str]): The list of index keys for a user's characters
+        (dict[str, Any]): Status code 200 and the list of index keys for a user's characters
     """
-    return userCharacterDataService.list_character_ids(user_id)
+    return {"status_code": 200, "detail": userCharacterDataService.list_character_ids(user_id)}
 
 
 @router.get("/user-character/{user_id}/list")
@@ -60,9 +64,9 @@ def list_characters(user_id: str):
         uesr_id (str): The user's ID from Google Firebase Authentication
 
     Returns:
-        (list[str]): The list of index keys for a user's characters
+        (dict[str, Any]): Status code 200 and the list of index keys for a user's characters
     """
-    return userCharacterDataService.list_characters(user_id)
+    return {"status_code": 200, "detail": userCharacterDataService.list_characters(user_id)}
 
 
 @router.get("/user-character/{user_id}/{character_id}")
@@ -74,12 +78,12 @@ def get_character_by_id(user_id: str, character_id: str):
         uesr_id (str): The user's ID from Google Firebase Authentication
 
     Returns:
-        (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
+        (dict[str, Any]): Status code 200 and the user's character as a Dictionary of String, Any; or None if there is no existing characters
     """
     char = userCharacterDataService.get_character_by_id(user_id, character_id)
     if char is None:
         raise HTTPException(status_code=404, detail="Character not found!")
-    return char
+    return {"status_code": 200, "detail": char}
 
 
 @router.get("/num-user-characters/{user_id}")
@@ -91,6 +95,6 @@ def get_num_user_characters(user_id: str):
         uesr_id (str): The user's ID from Google Firebase Authentication
 
     Returns:
-        (int): The number of characters the user has
+        (dict[str, Any]): Status code 200 and the number of characters the user has
     """
-    return userCharacterDataService.get_num_user_characters(user_id)
+    return {"status_code": 200, "detail": userCharacterDataService.get_num_user_characters(user_id)}
