@@ -108,7 +108,7 @@ src/forge_backend/
 tests/
   conftest.py                           # redis_conn fixture (dedicated DB 15 + flush)
   test_storage.py                       # unit: key formats, record validation
-  test_storage_integration.py# integration: refresh roundtrip, idempotency,
+  test_storage_integration.py           # integration: refresh roundtrip, idempotency,
                                         # orphan cleanup, type/player-data isolation, wipe
   test_user_character_data_routes.py    # Integration testing of creating a new character using the API route functions                    
   test_user_character_data_service.py   # Unit testing of generating a character ID and Integration testing of the functions to create a new character
