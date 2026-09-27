@@ -12,6 +12,14 @@ from forge_backend.storage import (
 )
 
 
+class DuplicateCharacterId(Exception):
+    """Exception raised when there is a duplicate character ID [15]"""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class UserCharacterDataService:
     """This class provides functions to manipulate the user's character in the database."""
     
@@ -34,8 +42,10 @@ class UserCharacterDataService:
         """
         user_character = {"owner": user_name, "name": character_name}; # Construct the JSON for the new character
         result = add_new_character(self.redis_client, user_id, character_id, user_character) # Try to add the new character to the database
+        # If there was a duplicate character ID, then raise an error about it.
+        # Otherwise, continue and return the result.
         if (result == 0):
-            result = add_new_character(self.redis_client, user_id, character_id, user_character) # Adding the character again seems to succeed on the 2nd try if the 1st try fails
+            raise DuplicateCharacterId("Cannot add duplicate character with ID: " + character_id + "!")
         return result
 
 
