@@ -103,11 +103,15 @@ Schema behavior is pinned by tests: `test_storage.py` (key formats, envelope val
 src/forge_backend/
   config.py    # REDIS_URL (env, localhost default)
   storage.py   # ONLY module allowed to import redis (NFR-16)
+  user_character_data_routes.py # API routes for retrieving/manipulating user characters
+  user_character_data_service.py # Intermediary functions for retrieving/manipulating user characters
 tests/
   conftest.py                # redis_conn fixture (dedicated DB 15 + flush)
   test_storage.py            # unit: key formats, record validation
   test_storage_integration.py# integration: refresh roundtrip, idempotency,
                              # orphan cleanup, type/player-data isolation, wipe
+  test_user_character_data_routes.py # Integration testing of creating a new character using the API route functions                    
+  test_user_character_data_service.py # Unit testing of generating a character ID and Integration testing of the functions to create a new character
 docker-compose.yml  # local Redis + RedisInsight
 ```
 
