@@ -98,3 +98,11 @@ def test_adding_new_character(redis_conn):
     # Clean up after the test
     redis_conn.delete(char_key(UID, CHARID))
     redis_conn.delete(char_index_key(UID)) # Delete any existing character index key for the user (char:idx:uid)
+
+
+def test_adding_duplicate_character(redis_conn):
+    add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) # Add the original character
+    assert add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 0 # Test adding the duplicate character
+    # Clean up after the test
+    redis_conn.delete(char_key(UID, CHARID))
+    redis_conn.delete(char_index_key(UID)) # Delete any existing character index key for the user (char:idx:uid)

@@ -247,8 +247,10 @@ def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: 
     pipe.set(
         char_key(uid, charid), # Construct the key for the character char:uid:charid
         json.dumps(user_character, ensure_ascii=False, separators=(",", ":")), # Ensure that the incoming character has the correct JSON format
+        nx=True,  # duplicate id -> returns None, preserves original
     )
     pipe.sadd(char_index_key(uid), charid) # Add/re-add the character index key for the user
     result = pipe.execute() # Actually apply the changes to the Redis database - 
 
-    return int(result[1]) # Return the 2nd position of the result (should be [True, 1]) as an Integer
+   # return int(result[1]) # Return the 2nd position of the result (should be [True, 1]) as an Integer
+    return 1 if result[0] is not None else 0 # return 1 if the character was created, otherwise return 0
