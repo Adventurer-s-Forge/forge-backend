@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 from forge_backend.storage import (  # Used for the cleanup at the end of the test
     char_index_key,
     char_key,
@@ -56,3 +58,15 @@ def test_create_new_character_via_api_route_roundtrip():
     userCharacterDataService = UserCharacterDataService()
     userCharacterDataService.redis_client.delete(char_key(NEW_CHARACTER_DATA.user_id, character_id)) # Delete the test character [7]
     userCharacterDataService.redis_client.delete(char_index_key(NEW_CHARACTER_DATA.user_id)) # Delete any existing character index key for the user (char:idx:uid) [7]
+
+
+def test_no_character_found_via_api_route():
+    """Use a TryCatch to catch the error and pass it to a variable, and assert that that the error type and its data are correct [16]."""
+    testingError = None
+    try:
+        get_character_by_id(NEW_CHARACTER_DATA.user_id, "fakeID")
+    except HTTPException as e:
+        testingError = e
+    assert type(testingError) == HTTPException
+    assert testingError.status_code == 404
+    assert testingError.detail == "Character not found!"

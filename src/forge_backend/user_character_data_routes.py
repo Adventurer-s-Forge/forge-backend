@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from forge_backend.user_character_data_service import UserCharacterDataService
@@ -76,7 +76,10 @@ def get_character_by_id(user_id: str, character_id: str):
     Returns:
         (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
     """
-    return userCharacterDataService.get_character_by_id(user_id, character_id)
+    char = userCharacterDataService.get_character_by_id(user_id, character_id)
+    if char is None:
+        raise HTTPException(status_code=404, detail="Character not found!")
+    return char
 
 
 @router.get("/num-user-characters/{user_id}")
