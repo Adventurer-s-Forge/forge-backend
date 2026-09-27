@@ -5,6 +5,7 @@ description = "Adventurer's Forge backend: Redis data-access layer, rules engine
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.141.1",
+    "pytest-cov>=7.1.0",
     "redis>=5.2",
 ]
 
