@@ -29,7 +29,7 @@ def create_new_character(newCharacterData: NewCharacterData):
     """
     # Generate the new character's ID
     character_id = userCharacterDataService.generate_character_id()
-    result = userCharacterDataService.create_user_character(newCharacterData["user_id"], newCharacterData["character_name"], newCharacterData["user_name"], character_id)
+    result = userCharacterDataService.create_user_character(newCharacterData.user_id, newCharacterData.character_name, newCharacterData.user_name, character_id)
     # Ensure that the new character's ID is passed back out, along with the result of adding the character to the database
     return {
         "character_id": character_id,
@@ -37,7 +37,7 @@ def create_new_character(newCharacterData: NewCharacterData):
     }
 
 
-@router.get("/user-character-ids/{user_id}")
+@router.get("/user-character/{user_id}/list-ids")
 def list_character_ids(user_id: str):
     """
     API route for listing all the character IDs for a user.
@@ -51,7 +51,7 @@ def list_character_ids(user_id: str):
     return userCharacterDataService.list_character_ids(user_id)
 
 
-@router.get("/user-character/{user_id}")
+@router.get("/user-character/{user_id}/list")
 def list_characters(user_id: str):
     """
     API route for listing all the characters for a user.
@@ -79,7 +79,7 @@ def get_character_by_id(user_id: str, character_id: str):
     return userCharacterDataService.get_character_by_id(user_id, character_id)
 
 
-@router.get("/num-user-characters/{user_id}")
+@router.get("/user-character/{user_id}/count")
 def get_num_user_characters(user_id: str):
     """
     API route for listing all the character IDs for a user.
