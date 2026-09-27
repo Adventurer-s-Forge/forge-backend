@@ -25,6 +25,7 @@ EXPECTED_RESULT = {
 
 
 def test_user_character_post_api_route_roundtrip():
+    """Test the API routes for retrieving/manipulating user characters [11]"""
     # # Test creating the character via API call
     response = requests.post("http://127.0.0.1:8000/user-character", json=NEW_CHARACTER_DATA)
     character_id = response.json()["character_id"]
