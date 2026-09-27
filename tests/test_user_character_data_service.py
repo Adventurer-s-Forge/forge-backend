@@ -8,8 +8,10 @@ userCharacterDataService = UserCharacterDataService()
 
 
 def test_generate_character_id():  
-    charid = userCharacterDataService.generate_character_id()
-    assert charid.isnumeric() and len(charid) == 5 # Verify that the output is a number [6] and is 5 digits
+    # Set the test data
+    user_id = "m12345"
+    charid = userCharacterDataService.generate_character_id(user_id)
+    assert int(charid, 16) and len(charid) == 8 # Verify that the output is a hexademcial [14] and is 8 characters
 
 
 def test_create_new_character_roundtrip():

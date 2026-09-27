@@ -28,7 +28,7 @@ def create_new_character(newCharacterData: NewCharacterData):
         (dict[str, Any]): JSON Object/Python dictionary containing the new character's ID and the result of adding the character to the database
     """
     # Generate the new character's ID
-    character_id = userCharacterDataService.generate_character_id()
+    character_id = userCharacterDataService.generate_character_id(newCharacterData.user_id)
     result = userCharacterDataService.create_user_character(newCharacterData.user_id, newCharacterData.character_name, newCharacterData.user_name, character_id)
     # Ensure that the new character's ID is passed back out, along with the result of adding the character to the database
     return {

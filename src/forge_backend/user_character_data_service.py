@@ -3,6 +3,7 @@ from typing import Any
 
 from forge_backend.storage import (
     add_new_character,
+    char_index_key,
     count_characters,
     get_redis,
     get_user_character,
@@ -38,17 +39,25 @@ class UserCharacterDataService:
         return result
 
 
-    def generate_character_id(self) -> str:
+    def generate_character_id(self, user_id: str) -> str:
         """
         Generate the unique ID for the new character [3] [4] [5]
 
         Args:
             self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
 
         Returns:
             (str): The character ID as a 5 digit number
         """
-        return str(uuid.uuid1().fields[0])[:5]
+        # Iterate through the loop 5 times, generate a character ID using UUID4, and verify that there is no duplicate
+        for _ in range(5):
+            charid = uuid.uuid4().hex[:8]
+            # If there is no duplicate character ID found for the user, then return the character ID.
+            # Otherwise, move on and throw a RuntimeError about the collision.
+            if self.redis_client.sismember(char_index_key(user_id), charid) == 0:
+                return charid
+            raise RuntimeError("Character ID collision, retry")
 
 
     def list_character_ids(self, user_id) -> list[str]:

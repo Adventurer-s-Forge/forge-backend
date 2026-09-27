@@ -42,7 +42,7 @@ def test_create_new_character_via_api_route_roundtrip():
     response = create_new_character(NEW_CHARACTER_DATA)
     character_id = response["character_id"]
     result = response["result"]
-    assert character_id.isnumeric() and len(character_id) == 5 # Verify that the output is a number [6] and is 5 digits
+    assert int(character_id, 16) and len(character_id) == 8 # Verify that the output is a hexademcial [14] and is 8 characters
     assert result == 1
     # Test getting the newly created character by ID
     assert get_character_by_id(NEW_CHARACTER_DATA.user_id, character_id) == EXPECTED_RESULT
