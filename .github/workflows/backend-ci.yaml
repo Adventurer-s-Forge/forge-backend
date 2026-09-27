@@ -26,7 +26,7 @@ jobs:
           uv add pytest-cov
           uv sync
           docker compose up -d
-          
+
       - name: Run tests
         run: |
           uv run pytest . --cov=.
