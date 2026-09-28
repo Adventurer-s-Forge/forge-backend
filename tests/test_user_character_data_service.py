@@ -1,3 +1,5 @@
+# Used for the cleanup at the end of the test
+from forge_backend.cleanup_before_tests import cleanup_before_test
 from forge_backend.storage import (  # Used for the cleanup at the end of the test
     char_index_key,
     char_key,
@@ -25,7 +27,8 @@ def test_create_new_character_roundtrip():
         "owner": user_name,
         "name": character_name
     }
-
+    # Clean up the database before running the test
+    cleanup_before_test(user_id)
     # Run the tests
     assert userCharacterDataService.create_user_character(user_id, character_name, user_name, character_id) == 1 # Verify that the new character was successfully created
     assert userCharacterDataService.get_num_user_characters(user_id) == 1

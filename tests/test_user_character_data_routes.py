@@ -1,5 +1,7 @@
 from fastapi import HTTPException
 
+# Used for the cleanup at the end of the test
+from forge_backend.cleanup_before_tests import cleanup_before_test
 from forge_backend.storage import (  # Used for the cleanup at the end of the test
     char_index_key,
     char_key,
@@ -41,6 +43,8 @@ EXPECTED_RESULT = {
 
 def test_create_new_character_via_api_route_roundtrip():
     # Test creating a new character
+    # Clean up the database before running the test
+    cleanup_before_test(test_user_id)
     response = create_new_character(NEW_CHARACTER_DATA)
     assert response["status_code"] == 201
     character_id = response["detail"]["character_id"]

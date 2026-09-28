@@ -1,5 +1,7 @@
 import requests
 
+# Used for the cleanup before the test
+from forge_backend.cleanup_before_tests import cleanup_before_test
 from forge_backend.storage import (  # Used for the cleanup at the end of the test
     char_index_key,
     char_key,
@@ -26,19 +28,27 @@ EXPECTED_RESULT = {
 
 def test_user_character_post_api_route():
     """Test the API routes for retrieving/manipulating user characters [11]"""
+    # Clean up the database before running the test
+    cleanup_before_test(test_user_id)
     # # Test creating the character via API call
     response = requests.post("http://127.0.0.1:8000/user-character", json=NEW_CHARACTER_DATA)
-    character_id = response.json()["character_id"]
-    result = response.json()["result"]
-    assert character_id.isnumeric() and len(character_id) == 5 # Verify that the output is a number [6] and is 5 digits
+    assert response.json()["status_code"] == 201
+    character_id = response.json()["detail"]["character_id"]
+    result = response.json()["detail"]["result"]
+    assert int(character_id, 16) and len(character_id) == 8 # Verify that the output is a hexademcial [14] and is 8 characters
     assert result == 1
     # Test getting the created character via API call
-    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/" + character_id).json() == EXPECTED_RESULT
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/" + character_id).json()["status_code"] == 200
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/" + character_id).json()["detail"] == EXPECTED_RESULT
     # Test getting the list of character IDs via API call
-    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/ids").json() == [character_id]
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/ids").json()["status_code"] == 200
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/ids").json()["detail"] == [character_id]
     # Test getting the list of characters via API call
-    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/list").json() == [EXPECTED_RESULT]
-    assert requests.get("http://127.0.0.1:8000/num-user-characters/" + test_user_id).json() == 1
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/list").json()["status_code"] == 200
+    assert requests.get("http://127.0.0.1:8000/user-character/" + test_user_id + "/list").json()["detail"] == [EXPECTED_RESULT]
+    # Test getting the number of characters via API call
+    assert requests.get("http://127.0.0.1:8000/num-user-characters/" + test_user_id).json()["status_code"] == 200
+    assert requests.get("http://127.0.0.1:8000/num-user-characters/" + test_user_id).json()["detail"] == 1
     # Clean up after the test
     userCharacterDataService = UserCharacterDataService()
     userCharacterDataService.redis_client.delete(char_key(test_user_id, character_id)) # Delete the test character [7]
