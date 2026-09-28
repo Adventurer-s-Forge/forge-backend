@@ -9,6 +9,8 @@ from forge_backend.storage import (
     get_user_character,
     list_char_keys,
     list_character_records,
+    list_reference_records,
+    update_character,
 )
 
 
@@ -116,6 +118,24 @@ class UserCharacterDataService:
             (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
         """
         return get_user_character(self.redis_client, user_id, character_id)
+
+    def set_character_class(self, user_id: str, character_id: str, class_value: str) -> dict:
+        """Replace the record's single class value; raises KeyError when missing."""
+        record = self.get_character_by_id(user_id, character_id)
+        if record is None:
+            raise KeyError(character_id)
+        record["class"] = class_value
+        update_character(self.redis_client, user_id, character_id, record)
+        return record
+
+    def valid_class_values(self) -> set[str]:
+        """Slugs and display names of all seeded class records."""
+        records = list_reference_records(self.redis_client, "class")
+        return {r["key"] for r in records} | {r["name"] for r in records}
+
+    def class_exists(self, value: str) -> bool:
+        """True when value matches a seeded class slug or display name."""
+        return value in self.valid_class_values()
 
     def get_num_user_characters(self, user_id) -> int:
         """
