@@ -23,7 +23,7 @@ packages = ["src/forge_backend"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: requires a reachable Redis (TEST_REDIS_URL, default redis://localhost:6379/15)"]
+markers = ["integration: requires a reachable Redis (TEST_REDIS_URL, default redis://localhost:6379/15)", "test_id(id): traceability link from a test to its spec test-case ID (e.g. UT-1, ST-2)"]
 
 [tool.ruff]
 line-length = 100
