@@ -260,3 +260,27 @@ def add_new_character(
     return (
         1 if result[0] is not None else 0
     )  # return 1 if the character was created, otherwise return 0
+
+
+def update_character(
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+) -> None:
+    """
+    Overwrite an existing character record in place.
+
+    Unlike `add_new_character` (NX: duplicate id preserves the original), this is a plain
+    `SET`: for mutation of a record that the caller has already fetched.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+        charid (str): The unique ID of the user's character
+        user_character (Mapping[str, str]): The full record to store
+    """
+    pipe = conn.pipeline(transaction=True)
+    pipe.set(
+        char_key(uid, charid),
+        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")),
+    )
+    pipe.sadd(char_index_key(uid), charid)  # idempotent: no-op when already indexed
+    pipe.execute()
