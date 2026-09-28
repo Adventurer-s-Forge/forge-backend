@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 
 from forge_backend.character_data_service import CharacterDataService
 from forge_backend.user_character_data_service import UserCharacterDataService
 
 router = APIRouter()
 service = CharacterDataService()
+
+
+class ClassSelection(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    character_class: str = Field(alias="class", min_length=1)
 
 
 # TODO(US-19/auth): replace with Firebase ID-token verification.
@@ -45,3 +52,13 @@ def get_character(character_id: str, uid: str = Depends(get_uid)):
     if record is None:
         raise HTTPException(status_code=404, detail="character not found")
     return record
+
+
+@router.put("/characters/{character_id}/class")
+def set_character_class(character_id: str, selection: ClassSelection, uid: str = Depends(get_uid)):
+    user_service = UserCharacterDataService()
+    if user_service.get_character_by_id(uid, character_id) is None:
+        raise HTTPException(status_code=404, detail="character not found")
+    if not user_service.class_exists(selection.character_class):
+        raise HTTPException(status_code=400, detail="unknown class")
+    return user_service.set_character_class(uid, character_id, selection.character_class)
