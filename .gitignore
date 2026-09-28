@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+sampleCharacterJSON.json
+/src/cleanup.py

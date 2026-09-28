@@ -112,18 +112,22 @@ lifespan seed-once, seed-failure-is-nonfatal, seed-level idempotent rerun).
 
 ```text
 src/forge_backend/
-  config.py           # REDIS_URL (env, localhost default)
-  storage.py          # ONLY module allowed to import redis (NFR-16)
-  open_5e_caller.py   # sync Open5e API client (deploy-time only, never at runtime)
-  ingest_database.py  # run_ingestion(): fetch five ref types, full-replace per type
-  main.py             # FastAPI app; lifespan seeds via run_ingestion; GET /health
-  character_data_service.py  # read service over seeded content
+  config.py                         # REDIS_URL (env, localhost default)
+  storage.py                        # ONLY module allowed to import redis (NFR-16)
+  open_5e_caller.py                 # sync Open5e API client (deploy-time only, never at runtime)
+  ingest_database.py                # run_ingestion(): fetch five ref types, full-replace per type
+  main.py                           # FastAPI app; lifespan seeds via run_ingestion; GET /health
+  character_data_service.py         # read service over seeded content
+  user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
+  user_character_data_routes.py     # API routes for retrieving/manipulating user characters
 tests/
-  conftest.py                # redis_conn fixture (dedicated DB 15 + flush)
-  test_storage.py            # unit: key formats, record validation
-  test_storage_integration.py# integration: refresh roundtrip, idempotency,
-                             # orphan cleanup, type/player-data isolation, wipe
-  test_startup_seed.py       # ingestion formatting/counts, lifespan seed + failure,
-                             # seed-level idempotent rerun (integration)
+  conftest.py                             # redis_conn fixture (dedicated DB 15 + flush)
+  test_storage.py                         # unit: key formats, record validation
+  test_storage_integration.py             # integration: refresh roundtrip, idempotency,
+                                          # orphan cleanup, type/player-data isolation, wipe
+  test_startup_seed.py                    # ingestion formatting/counts, lifespan seed + failure,
+                                          # seed-level idempotent rerun (integration)
+  test_user_character_data_service.py     # Unit testing of generating a character ID and Integration testing of the functions to create a new character
+  test_user_character_data_routes.py      # Integration testing of creating a new character using the API route functions
 docker-compose.yml  # local Redis + RedisInsight
 ```

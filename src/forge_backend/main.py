@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from forge_backend import config
 from forge_backend.character_data_routes import router
 from forge_backend.ingest_database import run_ingestion
+from forge_backend.user_character_data_routes import router as userCharacterRouter
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)
+app.include_router(userCharacterRouter) # Ensure that main has access to the User Character Data Router
 
 app.add_middleware(
     CORSMiddleware,
