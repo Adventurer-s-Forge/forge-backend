@@ -22,11 +22,13 @@ class DuplicateCharacterId(Exception):
 
 class UserCharacterDataService:
     """This class provides functions to manipulate the user's character in the database."""
-    
+
     def __init__(self):
         self.redis_client = get_redis()
 
-    def create_user_character(self, user_id: str, character_name: str, user_name: str, character_id: str) -> int:
+    def create_user_character(
+        self, user_id: str, character_name: str, user_name: str, character_id: str
+    ) -> int:
         """
         Create the user's character as an object and add it to the database.
 
@@ -40,14 +42,20 @@ class UserCharacterDataService:
         Returns:
             (int): The number of items added to the database (should only be 1)
         """
-        user_character = {"owner": user_name, "name": character_name}; # Construct the JSON for the new character
-        result = add_new_character(self.redis_client, user_id, character_id, user_character) # Try to add the new character to the database
+        user_character = {
+            "owner": user_name,
+            "name": character_name,
+        }  # Construct the JSON for the new character
+        result = add_new_character(
+            self.redis_client, user_id, character_id, user_character
+        )  # Try to add the new character to the database
         # If there was a duplicate character ID, then raise an error about it.
         # Otherwise, continue and return the result.
-        if (result == 0):
-            raise DuplicateCharacterId("Cannot add duplicate character with ID: " + character_id + "!")
+        if result == 0:
+            raise DuplicateCharacterId(
+                "Cannot add duplicate character with ID: " + character_id + "!"
+            )
         return result
-
 
     def generate_character_id(self, user_id: str) -> str:
         """
@@ -69,7 +77,6 @@ class UserCharacterDataService:
                 return charid
             raise RuntimeError("Character ID collision, retry")
 
-
     def list_character_ids(self, user_id) -> list[str]:
         """
         Helper function to retrieve all the keys for the user's characters in database.
@@ -83,7 +90,6 @@ class UserCharacterDataService:
         """
         return list_char_keys(self.redis_client, user_id)
 
-    
     def list_characters(self, user_id: str) -> list[dict[str, Any]]:
         """
         Helper function to retrieve all characters for a certain user from the database.
@@ -96,7 +102,6 @@ class UserCharacterDataService:
             (list[dict[str, Any]]): The list of a user's characters (including the data for each)
         """
         return list_character_records(self.redis_client, user_id)
-
 
     def get_character_by_id(self, user_id, character_id) -> dict[str, Any] | None:
         """
@@ -111,7 +116,6 @@ class UserCharacterDataService:
             (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
         """
         return get_user_character(self.redis_client, user_id, character_id)
-
 
     def get_num_user_characters(self, user_id) -> int:
         """
