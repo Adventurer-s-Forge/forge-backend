@@ -45,6 +45,10 @@ uv run python -m forge_backend.ingest_database
 Startup never fails over seeding: if Open5e or Redis is unreachable, the lifespan logs a
 warning and the app still serves (with `seed_counts: null`).
 
+## API
+
+Client-facing HTTP reference (endpoints, auth header, status codes, examples): [API.md](API.md).
+
 ## Redis Schema
 
 All Redis access goes through `src/forge_backend/storage.py`; nothing else in the
@@ -58,7 +62,8 @@ re-seed of a reference type to never touch player data.
 |----------------------|------------|-------------------------------------------------------------------|
 | `ref:{type}:{slug}`  | STRING     | One reference record, stored as a single compact JSON string      |
 | `ref:idx:{type}`     | SET        | Slugs currently stored for `{type}`; source of truth for list/count |
-| `char:{uid}:{id}`    | STRING     | One player character as JSON *(reserved, CRUD not implemented yet)* |
+| `char:{uid}:{id}`    | STRING     | One player character as JSON (owner, name, class)                  |
+| `char:idx:{uid}`     | SET        | Character ids for that user; SADDed idempotently on every save, source of truth for list/count |
 
 - `{type}` ∈ `race` | `class` | `background` | `item` | `spell` (`storage.REF_TYPES`).
 - `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd_dragonborn`).
@@ -93,6 +98,11 @@ Exactly five contract fields (extra keys ignored); every record is checked by
 | `list_reference_keys`      | Sorted `SMEMBERS` of the index. |
 | `list_reference_records`   | Sorted `SMEMBERS`, then `MGET` of all records; index entries whose key is gone are skipped. |
 | `count_reference`          | `SCARD` of the index. |
+| `get_user_character`       | `GET` + `json.loads` of `char:{uid}:{id}`; `None` on miss. |
+| `add_new_character`        | Upsert in one MULTI/EXEC: `SET` record (NX: duplicate id returns 0, preserves original) + `SADD` id; returns 1 if created, 0 otherwise. |
+| `list_char_keys`           | Sorted `SMEMBERS` of `char:idx:{uid}`. |
+| `list_character_records`   | Sorted ids then `MGET` of the records. |
+| `count_characters`         | `SCARD` of `char:idx:{uid}`. |
 
 Invariants:
 
@@ -120,6 +130,7 @@ src/forge_backend/
   character_data_service.py         # read service over seeded content
   user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
   user_character_data_routes.py     # API routes for retrieving/manipulating user characters
+  cleanup_before_tests.py           # Test helper: remove one user's test characters
 tests/
   conftest.py                             # redis_conn fixture (dedicated DB 15 + flush)
   test_storage.py                         # unit: key formats, record validation

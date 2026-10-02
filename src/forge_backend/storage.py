@@ -58,7 +58,7 @@ def char_key(uid: str, charid: str) -> str:
     Args:
         uid (str): The user's ID from Google Firebase Authentication
         charid (str): The unique ID of the user's character
-    
+
     Returns:
         (str): The prefix to use to reference the character in the database
     """
@@ -156,12 +156,12 @@ def get_user_character(conn: redis.Redis, uid: str, charid: str) -> dict[str, An
     Returns:
         (dict[str, Any] | Any): The user's character as a Dictionary of String, Any; or None if there is no existing characters
     """
-    raw = conn.get(char_key(uid, charid)) # Construct the prefix to get the user's character
+    raw = conn.get(char_key(uid, charid))  # Construct the prefix to get the user's character
     # If the user's character is empty, then return None.
     # Otherwise, continue.
     if raw is None:
         return None
-    return json.loads(raw) # deserialize the retrieved JSON and return it
+    return json.loads(raw)  # deserialize the retrieved JSON and return it
 
 
 def list_reference_keys(conn: redis.Redis, ref_type: str) -> list[str]:
@@ -201,7 +201,7 @@ def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
     Returns:
         (list[dict[str, Any]]): The list of a user's characters (including the data for each)
     """
-    slugs = list_char_keys(conn, uid) # Get the keys for each of the user's characters
+    slugs = list_char_keys(conn, uid)  # Get the keys for each of the user's characters
     # If there were no keys, then return an empty list.
     # Otherwise, continue.
     if not slugs:
@@ -230,7 +230,9 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
     return conn.scard(char_index_key(uid))
 
 
-def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]) -> int:
+def add_new_character(
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+) -> int:
     """
     Add a new character for a user to the database.
 
@@ -243,14 +245,42 @@ def add_new_character(conn: redis.Redis, uid: str, charid: str, user_character: 
     Returns:
         (int): Returns 1 since only 1 character is created at a t
     """
-    pipe = conn.pipeline(transaction=True) # Create the Redis pipeline
+    pipe = conn.pipeline(transaction=True)  # Create the Redis pipeline
     pipe.set(
-        char_key(uid, charid), # Construct the key for the character char:uid:charid
-        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")), # Ensure that the incoming character has the correct JSON format
+        char_key(uid, charid),  # Construct the key for the character char:uid:charid
+        json.dumps(
+            user_character, ensure_ascii=False, separators=(",", ":")
+        ),  # Ensure that the incoming character has the correct JSON format
         nx=True,  # duplicate id -> returns None, preserves original
     )
-    pipe.sadd(char_index_key(uid), charid) # Add/re-add the character index key for the user
-    result = pipe.execute() # Actually apply the changes to the Redis databases
+    pipe.sadd(char_index_key(uid), charid)  # Add/re-add the character index key for the user
+    result = pipe.execute()  # Actually apply the changes to the Redis databases
 
-   # return int(result[1]) # Return the 2nd position of the result (should be [True, 1]) as an Integer
-    return 1 if result[0] is not None else 0 # return 1 if the character was created, otherwise return 0
+    # return int(result[1]) # Return the 2nd position of the result (should be [True, 1]) as a Integer
+    return (
+        1 if result[0] is not None else 0
+    )  # return 1 if the character was created, otherwise return 0
+
+
+def update_character(
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+) -> None:
+    """
+    Overwrite an existing character record in place.
+
+    Unlike `add_new_character` (NX: duplicate id preserves the original), this is a plain
+    `SET`: for mutation of a record that the caller has already fetched.
+
+    Args:
+        conn (redis.Redis): the Redist database connection
+        uid (str): The user's ID from Google Firebase Authentication
+        charid (str): The unique ID of the user's character
+        user_character (Mapping[str, str]): The full record to store
+    """
+    pipe = conn.pipeline(transaction=True)
+    pipe.set(
+        char_key(uid, charid),
+        json.dumps(user_character, ensure_ascii=False, separators=(",", ":")),
+    )
+    pipe.sadd(char_index_key(uid), charid)  # idempotent: no-op when already indexed
+    pipe.execute()
