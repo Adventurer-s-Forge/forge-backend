@@ -12,5 +12,7 @@ def cleanup_before_test(user_id: str) -> None:
     userCharacterDataService = UserCharacterDataService()
     chars = userCharacterDataService.list_character_ids(user_id)
     for char in chars:
-        userCharacterDataService.redis_client.delete(char_key(user_id, char)) # Delete the test character [7]
+        userCharacterDataService.redis_client.delete(
+            char_key(user_id, char)
+        )  # Delete the test character [7]
         userCharacterDataService.redis_client.delete(char_index_key(user_id))

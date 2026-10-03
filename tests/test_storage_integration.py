@@ -81,14 +81,11 @@ def test_empty_refresh_wipes_type(redis_conn):
 
 
 """Set the test data"""
-TEST_CHARACTER = {
-    "owner": "testUser",
-    "name": "Joe Schmoe"
-}
+TEST_CHARACTER = {"owner": "testUser", "name": "Joe Schmoe"}
 
-UID = "4CIZQ94T3ncLcAAizmHcN62V6Q42" # The test user ID
+UID = "4CIZQ94T3ncLcAAizmHcN62V6Q42"  # The test user ID
 
-CHARID = "26957" # The test character ID
+CHARID = "26957"  # The test character ID
 
 
 def test_adding_new_character(redis_conn):
@@ -101,14 +98,20 @@ def test_adding_new_character(redis_conn):
     assert list_character_records(redis_conn, UID) == [TEST_CHARACTER]
     # Clean up after the test
     redis_conn.delete(char_key(UID, CHARID))
-    redis_conn.delete(char_index_key(UID)) # Delete any existing character index key for the user (char:idx:uid)
+    redis_conn.delete(
+        char_index_key(UID)
+    )  # Delete any existing character index key for the user (char:idx:uid)
 
 
 def test_adding_duplicate_character(redis_conn):
     # Clean up the database before running the test
     cleanup_before_test(UID)
-    add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) # Add the original character
-    assert add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 0 # Test adding the duplicate character
+    add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER)  # Add the original character
+    assert (
+        add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 0
+    )  # Test adding the duplicate character
     # Clean up after the test
     redis_conn.delete(char_key(UID, CHARID))
-    redis_conn.delete(char_index_key(UID)) # Delete any existing character index key for the user (char:idx:uid)
+    redis_conn.delete(
+        char_index_key(UID)
+    )  # Delete any existing character index key for the user (char:idx:uid)

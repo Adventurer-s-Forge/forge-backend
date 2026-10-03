@@ -8,9 +8,13 @@ from forge_backend.storage import REF_TYPES, count_reference, get_reference
 class StubCaller:
     @staticmethod
     def _rec(key, name, doc, **extra):
-        return {"key": key, "name": name,
-                "document": {"key": doc, "name": doc}, 
-                "desc": "x", **extra}
+        return {
+            "key": key,
+            "name": name,
+            "document": {"key": doc, "name": doc},
+            "desc": "x",
+            **extra,
+        }
 
     def get_races(self):
         return [

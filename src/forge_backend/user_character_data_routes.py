@@ -1,100 +1,173 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+"""Player-character router: sole owner of the /characters contract."""
 
-from forge_backend.user_character_data_service import DuplicateCharacterId, UserCharacterDataService
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, Header, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
+
+from forge_backend.user_character_data_service import (
+    DuplicateCharacterId,
+    UserCharacterDataService,
+)
+
+router = APIRouter(prefix="/characters", tags=["Characters"])
+
+_service = UserCharacterDataService()
+
+
+class CreateCharacterResponse(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"character_id": "1a2b3c4d", "result": 1}}
+    )
+
+    character_id: str
+    result: int
+
+
+class CharacterRecord(BaseModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        json_schema_extra={"example": {"owner": "test-user", "name": "Gandalf"}},
+    )
+
+    owner: str
+    name: str
+    character_class: str | None = Field(default=None, alias="class")
+
+
+class ErrorResponse(BaseModel):
+    detail: str
 
 
 class NewCharacterData(BaseModel):
-    """Class to set the expected schema for new characters being created - provided via the imported pydantic BaseModel [10]."""
-    user_id: str
+    """Expected schema for new characters being created."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={"example": {"character_name": "Gandalf", "user_name": "test-user"}},
+    )
+
     character_name: str
     user_name: str
 
 
-router = APIRouter()
-userCharacterDataService = UserCharacterDataService()
+class ClassSelection(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={"example": {"class": "Wizard"}},
+    )
+
+    character_class: str = Field(alias="class", min_length=1)
 
 
-# Set the API routes for retrieving/manipulating user characters [9] [10]
-@router.post("/user-character")
-def create_new_character(newCharacterData: NewCharacterData):
-    """
-    API route for creating a new character [9] [10].
+# TODO(US-19/auth): replace with Firebase ID-token verification.
+def get_uid(
+    x_user_id: str = Header(
+        alias="X-User-Id",
+        min_length=1,
+        description="Temporary development identity; not authentication.",
+    ),
+) -> str:
+    return x_user_id
 
-    Args:
-        newCharacterData (NewCharacterData): The JSON Object/Python dictionary that contains the user ID, character name, and username
 
-    Returns:
-        (dict[str, Any]): JSON Object/Python dictionary containing the new character's ID and the result of adding the character to the database
-    """
-    # Generate the new character's ID
-    character_id = userCharacterDataService.generate_character_id(newCharacterData.user_id)
+@router.post(
+    "",
+    operation_id="create_character",
+    status_code=201,
+    response_model=CreateCharacterResponse,
+    responses={409: {"model": ErrorResponse}},
+    summary="Create a character",
+    description=(
+        "Create a blank character record. `owner` is a display name and the "
+        "X-User-Id header selects the storage namespace; the header does not "
+        "authenticate the caller."
+    ),
+)
+def create_new_character(new_character_data: NewCharacterData, uid: str = Depends(get_uid)):
+    character_id = _service.generate_character_id(uid)
     try:
-        result = userCharacterDataService.create_user_character(newCharacterData.user_id, newCharacterData.character_name, newCharacterData.user_name, character_id)
+        result = _service.create_user_character(
+            uid,
+            new_character_data.character_name,
+            new_character_data.user_name,
+            character_id,
+        )
     except DuplicateCharacterId:
         raise HTTPException(status_code=409, detail="Character ID collision, retry")
-    # Ensure that the new character's ID is passed back out, along with the result of adding the character to the database
-    return {"status_code": 201, "detail": {"character_id": character_id, "result": result}}
-    # return {
-    #     "character_id": character_id,
-    #     "result": result
-    # }
+    return {"character_id": character_id, "result": result}
 
 
-@router.get("/user-character/{user_id}/ids")
-def list_character_ids(user_id: str):
-    """
-    API route for listing all the character IDs for a user.
-
-    Args:
-        uesr_id (str): The user's ID from Google Firebase Authentication
-
-    Returns:
-        (dict[str, Any]): Status code 200 and the list of index keys for a user's characters
-    """
-    return {"status_code": 200, "detail": userCharacterDataService.list_character_ids(user_id)}
+@router.get(
+    "",
+    operation_id="list_characters",
+    response_model=list[CharacterRecord],
+    response_model_exclude_unset=True,
+    summary="List characters",
+    description="List stored character records for the X-User-Id storage namespace.",
+)
+def list_characters(uid: str = Depends(get_uid)):
+    return _service.list_characters(uid)
 
 
-@router.get("/user-character/{user_id}/list")
-def list_characters(user_id: str):
-    """
-    API route for listing all the characters for a user.
-
-    Args:
-        uesr_id (str): The user's ID from Google Firebase Authentication
-
-    Returns:
-        (dict[str, Any]): Status code 200 and the list of index keys for a user's characters
-    """
-    return {"status_code": 200, "detail": userCharacterDataService.list_characters(user_id)}
+@router.get(
+    "/ids",
+    operation_id="list_character_ids",
+    response_model=list[str],
+    summary="List character IDs",
+    description="List sorted character IDs for the X-User-Id storage namespace.",
+)
+def list_character_ids(uid: str = Depends(get_uid)):
+    return _service.list_character_ids(uid)
 
 
-@router.get("/user-character/{user_id}/{character_id}")
-def get_character_by_id(user_id: str, character_id: str):
-    """
-    API route for listing a certain character that a user has based on its character ID
-
-    Args:
-        uesr_id (str): The user's ID from Google Firebase Authentication
-
-    Returns:
-        (dict[str, Any]): Status code 200 and the user's character as a Dictionary of String, Any; or None if there is no existing characters
-    """
-    char = userCharacterDataService.get_character_by_id(user_id, character_id)
-    if char is None:
-        raise HTTPException(status_code=404, detail="Character not found!")
-    return {"status_code": 200, "detail": char}
+@router.get(
+    "/count",
+    operation_id="count_characters",
+    response_model=int,
+    summary="Count characters",
+    description="Count character index entries for the X-User-Id storage namespace.",
+)
+def get_num_user_characters(uid: str = Depends(get_uid)):
+    return _service.get_num_user_characters(uid)
 
 
-@router.get("/num-user-characters/{user_id}")
-def get_num_user_characters(user_id: str):
-    """
-    API route for listing the number of characters a user has.
+@router.get(
+    "/{character_id}",
+    operation_id="get_character",
+    response_model=CharacterRecord,
+    response_model_exclude_unset=True,
+    responses={404: {"model": ErrorResponse}},
+    summary="Get a character",
+    description="Return one stored record. Blank records look like "
+    '`{"owner":"test-user","name":"Gandalf"}`.',
+)
+def get_character_by_id(character_id: str, uid: str = Depends(get_uid)):
+    record = _service.get_character_by_id(uid, character_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="character not found")
+    return record
 
-    Args:
-        uesr_id (str): The user's ID from Google Firebase Authentication
 
-    Returns:
-        (dict[str, Any]): Status code 200 and the number of characters the user has
-    """
-    return {"status_code": 200, "detail": userCharacterDataService.get_num_user_characters(user_id)}
+@router.put(
+    "/{character_id}/class",
+    operation_id="set_character_class",
+    response_model=CharacterRecord,
+    response_model_exclude_unset=True,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Set character class",
+    description=(
+        'Replace the record\'s single class value, e.g. `{"class":"Wizard"}`. '
+        "Seeded names/slugs persist verbatim."
+    ),
+)
+def set_character_class(character_id: str, selection: ClassSelection, uid: str = Depends(get_uid)):
+    if _service.get_character_by_id(uid, character_id) is None:
+        raise HTTPException(status_code=404, detail="character not found")
+    if not _service.class_exists(selection.character_class):
+        raise HTTPException(status_code=400, detail="unknown class")
+    try:
+        return _service.set_character_class(uid, character_id, selection.character_class)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found")

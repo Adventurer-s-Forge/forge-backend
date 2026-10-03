@@ -1,10 +1,7 @@
 import pytest
-from fastapi.testclient import TestClient
 
-from forge_backend import character_data_routes
-from forge_backend.main import app
+from forge_backend import user_character_data_routes
 from forge_backend.storage import refresh_reference_type
-from forge_backend.user_character_data_service import UserCharacterDataService
 
 UID = "us35-test-user"
 CHARID = "26957"
@@ -43,12 +40,10 @@ def _headers():
 
 
 @pytest.fixture
-def client(redis_conn, monkeypatch):
-    monkeypatch.setattr("forge_backend.user_character_data_service.get_redis", lambda: redis_conn)
+def client(api_client, redis_conn):
     refresh_reference_type(redis_conn, "class", _class_records())
-    UserCharacterDataService().create_user_character(UID, "Gandalf", "test-user", CHARID)
-    monkeypatch.setattr(character_data_routes.service, "redis_client", redis_conn)
-    return TestClient(app)
+    user_character_data_routes._service.create_user_character(UID, "Gandalf", "test-user", CHARID)
+    return api_client
 
 
 @pytest.mark.integration
@@ -98,6 +93,18 @@ def test_missing_class_rejected(client):
     )
 
 
+@pytest.mark.test_id("ST-5")
+@pytest.mark.integration
+def test_empty_class_rejected(client):
+    """Empty class fails body validation."""
+    assert (
+        client.put(
+            f"/characters/{CHARID}/class", json={"class": ""}, headers=_headers()
+        ).status_code
+        == 422
+    )
+
+
 @pytest.mark.test_id("ST-6")
 @pytest.mark.integration
 def test_reselecting_class_replaces(client):
@@ -136,6 +143,10 @@ def test_unknown_character_returns_404(client):
 
 
 def test_missing_uid_header_returns_422():
+    from fastapi.testclient import TestClient
+
+    from forge_backend.main import app
+
     client = TestClient(app)
     assert client.get(f"/characters/{CHARID}").status_code == 422
     resp = client.put(f"/characters/{CHARID}/class", json={"class": "Wizard"})
@@ -143,6 +154,10 @@ def test_missing_uid_header_returns_422():
 
 
 def test_blank_uid_header_returns_422():
+    from fastapi.testclient import TestClient
+
+    from forge_backend.main import app
+
     client = TestClient(app)
     headers = {"X-User-Id": ""}
     assert client.get(f"/characters/{CHARID}", headers=headers).status_code == 422
