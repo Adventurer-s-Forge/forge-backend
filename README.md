@@ -102,7 +102,7 @@ re-seed of a reference type to never touch player data.
 | `char:{uid}:{id}`    | STRING     | One player character as JSON (owner, name, class)                  |
 | `char:idx:{uid}`     | SET        | Character ids for that user; SADDed idempotently on every save, source of truth for list/count |
 
-- `{type}` ∈ `race` | `class` | `background` | `item` | `spell` (`storage.REF_TYPES`).
+- `{type}` ∈ `race` | `class` | `background` | `item` | `spell` | `skill` (`storage.REF_TYPES`).
 - `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd_dragonborn`).
 - No hashes, no TTLs: reference records are immutable between seeds and always read whole,
   so each is one JSON string and no key ever expires.
@@ -162,7 +162,7 @@ src/forge_backend/
   config.py                         # REDIS_URL (env, localhost default)
   storage.py                        # ONLY module allowed to import redis (NFR-16)
   open_5e_caller.py                 # sync Open5e API client (deploy-time only, never at runtime)
-  ingest_database.py                # run_ingestion(): fetch five ref types, full-replace per type
+  ingest_database.py                # run_ingestion(): fetch six ref types, full-replace per type
   main.py                           # FastAPI app (OpenAPI title/version/tags); lifespan seeds via run_ingestion; GET /health
   character_data_routes.py          # reference-content router (/races, /classes, /backgrounds, /items, /spells)
   character_data_service.py         # read service over seeded content

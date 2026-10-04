@@ -27,17 +27,24 @@ class StubCaller:
         return [self._rec("srd_class", "Class", "srd-2014")]
 
     def get_backgrounds(self):
-        return [self._rec("srd_background", "Background", "srd-2014")]
+        return [self._rec("srd_background", "Background", "srd-2024")]
 
     def get_items(self):
         return [
-            self._rec("srd_item_1", "Item 1", "srd-2014"),
-            self._rec("srd_item_2", "Item 2", "srd-2014"),
-            self._rec("srd_item_3", "Item 3", "srd-2014"),
+            self._rec("srd_item_1", "Item 1", "srd-2024"),
+            self._rec("srd_item_2", "Item 2", "srd-2024"),
+            self._rec("srd_item_3", "Item 3", "srd-2024"),
         ]
 
     def get_spells(self):
         return [self._rec("srd_spell", "Spell", "srd-2014")]
+
+    def get_skills(self):
+        return [
+            {"key": "acrobatics", "name": "Acrobatics", "document": "core", "desc": "x"},
+            {"key": "arcana", "name": "Arcana", "document": "core", "desc": "x"},
+            self._rec("a5e-ag_culture", "Culture", "a5e-ag"),
+        ]
 
 
 def _patch_caller(monkeypatch):
@@ -62,6 +69,7 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
         "background": 1,
         "item": 3,
         "spell": 1,
+        "skill": 2,
     }
     assert [ref_type for _, ref_type, _ in calls] == list(REF_TYPES)
     for conn, ref_type, records in calls:
@@ -69,7 +77,10 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
         for record in records:
             assert record["key"] == record["data"]["key"]
             assert record["name"] == record["data"]["name"]
-            assert record["document"] == record["data"]["document"]["key"]
+            raw_doc = record["data"]["document"]
+            expected_raw = raw_doc["key"] if isinstance(raw_doc, dict) else raw_doc
+            assert record["document"] == expected_raw
+            assert record["document"] == ingest_database.REF_DOCUMENTS[ref_type]
 
 
 def test_lifespan_seeds_and_health_reports_counts(monkeypatch):

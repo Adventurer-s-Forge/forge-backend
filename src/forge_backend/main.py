@@ -15,6 +15,8 @@ from forge_backend.character_data_routes import router as reference_router
 from forge_backend.ingest_database import run_ingestion
 from forge_backend.user_character_data_routes import router as user_character_router
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,14 +28,17 @@ class HealthResponse(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Seed Redis reference data at startup; never fail startup over it."""
+    logger.info("startup seeding: begin")
     try:
         counts = await asyncio.to_thread(run_ingestion)
     except Exception:
         logger.warning(
-            "reference-data seeding failed; serving without fresh seed",
+            "startup seeding: failed; serving without fresh seed",
             exc_info=True,
         )
         counts = None
+    else:
+        logger.info("startup seeding: complete counts=%s", counts)
     app.state.seed_counts = counts
     yield
 
