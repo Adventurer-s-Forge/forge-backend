@@ -41,3 +41,5 @@ class CharacterDataService:
     def get_spells(self):
         response = list_reference_records(self.redis_client, "spell")
         return response
+
+

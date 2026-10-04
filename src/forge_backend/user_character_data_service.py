@@ -137,6 +137,16 @@ class UserCharacterDataService:
         """True when value matches a seeded class slug or display name."""
         return value in self.valid_class_values()
 
+    def valid_spell_values(self) -> set[str]:
+        """Slugs and display names of all seeded spell records."""
+        records = list_reference_records(self.redis_client, "spell")
+        return {r["key"] for r in records} | {r["name"] for r in records}
+
+    def spells_exist(self, values: list[str]) -> bool:
+        """True when all value matches a seeded spell slug or display name."""
+        valid_spells = self.valid_spell_values()
+        return all(value in valid_spells for value in values)
+
     def get_num_user_characters(self, user_id) -> int:
         """
         Helper function to retrieve the count of characters for a certain user in the database.
@@ -149,3 +159,13 @@ class UserCharacterDataService:
             (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)
+
+
+    def set_character_spells(self, user_id: str, character_id: str, spells_value: list[str]) -> dict:
+            """Set the record's spells value; raises KeyError when missing."""
+            record = self.get_character_by_id(user_id, character_id)
+            if record is None:
+                raise KeyError(character_id)
+            record["spells"] = spells_value
+            update_character(self.redis_client, user_id, character_id, record)
+            return record
