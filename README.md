@@ -47,7 +47,44 @@ warning and the app still serves (with `seed_counts: null`).
 
 ## API
 
-Client-facing HTTP reference (endpoints, auth header, status codes, examples): [API.md](API.md).
+Contract is the OpenAPI schema generated from the FastAPI app (`src/forge_backend/main.py`,
+title "Adventurer's Forge API", version `0.1.0`), pinned by `tests/test_openapi_contract.py`.
+With the server running (`uv run uvicorn forge_backend.main:app`):
+
+- Interactive docs: `http://localhost:8000/docs` (Swagger UI) and `http://localhost:8000/redoc`
+- Raw schema: `http://localhost:8000/openapi.json`
+
+Identity is a temporary `X-User-Id` request header selecting the `char:{uid}:*` storage
+namespace; it is not authentication (Firebase verification is a future story).
+
+| Method | Path | operationId | Success | Errors |
+|--------|------|-------------|---------|--------|
+| `GET` | `/races` | `list_races` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/classes` | `list_classes` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/backgrounds` | `list_backgrounds` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/items` | `list_items` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/spells` | `list_spells` | `200 [ReferenceRecord]` | `422` |
+| `POST` | `/characters` | `create_character` | `201 CreateCharacterResponse` | `409` (id collision), `422` |
+| `GET` | `/characters` | `list_characters` | `200 [CharacterRecord]` | `422` |
+| `GET` | `/characters/ids` | `list_character_ids` | `200 [string]` (sorted) | `422` |
+| `GET` | `/characters/count` | `count_characters` | `200 int` | `422` |
+| `GET` | `/characters/{character_id}` | `get_character` | `200 CharacterRecord` | `404`, `422` |
+| `PUT` | `/characters/{character_id}/class` | `set_character_class` | `200 CharacterRecord` | `400` (unknown class), `404`, `422` |
+| `GET` | `/health` | `get_health` | `200 HealthResponse` (`seed_counts` null when seeding failed) | N/A |
+
+Request bodies:
+
+```sh
+# POST /characters (header X-User-Id: <uid>)
+{"character_name": "Gandalf", "user_name": "test-user"}
+# → 201 {"character_id": "1a2b3c4d", "result": 1}
+
+# PUT /characters/{id}/class (header X-User-Id: <uid>)
+{"class": "Wizard"}
+```
+
+Error bodies are `{"detail": "<message>"}` (`ErrorResponse`); validation failures are
+FastAPI's `422 HTTPValidationError`.
 
 ## Redis Schema
 
@@ -65,7 +102,7 @@ re-seed of a reference type to never touch player data.
 | `char:{uid}:{id}`    | STRING     | One player character as JSON (owner, name, class)                  |
 | `char:idx:{uid}`     | SET        | Character ids for that user; SADDed idempotently on every save, source of truth for list/count |
 
-- `{type}` ∈ `race` | `class` | `background` | `item` | `spell` (`storage.REF_TYPES`).
+- `{type}` ∈ `race` | `class` | `background` | `item` | `spell` | `skill` (`storage.REF_TYPES`).
 - `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd_dragonborn`).
 - No hashes, no TTLs: reference records are immutable between seeds and always read whole,
   so each is one JSON string and no key ever expires.
@@ -125,20 +162,21 @@ src/forge_backend/
   config.py                         # REDIS_URL (env, localhost default)
   storage.py                        # ONLY module allowed to import redis (NFR-16)
   open_5e_caller.py                 # sync Open5e API client (deploy-time only, never at runtime)
-  ingest_database.py                # run_ingestion(): fetch five ref types, full-replace per type
-  main.py                           # FastAPI app; lifespan seeds via run_ingestion; GET /health
+  ingest_database.py                # run_ingestion(): fetch six ref types, full-replace per type
+  main.py                           # FastAPI app (OpenAPI title/version/tags); lifespan seeds via run_ingestion; GET /health
+  character_data_routes.py          # reference-content router (/races, /classes, /backgrounds, /items, /spells)
   character_data_service.py         # read service over seeded content
   user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
-  user_character_data_routes.py     # API routes for retrieving/manipulating user characters
-  cleanup_before_tests.py           # Test helper: remove one user's test characters
+  user_character_data_routes.py     # sole /characters router (create/list/ids/count/detail/set-class)
 tests/
-  conftest.py                             # redis_conn fixture (dedicated DB 15 + flush)
+  conftest.py                             # redis_conn fixture (dedicated DB 15 + flush) + api_client (in-process TestClient)
   test_storage.py                         # unit: key formats, record validation
   test_storage_integration.py             # integration: refresh roundtrip, idempotency,
                                           # orphan cleanup, type/player-data isolation, wipe
   test_startup_seed.py                    # ingestion formatting/counts, lifespan seed + failure,
                                           # seed-level idempotent rerun (integration)
+  test_openapi_contract.py                # OpenAPI pin: 201 create, CharacterRecord wire key, ReferenceRecord shape, X-User-Id header, error schemas
+  test_character_data_routes_us35.py      # reference routes + class-selection (US-35) via api_client
   test_user_character_data_service.py     # Unit testing of generating a character ID and Integration testing of the functions to create a new character
-  test_user_character_data_routes.py      # Integration testing of creating a new character using the API route functions
-docker-compose.yml  # local Redis + RedisInsight
+  test_user_character_data_routes.py      # Integration testing of character routes via the api_client fixture
 ```

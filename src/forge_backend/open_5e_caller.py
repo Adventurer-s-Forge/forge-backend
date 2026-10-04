@@ -7,13 +7,16 @@ class Open5eCaller:
         all_data = []
 
         while url:
-            response = requests.get(url)
+            # Force DRF's JSON renderer
+            separator = "&" if "?" in url else "?"
+            if "format=" not in url:
+                url = f"{url}{separator}format=json"
+            response = requests.get(url, headers={"Accept": "application/json"}, timeout=30)
             response.raise_for_status()
 
             data = response.json()
             all_data.extend(data["results"])
             url = data["next"]
-
         return all_data
 
     def get_races(self):
@@ -30,3 +33,6 @@ class Open5eCaller:
 
     def get_spells(self):
         return self.pagination_data("https://api.open5e.com/v2/spells/")
+
+    def get_skills(self):
+        return self.pagination_data("https://api.open5e.com/v2/skills/")

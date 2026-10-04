@@ -26,7 +26,10 @@ def test_ref_key_format():
 
 
 def test_char_key_format():
-    assert char_key("4CIZQ94T3ncLcAAizmHcN62V6Q42", "26957") == "char:4CIZQ94T3ncLcAAizmHcN62V6Q42:26957"
+    assert (
+        char_key("4CIZQ94T3ncLcAAizmHcN62V6Q42", "26957")
+        == "char:4CIZQ94T3ncLcAAizmHcN62V6Q42:26957"
+    )
 
 
 def test_ref_index_key_format():

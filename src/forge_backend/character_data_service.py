@@ -4,8 +4,8 @@ from forge_backend.storage import get_redis, get_reference, list_reference_recor
 
 # This is the getter methods to grab information from the database.
 class CharacterDataService:
-    def __init__(self):
-        self.redis_client = get_redis()
+    def __init__(self, redis_client=None):
+        self.redis_client = redis_client if redis_client is not None else get_redis()
 
     def get_race(self, race):
         return get_reference(self.redis_client, "race", race)
@@ -40,4 +40,11 @@ class CharacterDataService:
 
     def get_spells(self):
         response = list_reference_records(self.redis_client, "spell")
+        return response
+
+    def get_skill(self, skill):
+        return get_reference(self.redis_client, "skill", skill)
+
+    def get_skills(self):
+        response = list_reference_records(self.redis_client, "skill")
         return response
