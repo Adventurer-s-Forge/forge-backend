@@ -168,7 +168,6 @@ src/forge_backend/
   character_data_service.py         # read service over seeded content
   user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
   user_character_data_routes.py     # sole /characters router (create/list/ids/count/detail/set-class)
-  cleanup_before_tests.py           # Test helper: remove one user's test characters
 tests/
   conftest.py                             # redis_conn fixture (dedicated DB 15 + flush) + api_client (in-process TestClient)
   test_storage.py                         # unit: key formats, record validation

@@ -1,7 +1,5 @@
 import pytest
 
-# Used for the cleanup before the test
-from forge_backend.cleanup_before_tests import cleanup_before_test
 from forge_backend.storage import (
     add_new_character,
     char_index_key,
@@ -89,29 +87,16 @@ CHARID = "26957"  # The test character ID
 
 
 def test_adding_new_character(redis_conn):
-    # Clean up the database before running the test
-    cleanup_before_test(UID)
     assert add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 1
     assert count_characters(redis_conn, UID) == 1
     assert get_user_character(redis_conn, UID, CHARID) == TEST_CHARACTER
     assert list_char_keys(redis_conn, UID) == [CHARID]
     assert list_character_records(redis_conn, UID) == [TEST_CHARACTER]
-    # Clean up after the test
-    redis_conn.delete(char_key(UID, CHARID))
-    redis_conn.delete(
-        char_index_key(UID)
-    )  # Delete any existing character index key for the user (char:idx:uid)
+    assert redis_conn.exists(char_key(UID, CHARID)) == 1
+    assert redis_conn.exists(char_index_key(UID)) == 1
 
 
 def test_adding_duplicate_character(redis_conn):
-    # Clean up the database before running the test
-    cleanup_before_test(UID)
-    add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER)  # Add the original character
-    assert (
-        add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 0
-    )  # Test adding the duplicate character
-    # Clean up after the test
-    redis_conn.delete(char_key(UID, CHARID))
-    redis_conn.delete(
-        char_index_key(UID)
-    )  # Delete any existing character index key for the user (char:idx:uid)
+    add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER)
+    assert add_new_character(redis_conn, UID, CHARID, TEST_CHARACTER) == 0
+    assert get_user_character(redis_conn, UID, CHARID) == TEST_CHARACTER
