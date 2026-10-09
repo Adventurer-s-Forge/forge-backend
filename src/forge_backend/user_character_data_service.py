@@ -149,3 +149,52 @@ class UserCharacterDataService:
             (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)
+
+    def set_character_skills(self, user_id: str, character_id: str, skill_label: str, skills_list: list[str]) -> dict[str, Any]:
+        """
+        Helper function to update a user's character's skills in the database.
+        This will replace the character's list of skills with the incoming list.
+        If there is no character with the provided character ID, then raise a KeyError.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            user_id (str): The user's ID from Google Firebase Authentication
+            character_id (str): The unique ID of the user's character
+            skill_label (str): The label to indicate whether the Expertise skills or the Proficient skills are being added
+            skills_list (list[dict[str,Any]]): The list of skills to add or update
+
+        Returns:
+            (dict[str, Any]): The complete character with their new list of skills
+        """
+        record = self.get_character_by_id(user_id, character_id)
+        if record is None:
+            raise KeyError(character_id)
+        record[skill_label] = skills_list
+        update_character(self.redis_client, user_id, character_id, record)
+        return record
+
+    def valid_skill_values(self) -> set[str]:
+        """
+        Helper function to retrieve all valid skill values.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+        
+        Returns:
+            (set[str]): All valid skill values
+        """
+        records = list_reference_records(self.redis_client, "skill") # get all skills
+        return {r["key"] for r in records} | {r["name"] for r in records}
+
+    def skill_exists(self, value: str) -> bool:
+        """
+        Helper function to validate that a skill is valid.
+
+        Args:
+            self (redis.Redis): The Redis database connection
+            value (str): The skill to validate
+        
+        Returns:
+            (bool): Whether the skill is valid or not
+        """
+        return value in self.valid_skill_values()

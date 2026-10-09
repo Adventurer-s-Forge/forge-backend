@@ -171,5 +171,3 @@ def set_character_class(character_id: str, selection: ClassSelection, uid: str =
         return _service.set_character_class(uid, character_id, selection.character_class)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
-
-        """please work i beg u"""
