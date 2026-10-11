@@ -70,6 +70,7 @@ namespace; it is not authentication (Firebase verification is a future story).
 | `GET` | `/characters/count` | `count_characters` | `200 int` | `422` |
 | `GET` | `/characters/{character_id}` | `get_character` | `200 CharacterRecord` | `404`, `422` |
 | `PUT` | `/characters/{character_id}/class` | `set_character_class` | `200 CharacterRecord` | `400` (unknown class), `404`, `422` |
+| `PUT` | `/characters/{character_id}/equipment` | `set_character_equipment` | `200 CharacterRecord` | `400` (unknown item), `404`, `422` |
 | `GET` | `/health` | `get_health` | `200 HealthResponse` (`seed_counts` null when seeding failed) | N/A |
 
 Request bodies:
@@ -81,6 +82,10 @@ Request bodies:
 
 # PUT /characters/{id}/class (header X-User-Id: <uid>)
 {"class": "Wizard"}
+
+# PUT /characters/{id}/equipment (header X-User-Id: <uid>)
+{"equipment": ["Longsword", "Shield"]}
+# → 200 CharacterRecord (empty list clears the selection)
 ```
 
 Error bodies are `{"detail": "<message>"}` (`ErrorResponse`); validation failures are
@@ -99,7 +104,7 @@ re-seed of a reference type to never touch player data.
 |----------------------|------------|-------------------------------------------------------------------|
 | `ref:{type}:{slug}`  | STRING     | One reference record, stored as a single compact JSON string      |
 | `ref:idx:{type}`     | SET        | Slugs currently stored for `{type}`; source of truth for list/count |
-| `char:{uid}:{id}`    | STRING     | One player character as JSON (owner, name, class)                  |
+| `char:{uid}:{id}`    | STRING     | One player character as JSON (owner, name, class, equipment)       |
 | `char:idx:{uid}`     | SET        | Character ids for that user; SADDed idempotently on every save, source of truth for list/count |
 
 - `{type}` ∈ `race` | `class` | `background` | `item` | `spell` | `skill` (`storage.REF_TYPES`).
@@ -167,7 +172,7 @@ src/forge_backend/
   character_data_routes.py          # reference-content router (/races, /classes, /backgrounds, /items, /spells)
   character_data_service.py         # read service over seeded content
   user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
-  user_character_data_routes.py     # sole /characters router (create/list/ids/count/detail/set-class)
+  user_character_data_routes.py     # sole /characters router (create/list/ids/count/detail/set-class/set-equipment)
 tests/
   conftest.py                             # redis_conn fixture (dedicated DB 15 + flush) + api_client (in-process TestClient)
   test_storage.py                         # unit: key formats, record validation
