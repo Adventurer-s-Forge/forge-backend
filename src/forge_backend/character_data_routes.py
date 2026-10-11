@@ -37,7 +37,7 @@ def get_races():
     operation_id="list_classes",
     response_model=list[ReferenceRecord],
     summary="List classes",
-    description='List seeded class reference records, e.g. `key="srd_wizard"`.',
+    description='List seeded class reference records, e.g. `key="srd-2024_wizard"`.',
 )
 def get_classes():
     return service.get_classes()

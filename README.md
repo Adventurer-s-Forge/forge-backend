@@ -81,11 +81,11 @@ Request bodies:
 # → 201 {"character_id": "1a2b3c4d", "result": 1}
 
 # PUT /characters/{id}/class (header X-User-Id: <uid>)
-{"class": "Wizard"}
+{"classId": "srd-2024_barbarian"}
 
 # PUT /characters/{id}/equipment (header X-User-Id: <uid>)
-{"equipment": ["Longsword", "Shield"]}
-# → 200 CharacterRecord (empty list clears the selection)
+{"equipmentIds": ["srd-2024_acid"]}
+# -> 200 CharacterRecord (empty list clears the selection; only seeded keys accepted)
 ```
 
 Error bodies are `{"detail": "<message>"}` (`ErrorResponse`); validation failures are
@@ -108,7 +108,7 @@ re-seed of a reference type to never touch player data.
 | `char:idx:{uid}`     | SET        | Character ids for that user; SADDed idempotently on every save, source of truth for list/count |
 
 - `{type}` ∈ `race` | `class` | `background` | `item` | `spell` | `skill` (`storage.REF_TYPES`).
-- `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd_dragonborn`).
+- `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd-2024_barbarian`).
 - No hashes, no TTLs: reference records are immutable between seeds and always read whole,
   so each is one JSON string and no key ever expires.
 
@@ -122,7 +122,7 @@ Exactly five contract fields (extra keys ignored); every record is checked by
   "type": "race",
   "key": "srd_dragonborn",
   "name": "Dragonborn",
-  "document": "srd-2014",
+  "document": "srd-2024",
   "data": { "...verbatim Open5e v2 record..." }
 }
 ```

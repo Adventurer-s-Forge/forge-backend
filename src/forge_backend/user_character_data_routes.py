@@ -55,8 +55,8 @@ class NewCharacterData(BaseModel):
 
 class ClassSelection(BaseModel):
     model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={"example": {"class": "Wizard"}},
+        extra="forbid",
+        json_schema_extra={"example": {"classId": "srd-2024_wizard"}},
     )
 
     character_class: str = Field(alias="class", min_length=1)
@@ -64,7 +64,8 @@ class ClassSelection(BaseModel):
 
 class EquipmentSelection(BaseModel):
     model_config = ConfigDict(
-        json_schema_extra={"example": {"equipment": ["Longsword", "Shield"]}},
+        extra="forbid",
+        json_schema_extra={"example": {"equipmentIds": ["srd-2024_longsword"]}},
     )
 
     equipment: list[str]
