@@ -43,6 +43,7 @@ def test_every_character_operation_requires_nonempty_header():
         ("/characters/count", "get"),
         ("/characters/{character_id}", "get"),
         ("/characters/{character_id}/class", "put"),
+        ("/characters/{character_id}/equipment", "put"),
     ]
     for path, method in paths:
         params = schema["paths"][path][method].get("parameters", [])
@@ -68,3 +69,14 @@ def test_declared_errors_expose_string_detail():
     )
     put_responses = schema["paths"]["/characters/{character_id}/class"]["put"]["responses"]
     assert "400" in put_responses and "404" in put_responses
+
+
+def test_equipment_contract_exposes_array_and_errors():
+    schema = client.get("/openapi.json").json()
+    schemas = schema["components"]["schemas"]
+    assert schemas["EquipmentSelection"]["properties"]["equipment"]["type"] == "array"
+    assert schemas["EquipmentSelection"]["properties"]["equipment"]["items"]["type"] == "string"
+    assert "equipment" in schemas["EquipmentSelection"]["required"]
+    assert schemas["CharacterRecord"]["properties"]["equipment"]["type"] == "array"
+    put = schema["paths"]["/characters/{character_id}/equipment"]["put"]
+    assert "400" in put["responses"] and "404" in put["responses"]
