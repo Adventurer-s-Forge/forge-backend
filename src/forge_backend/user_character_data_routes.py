@@ -193,8 +193,8 @@ def set_character_class(character_id: str, selection: ClassSelection, uid: str =
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Set character's proficient and expertise skills",
     description=(
-        'Replace the record\'s single class value, e.g. `{"class":"Wizard"}`. '
-        "Seeded names/slugs persist verbatim."
+        'Replace the record\'s proficient and expertise skills, e.g. `{"proficientSkillIds":["arcana", "history"], "expertiseIds":["athletics"]}`.  An empty list clears the selection.'
+        "Only seeded reference keys are accepted."
     ),
 )
 def set_character_skills(character_id: str, skills: SkillsList, uid: str = Depends(get_uid)):
