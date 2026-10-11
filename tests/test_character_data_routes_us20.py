@@ -284,7 +284,7 @@ def test_items_served_from_seed_with_no_outbound_http(client, redis_conn, monkey
     monkeypatch.setattr(requests.sessions.Session, "request", _blocked)
     assert real_request is not None  # keep linters honest about the saved reference
 
-    resp = client.get("/items")
+    resp = client.get("/equipment")
     assert resp.status_code == 200
     keys = sorted(r["key"] for r in resp.json())
     assert keys == ["srd-2024_dagger", "srd-2024_longsword", "srd-2024_shield"]
@@ -295,4 +295,6 @@ def test_items_served_from_seed_with_no_outbound_http(client, redis_conn, monkey
     assert client.get(f"/characters/{CHARID}", headers=_headers()).json()["equipmentIds"] == [
         chosen
     ]
+    assert client.get("/items").status_code == 404
+    assert client.get("/equipments").status_code == 404
     assert attempts == []

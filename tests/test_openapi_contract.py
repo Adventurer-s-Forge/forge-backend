@@ -61,6 +61,7 @@ def test_every_character_operation_requires_nonempty_header():
         ("/characters/{character_id}", "put"),
         ("/characters/{character_id}/class", "put"),
         ("/characters/{character_id}/equipment", "put"),
+        ("/characters/{character_id}/spells", "put"),
     ]
     for path, method in paths:
         params = schema["paths"][path][method].get("parameters", [])
@@ -86,6 +87,8 @@ def test_declared_errors_expose_string_detail():
     )
     put_responses = schema["paths"]["/characters/{character_id}/class"]["put"]["responses"]
     assert "400" in put_responses and "404" in put_responses
+    spell_responses = schema["paths"]["/characters/{character_id}/spells"]["put"]["responses"]
+    assert "400" in spell_responses and "404" in spell_responses
 
 
 def test_save_operation_exposed():
@@ -109,3 +112,27 @@ def test_equipment_contract_exposes_array_and_errors():
     assert "400" in put["responses"] and "404" in put["responses"]
     assert schemas["ClassSelection"]["properties"]["classId"]["type"] == "string"
     assert "class" not in schemas["ClassSelection"]["properties"]
+
+
+def test_spell_contract_exposes_strict_ids_and_operation():
+    schema = client.get("/openapi.json").json()
+    schemas = schema["components"]["schemas"]
+    selection = schemas["SpellSelection"]
+    assert selection["properties"]["spellIds"]["type"] == "array"
+    assert selection["properties"]["spellIds"]["items"]["type"] == "string"
+    assert selection["required"] == ["spellIds"]
+    assert selection.get("additionalProperties") is False
+    assert "spells" not in selection["properties"]
+    put = schema["paths"]["/characters/{character_id}/spells"]["put"]
+    assert put["operationId"] == "set_character_spells"
+    assert "400" in put["responses"] and "404" in put["responses"]
+    ref = put["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+    assert ref.endswith("CharacterRecord")
+
+
+def test_equipment_path_is_singular():
+    paths = client.get("/openapi.json").json()["paths"]
+    assert "/equipment" in paths
+    assert paths["/equipment"]["get"]["operationId"] == "list_items"
+    assert "/items" not in paths
+    assert "/equipments" not in paths

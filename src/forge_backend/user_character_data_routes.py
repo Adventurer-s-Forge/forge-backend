@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 
 from forge_backend.character_models import CharacterRecord
 from forge_backend.user_character_data_service import (
@@ -18,6 +18,23 @@ _service = UserCharacterDataService()
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+class SpellSelection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={"example": {"spellIds": ["srd-2024_fireball"]}},
+    )
+
+    spellIds: list[StrictStr]
+
+    @field_validator("spellIds")
+    @classmethod
+    def _validate_id_list(cls, v: list[str]) -> list[str]:
+        for entry in v:
+            if entry == "":
+                raise ValueError("id list entries must be nonempty strings")
+        return v
 
 
 class ClassSelection(BaseModel):
@@ -155,6 +172,26 @@ def save_character(character_id: str, character: CharacterRecord, uid: str = Dep
 def set_character_class(character_id: str, selection: ClassSelection, uid: str = Depends(get_uid)):
     try:
         return _service.set_character_class(uid, character_id, selection.classId)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put(
+    "/{character_id}/spells",
+    operation_id="set_character_spells",
+    response_model=CharacterRecord,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Set character spells",
+    description=(
+        "Replace the spellIds list with seeded keys available to classId. "
+        "An empty list clears the selection."
+    ),
+)
+def set_character_spells(character_id: str, selection: SpellSelection, uid: str = Depends(get_uid)):
+    try:
+        return _service.set_character_spells(uid, character_id, selection.spellIds)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
     except ValueError as e:

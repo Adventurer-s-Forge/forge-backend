@@ -55,11 +55,11 @@ def get_backgrounds():
 
 
 @router.get(
-    "/items",
+    "/equipment",
     operation_id="list_items",
     response_model=list[ReferenceRecord],
-    summary="List items",
-    description="List seeded item reference records.",
+    summary="List equipment",
+    description="List seeded equipment reference records.",
 )
 def get_items():
     return service.get_items()

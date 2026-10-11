@@ -1,6 +1,7 @@
 from typing import Any
 
 from forge_backend.character_models import CharacterRecord
+from forge_backend.spell_rules import validate_spell_class_eligibility
 from forge_backend.storage import (
     add_new_character,
     count_characters,
@@ -39,9 +40,21 @@ class UserCharacterDataService:
             )
         return result
 
+    def _validate_spell_selection(self, class_id: str | None, spell_ids: list[str]) -> None:
+        if not spell_ids:
+            return
+        envelopes = []
+        for spell_id in dict.fromkeys(spell_ids):
+            envelope = get_reference(self.redis_client, "spell", spell_id)
+            if envelope is None:
+                raise ValueError("unknown spellIds")
+            envelopes.append(envelope)
+        validate_spell_class_eligibility(class_id, envelopes)
+
     def validate_character_references(self, character: CharacterRecord) -> None:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.equipmentIds)
+        self._validate_spell_selection(character.classId, character.spellIds)
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
@@ -64,8 +77,7 @@ class UserCharacterDataService:
             raise KeyError(character_id)
         if character.id != character_id:
             raise ValueError("id must match character_id")
-        self._validate_class_id(character.classId)
-        self._validate_equipment_ids(character.equipmentIds)
+        self.validate_character_references(character)
         record = character.model_dump(mode="json")
         update_character(self.redis_client, user_id, character_id, record)
         return record
@@ -116,6 +128,7 @@ class UserCharacterDataService:
         if record is None:
             raise KeyError(character_id)
         self._validate_class_id(class_id)
+        self._validate_spell_selection(class_id, record.get("spellIds", []))
         record["classId"] = class_id
         update_character(self.redis_client, user_id, character_id, record)
         return record
@@ -144,3 +157,15 @@ class UserCharacterDataService:
             (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)
+
+    def set_character_spells(self, user_id: str, character_id: str, spell_ids: list[str]) -> dict:
+        """Replace the record's spellIds; raises KeyError/ValueError."""
+        record = self.get_character_by_id(user_id, character_id)
+        if record is None:
+            raise KeyError(character_id)
+        if spell_ids:
+            self._validate_class_id(record.get("classId"))
+            self._validate_spell_selection(record.get("classId"), spell_ids)
+        record["spellIds"] = spell_ids
+        update_character(self.redis_client, user_id, character_id, record)
+        return record

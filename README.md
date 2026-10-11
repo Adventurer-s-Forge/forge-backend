@@ -62,16 +62,17 @@ namespace; it is not authentication (Firebase verification is a future story).
 | `GET` | `/races` | `list_races` | `200 [ReferenceRecord]` | `422` |
 | `GET` | `/classes` | `list_classes` | `200 [ReferenceRecord]` | `422` |
 | `GET` | `/backgrounds` | `list_backgrounds` | `200 [ReferenceRecord]` | `422` |
-| `GET` | `/items` | `list_items` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/equipment` | `list_items` | `200 [ReferenceRecord]` | `422` |
 | `GET` | `/spells` | `list_spells` | `200 [ReferenceRecord]` | `422` |
-| `POST` | `/characters` | `create_character` | `201 CharacterRecord` (caller-supplied UUID) | `400` (unknown classId/equipmentIds), `409` (id collision), `422` |
+| `POST` | `/characters` | `create_character` | `201 CharacterRecord` (caller-supplied UUID) | `400` (unknown classId/equipmentIds/spellIds, spell ineligible for class), `409` (id collision), `422` |
 | `GET` | `/characters` | `list_characters` | `200 [CharacterRecord]` | `422` |
 | `GET` | `/characters/ids` | `list_character_ids` | `200 [string]` (sorted) | `422` |
 | `GET` | `/characters/count` | `count_characters` | `200 int` | `422` |
 | `GET` | `/characters/{character_id}` | `get_character` | `200 CharacterRecord` | `404`, `422` |
-| `PUT` | `/characters/{character_id}` | `save_character` | `200 CharacterRecord` (full replacement) | `400` (ID mismatch, unknown classId/equipmentIds), `404`, `422` |
-| `PUT` | `/characters/{character_id}/class` | `set_character_class` | `200 CharacterRecord` | `400` (unknown classId), `404`, `422` |
+| `PUT` | `/characters/{character_id}` | `save_character` | `200 CharacterRecord` (full replacement) | `400` (ID mismatch, unknown classId/equipmentIds/spellIds, spell ineligible for class), `404`, `422` |
+| `PUT` | `/characters/{character_id}/class` | `set_character_class` | `200 CharacterRecord` | `400` (unknown classId, retained spells ineligible for new class), `404`, `422` |
 | `PUT` | `/characters/{character_id}/equipment` | `set_character_equipment` | `200 CharacterRecord` | `400` (unknown equipmentIds), `404`, `422` |
+| `PUT` | `/characters/{character_id}/spells` | `set_character_spells` | `200 CharacterRecord` | `400` (unknown spellIds, no class selected, spell ineligible for class), `404`, `422` |
 | `GET` | `/health` | `get_health` | `200 HealthResponse` (`seed_counts` null when seeding failed) | N/A |
 
 Request bodies:
@@ -91,6 +92,10 @@ Request bodies:
 # PUT /characters/{id}/equipment (header X-User-Id: <uid>)
 {"equipmentIds": ["srd-2024_acid"]}
 # -> 200 CharacterRecord (empty list clears the selection; only seeded keys accepted)
+
+# PUT /characters/{id}/spells (header X-User-Id: <uid>)
+{"spellIds": ["srd-2024_fireball"]}
+# -> 200 CharacterRecord (empty list clears the selection; only seeded keys whose class list contains classId accepted)
 ```
 
 Error bodies are `{"detail": "<message>"}` (`ErrorResponse`); validation failures are
@@ -174,11 +179,12 @@ src/forge_backend/
   open_5e_caller.py                 # sync Open5e API client (deploy-time only, never at runtime)
   ingest_database.py                # run_ingestion(): fetch six ref types, full-replace per type
   main.py                           # FastAPI app (OpenAPI title/version/tags); lifespan seeds via run_ingestion; GET /health
-  character_data_routes.py          # reference-content router (/races, /classes, /backgrounds, /items, /spells)
+  character_data_routes.py          # reference-content router (/races, /classes, /backgrounds, /equipment, /spells)
   character_data_service.py         # read service over seeded content
-  user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters
+  user_character_data_service.py    # Intermediary functions for retrieving/manipulating user characters (incl. spell class-eligibility)
+  spell_rules.py                    # pure spell class-eligibility validator (no I/O)
   character_models.py               # CharacterRecord/CharacterAbilities (strict, extra="forbid")
-  user_character_data_routes.py     # sole /characters router (create/save/list/ids/count/detail/set-class/set-equipment)
+  user_character_data_routes.py     # sole /characters router (create/save/list/ids/count/detail/set-class/set-equipment/set-spells)
 tests/
   conftest.py                             # redis_conn fixture (dedicated DB 15 + flush) + api_client (in-process TestClient)
   test_storage.py                         # unit: key formats, record validation
@@ -187,7 +193,8 @@ tests/
   test_startup_seed.py                    # ingestion formatting/counts, lifespan seed + failure,
                                           # seed-level idempotent rerun (integration)
   test_openapi_contract.py                # OpenAPI pin: 201 create, CharacterRecord wire key, ReferenceRecord shape, X-User-Id header, error schemas
+  test_spell_rules.py                     # pure spell class-eligibility validator (TC-1-01)
+  test_user_character_spell_service.py    # spell selection service incl. class transitions (TC-1-02)
+  test_character_data_routes_us1.py       # spell selection API roundtrips/failures/transitions/isolation (TC-1-03..06)
   test_character_data_routes_us35.py      # reference routes + class-selection (US-35) via api_client
-  test_user_character_data_service.py     # Unit testing of generating a character ID and Integration testing of the functions to create a new character
-  test_user_character_data_routes.py      # Integration testing of character routes via the api_client fixture
 ```

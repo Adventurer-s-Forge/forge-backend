@@ -54,6 +54,19 @@ def seeded(api_client, redis_conn):
     )
     refresh_reference_type(
         redis_conn,
+        "spell",
+        [
+            {
+                "type": "spell",
+                "key": "draft_spell",
+                "name": "Draft Spell",
+                "document": "srd-2024",
+                "data": {"classes": [{"key": "test_warden", "name": "Warden"}]},
+            }
+        ],
+    )
+    refresh_reference_type(
+        redis_conn,
         "item",
         [
             {
@@ -178,6 +191,31 @@ def test_save_reload_and_replace(seeded, redis_conn):
             "unknown equipmentIds",
         ),
         (
+            {"id": UUID, "name": "G", "classId": "test_warden", "spellIds": ["nope"]},
+            400,
+            "unknown spellIds",
+        ),
+        (
+            {
+                "id": UUID,
+                "name": "G",
+                "classId": "test_warden",
+                "spellIds": ["draft_spell", "nope"],
+            },
+            400,
+            "unknown spellIds",
+        ),
+        (
+            {"id": UUID, "name": "G", "spellIds": ["draft_spell"]},
+            400,
+            "Character has no class selected",
+        ),
+        (
+            {"id": UUID, "name": "G", "classId": "test_warden", "spellIds": ["Draft Spell"]},
+            400,
+            "unknown spellIds",
+        ),
+        (
             {"id": "11111111-2222-4333-8444-555555555555", "name": "G"},
             400,
             "id must match character_id",
@@ -218,6 +256,7 @@ def test_empty_seed_rejects_selections_allows_empty(seeded, redis_conn):
 
     refresh_reference_type(redis_conn, "class", [])
     refresh_reference_type(redis_conn, "item", [])
+    refresh_reference_type(redis_conn, "spell", [])
     assert (
         seeded.post("/characters", json={"id": UUID, "name": "G"}, headers=_headers()).status_code
         == 201
@@ -234,15 +273,54 @@ def test_empty_seed_rejects_selections_allows_empty(seeded, redis_conn):
         headers=_headers(),
     )
     assert resp.status_code == 400
+    refresh_reference_type(redis_conn, "spell", [])
+    resp = seeded.put(
+        f"/characters/{UUID}",
+        json={"id": UUID, "name": "G", "spellIds": ["draft_spell"]},
+        headers=_headers(),
+    )
+    assert resp.status_code == 400
+    assert resp.json() == {"detail": "unknown spellIds"}
     resp = seeded.put(f"/characters/{UUID}", json={"id": UUID, "name": "G"}, headers=_headers())
     assert resp.status_code == 200
+
+
+@pytest.mark.integration
+def test_spell_create_and_save_roundtrip(seeded, redis_conn):
+    payload = _payload()
+    assert seeded.post("/characters", json=payload, headers=_headers()).status_code == 201
+    # omitted spellIds resets to []
+    resp = seeded.put(f"/characters/{UUID}", json={"id": UUID, "name": "G"}, headers=_headers())
+    assert resp.status_code == 200
+    assert resp.json()["spellIds"] == []
+    # incompatible class list rejected
+    refresh_reference_type(
+        redis_conn,
+        "spell",
+        [
+            {
+                "type": "spell",
+                "key": "draft_spell",
+                "name": "Draft Spell",
+                "document": "srd-2024",
+                "data": {"classes": []},
+            }
+        ],
+    )
+    before = redis_conn.get(f"char:{UID}:{UUID}")
+    before_idx = redis_conn.smembers(f"char:idx:{UID}")
+    resp = seeded.put(f"/characters/{UUID}", json=payload, headers=_headers())
+    assert resp.status_code == 400
+    assert resp.json() == {"detail": "The spell isn't available for the selected class"}
+    assert redis_conn.get(f"char:{UID}:{UUID}") == before
+    assert redis_conn.smembers(f"char:idx:{UID}") == before_idx
 
 
 @pytest.mark.integration
 def test_identity_and_isolation(seeded, redis_conn):
     payload = _payload()
     assert seeded.post("/characters", json=payload, headers=_headers()).status_code == 201
-    # missing/empty header on all eight operations
+    # missing/empty header on all nine operations
     ops = [
         ("post", "/characters", {"json": payload}),
         ("get", "/characters", {}),
@@ -252,6 +330,7 @@ def test_identity_and_isolation(seeded, redis_conn):
         ("put", f"/characters/{UUID}", {"json": payload}),
         ("put", f"/characters/{UUID}/class", {"json": {"classId": "test_warden"}}),
         ("put", f"/characters/{UUID}/equipment", {"json": {"equipmentIds": []}}),
+        ("put", f"/characters/{UUID}/spells", {"json": {"spellIds": []}}),
     ]
     for method, path, kw in ops:
         for headers in ({}, {"X-User-Id": ""}):

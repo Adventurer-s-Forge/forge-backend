@@ -1,7 +1,6 @@
 import pytest
 
 UUID = "0f8c1a7e-3d52-4b91-a7c8-6e2f91b40d35"
-UUID2 = "11111111-2222-4333-8444-555555555555"
 UID = "route-test-user"
 OTHER_UID = "route-test-other"
 
@@ -64,8 +63,8 @@ def test_other_uid_isolated(api_client, redis_conn):
         ("get", "/characters/count", {}),
         ("get", f"/characters/{UUID}", {}),
         ("put", f"/characters/{UUID}", {"json": {"id": UUID, "name": "x"}}),
-        ("put", f"/characters/{UUID}/class", {"json": {"classId": "x"}}),
         ("put", f"/characters/{UUID}/equipment", {"json": {"equipmentIds": []}}),
+        ("put", f"/characters/{UUID}/spells", {"json": {"spellIds": []}}),
     ],
 )
 def test_missing_and_empty_headers_fail_all_operations(api_client, method, path, kwargs):
