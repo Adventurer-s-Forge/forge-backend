@@ -1,8 +1,10 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from forge_backend.user_character_data_service import UserCharacterDataService
+
+import pytest
 from fastapi import HTTPException
+
 from forge_backend import user_character_data_routes
+from forge_backend.user_character_data_service import UserCharacterDataService
 
 UID = "route-test-user"
 OTHER_UID = "route-test-other"

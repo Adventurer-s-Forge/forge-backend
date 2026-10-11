@@ -1,7 +1,6 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from forge_backend.character_data_service import CharacterDataService
-from forge_backend.user_character_data_service import UserCharacterDataService
 
 mock_race_records = [
     {

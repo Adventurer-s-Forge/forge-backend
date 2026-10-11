@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
-from forge_backend.character_data_service import CharacterDataService
 
+from forge_backend.character_data_service import CharacterDataService
 from forge_backend.user_character_data_service import (
     DuplicateCharacterId,
     UserCharacterDataService,
