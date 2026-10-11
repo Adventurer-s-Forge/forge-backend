@@ -120,13 +120,14 @@ def test_remove_skill_from_list(redis_conn):
 
 
 def test_key_error_when_setting_skills(redis_conn):
+    """Verify that a KeyError is thrown and that it returns the character ID that was inputted."""
     service = UserCharacterDataService(redis_conn)
     user_id = "4CIZQ94T3ncLcAAizmHcN62V6Q43"
     user_name = "iLoveSourCream"
     character_name = "Bart Proficient"
     test_skill_label = "proficientIds"
     test_skill_list = ["arcana", "history", "intimidation"]
-    expected = KeyError('fakeCharID')
+    expected = "fakeCharID"
 
     character_id = service.generate_character_id(user_id)
     service.create_user_character(user_id, character_name, user_name, character_id)
@@ -135,8 +136,7 @@ def test_key_error_when_setting_skills(redis_conn):
     try:
         char = service.set_character_skills(user_id, "fakeCharID", test_skill_label, test_skill_list)
     except KeyError as error:
-        do assertRaises()1
         error_setting_skills = error
     
     assert error_setting_skills != None
-    assert error_setting_skills == expected
+    assert error_setting_skills.args[0] == expected # The actual error message is in position 0 of the error args
