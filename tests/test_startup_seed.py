@@ -5,6 +5,10 @@ from forge_backend import ingest_database, main
 from forge_backend.storage import REF_TYPES, count_reference, get_reference
 
 
+def _desc(doc, text):
+    return {"document": {"key": doc}, "text": text}
+
+
 class StubCaller:
     @staticmethod
     def _rec(key, name, doc, **extra):

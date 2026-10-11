@@ -1,6 +1,7 @@
 import pytest
 
 from forge_backend import user_character_data_routes
+from forge_backend.character_models import CharacterRecord
 from forge_backend.storage import (
     char_key,
     get_user_character,
@@ -12,7 +13,7 @@ pytestmark = pytest.mark.integration
 
 UID = "us20-test-user"
 OTHER_UID = "us20-other-user"
-CHARID = "26957"
+CHARID = "0f8c1a7e-3d52-4b91-a7c8-6e2f91b40d35"
 
 
 def _item_records():
@@ -48,7 +49,9 @@ def _headers(uid=UID):
 @pytest.fixture
 def client(api_client, redis_conn):
     refresh_reference_type(redis_conn, "item", _item_records())
-    user_character_data_routes._service.create_user_character(UID, "Gandalf", "test-user", CHARID)
+    user_character_data_routes._service.create_user_character(
+        UID, CharacterRecord.model_validate({"id": CHARID, "name": "Gandalf"})
+    )
     return api_client
 
 

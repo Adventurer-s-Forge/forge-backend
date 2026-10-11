@@ -1,6 +1,7 @@
 import pytest
 
 from forge_backend import user_character_data_routes
+from forge_backend.character_models import CharacterRecord
 from forge_backend.storage import refresh_reference_type
 
 UID = "us35-test-user"

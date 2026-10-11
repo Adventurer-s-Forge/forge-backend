@@ -231,7 +231,7 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
 
 
 def add_new_character(
-    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, Any]
 ) -> int:
     """
     Add a new character for a user to the database.
@@ -240,7 +240,7 @@ def add_new_character(
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
         charid (str): The unique ID of the user's character
-        user_character (Mapping[str, str]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
+        user_character (Mapping[str, Any]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
 
     Returns:
         (int): Returns 1 since only 1 character is created at a t
@@ -263,7 +263,7 @@ def add_new_character(
 
 
 def update_character(
-    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, Any]
 ) -> None:
     """
     Overwrite an existing character record in place.
@@ -275,7 +275,7 @@ def update_character(
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
         charid (str): The unique ID of the user's character
-        user_character (Mapping[str, str]): The full record to store
+        user_character (Mapping[str, Any]): The full record to store
     """
     pipe = conn.pipeline(transaction=True)
     pipe.set(

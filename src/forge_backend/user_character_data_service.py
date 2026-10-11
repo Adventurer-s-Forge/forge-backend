@@ -1,15 +1,15 @@
-import uuid
 from typing import Any
 
+from forge_backend.character_models import CharacterRecord
 from forge_backend.storage import (
     add_new_character,
-    char_index_key,
     count_characters,
     get_redis,
+    get_reference,
     get_user_character,
     list_char_keys,
     list_character_records,
-    list_reference_records,
+    list_reference_keys,
     update_character,
 )
 
@@ -28,56 +28,47 @@ class UserCharacterDataService:
     def __init__(self, redis_client=None):
         self.redis_client = redis_client if redis_client is not None else get_redis()
 
-    def create_user_character(
-        self, user_id: str, character_name: str, user_name: str, character_id: str
-    ) -> int:
-        """
-        Create the user's character as an object and add it to the database.
-
-        Args:
-            self (redis.Redis): The Redis database connection
-            user_id (str): The user's ID from Google Firebase Authentication
-            character_name (str): The name that the user provides for their character
-            user_name (str): The username of the user that is creating the character
-            character_id (str): The character's ID
-
-        Returns:
-            (int): The number of items added to the database (should only be 1)
-        """
-        user_character = {
-            "owner": user_name,
-            "name": character_name,
-        }  # Construct the JSON for the new character
-        result = add_new_character(
-            self.redis_client, user_id, character_id, user_character
-        )  # Try to add the new character to the database
-        # If there was a duplicate character ID, then raise an error about it.
-        # Otherwise, continue and return the result.
+    def create_user_character(self, user_id: str, character: CharacterRecord) -> int:
+        """Validate selections, persist the complete record; raises DuplicateCharacterId."""
+        self.validate_character_references(character)
+        record = character.model_dump(mode="json")
+        result = add_new_character(self.redis_client, user_id, character.id, record)
         if result == 0:
             raise DuplicateCharacterId(
-                "Cannot add duplicate character with ID: " + character_id + "!"
+                "Cannot add duplicate character with ID: " + character.id + "!"
             )
         return result
 
-    def generate_character_id(self, user_id: str) -> str:
-        """
-        Generate the unique ID for the new character [3] [4] [5]
+    def validate_character_references(self, character: CharacterRecord) -> None:
+        self._validate_class_id(character.classId)
+        self._validate_equipment_ids(character.equipmentIds)
 
-        Args:
-            self (redis.Redis): The Redis database connection
-            user_id (str): The user's ID from Google Firebase Authentication
+    def _validate_class_id(self, class_id: str | None) -> None:
+        if class_id is None:
+            return
+        if get_reference(self.redis_client, "class", class_id) is None:
+            raise ValueError("unknown classId")
 
-        Returns:
-            (str): The character ID as a 5 digit number
-        """
-        # Iterate through the loop 5 times, generate a character ID using UUID4, and verify that there is no duplicate
-        for _ in range(5):
-            charid = uuid.uuid4().hex[:8]
-            # If there is no duplicate character ID found for the user, then return the character ID.
-            # Otherwise, move on and throw a RuntimeError about the collision.
-            if self.redis_client.sismember(char_index_key(user_id), charid) == 0:
-                return charid
-            raise RuntimeError("Character ID collision, retry")
+    def _validate_equipment_ids(self, equipment_ids: list[str]) -> None:
+        if not equipment_ids:
+            return
+        valid = set(list_reference_keys(self.redis_client, "item"))
+        for entry in equipment_ids:
+            if entry not in valid:
+                raise ValueError("unknown equipmentIds")
+
+    def save_character(self, user_id: str, character_id: str, character: CharacterRecord) -> dict:
+        """Full-replacement save of an owned record; raises KeyError/ValueError."""
+        existing = get_user_character(self.redis_client, user_id, character_id)
+        if existing is None:
+            raise KeyError(character_id)
+        if character.id != character_id:
+            raise ValueError("id must match character_id")
+        self._validate_class_id(character.classId)
+        self._validate_equipment_ids(character.equipmentIds)
+        record = character.model_dump(mode="json")
+        update_character(self.redis_client, user_id, character_id, record)
+        return record
 
     def list_character_ids(self, user_id) -> list[str]:
         """
@@ -119,46 +110,25 @@ class UserCharacterDataService:
         """
         return get_user_character(self.redis_client, user_id, character_id)
 
-    def set_character_class(self, user_id: str, character_id: str, class_value: str) -> dict:
-        """Replace the record's single class value; raises KeyError when missing."""
+    def set_character_class(self, user_id: str, character_id: str, class_id: str) -> dict:
+        """Replace the record's classId; raises KeyError/ValueError."""
         record = self.get_character_by_id(user_id, character_id)
         if record is None:
             raise KeyError(character_id)
-        record["class"] = class_value
+        self._validate_class_id(class_id)
+        record["classId"] = class_id
         update_character(self.redis_client, user_id, character_id, record)
         return record
 
-    def valid_class_values(self) -> set[str]:
-        """Slugs and display names of all seeded class records."""
-        records = list_reference_records(self.redis_client, "class")
-        return {r["key"] for r in records} | {r["name"] for r in records}
-
-    def class_exists(self, value: str) -> bool:
-        """True when value matches a seeded class slug or display name."""
-        return value in self.valid_class_values()
-
-    def valid_item_values(self) -> set[str]:
-        """Slugs and display names of all seeded item records."""
-        records = list_reference_records(self.redis_client, "item")
-        return {r["key"] for r in records} | {r["name"] for r in records}
-
-    def item_exists(self, value: str, valid: set[str] | None = None) -> bool:
-        """True when value matches a seeded item slug or display name."""
-        return value in (valid if valid is not None else self.valid_item_values())
-
     def set_character_equipment(
-        self, user_id: str, character_id: str, equipment: list[str]
+        self, user_id: str, character_id: str, equipment_ids: list[str]
     ) -> dict:
-        """Replace the record's equipment list; raises KeyError/ValueError."""
+        """Replace the record's equipmentIds; raises KeyError/ValueError."""
         record = self.get_character_by_id(user_id, character_id)
         if record is None:
             raise KeyError(character_id)
-        if equipment:
-            valid = self.valid_item_values()
-            for entry in equipment:
-                if not self.item_exists(entry, valid):
-                    raise ValueError("unknown item")
-        record["equipment"] = equipment
+        self._validate_equipment_ids(equipment_ids)
+        record["equipmentIds"] = equipment_ids
         update_character(self.redis_client, user_id, character_id, record)
         return record
 

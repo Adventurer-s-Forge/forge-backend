@@ -79,7 +79,20 @@ def test_empty_refresh_wipes_type(redis_conn):
 
 
 """Set the test data"""
-TEST_CHARACTER = {"owner": "testUser", "name": "Joe Schmoe"}
+TEST_CHARACTER = {
+    "id": "0f8c1a7e-3d52-4b91-a7c8-6e2f91b40d35",
+    "name": "Joe Schmoe",
+    "level": 1,
+    "raceId": None,
+    "classId": "srd-2024_warden",
+    "backgroundId": None,
+    "abilities": {"method": "roll", "base": {"STR": 15}, "rolled": [15], "originBonuses": {}},
+    "proficientSkillIds": ["arcana"],
+    "expertiseIds": [],
+    "spellIds": [],
+    "equipmentIds": ["srd-2024_shield"],
+    "completedSteps": ["name"],
+}
 
 UID = "4CIZQ94T3ncLcAAizmHcN62V6Q42"  # The test user ID
 
