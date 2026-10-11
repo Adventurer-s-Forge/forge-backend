@@ -34,7 +34,7 @@ def test_valid_skill_values(redis_conn):
 
 def test_skill_exists(redis_conn):
     service = UserCharacterDataService()
-    test_skills_list = ["arcana", "animal-handling", "survival", "stealth", "intimitation", "history"]
+    test_skills_list = ["arcana", "animal-handling", "survival", "stealth", "intimidation", "history"]
     all_skills_exist = True
 
     for test_skill in test_skills_list:

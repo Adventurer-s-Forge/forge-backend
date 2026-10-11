@@ -177,8 +177,9 @@ def test_set_character_skills_200(api_client):
 
 
 @pytest.mark.integration
-def test_unknown_proficiency_skill_400(api_client):
+def test_unknown_skills_400(api_client):
     cid = _create(api_client)
+    # Test unknown proficient skill
     resp = api_client.put(
         f"/characters/{cid}/skills",
         headers=_headers(UID),
@@ -186,11 +187,7 @@ def test_unknown_proficiency_skill_400(api_client):
     )
     assert resp.status_code == 400
     assert resp.json() == {"detail": "unknown skill in proficient skills list: fakeSkill"}
-
-
-@pytest.mark.integration
-def test_unknown_expertise_skill_400(api_client):
-    cid = _create(api_client)
+    # Test unknown expertise skill
     resp = api_client.put(
         f"/characters/{cid}/skills",
         headers=_headers(UID),
