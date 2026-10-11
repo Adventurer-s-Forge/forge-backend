@@ -137,6 +137,31 @@ class UserCharacterDataService:
         """True when value matches a seeded class slug or display name."""
         return value in self.valid_class_values()
 
+    def valid_item_values(self) -> set[str]:
+        """Slugs and display names of all seeded item records."""
+        records = list_reference_records(self.redis_client, "item")
+        return {r["key"] for r in records} | {r["name"] for r in records}
+
+    def item_exists(self, value: str, valid: set[str] | None = None) -> bool:
+        """True when value matches a seeded item slug or display name."""
+        return value in (valid if valid is not None else self.valid_item_values())
+
+    def set_character_equipment(
+        self, user_id: str, character_id: str, equipment: list[str]
+    ) -> dict:
+        """Replace the record's equipment list; raises KeyError/ValueError."""
+        record = self.get_character_by_id(user_id, character_id)
+        if record is None:
+            raise KeyError(character_id)
+        if equipment:
+            valid = self.valid_item_values()
+            for entry in equipment:
+                if not self.item_exists(entry, valid):
+                    raise ValueError("unknown item")
+        record["equipment"] = equipment
+        update_character(self.redis_client, user_id, character_id, record)
+        return record
+
     def get_num_user_characters(self, user_id) -> int:
         """
         Helper function to retrieve the count of characters for a certain user in the database.
