@@ -19,24 +19,19 @@ jobs:
         with:
           python-version: ">=3.12"
 
-      # Run the backend server in the background and give it time to start [12]
       - name: Install dependencies
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           uv sync
           docker compose up -d
-          uv run uvicorn forge_backend.main:app &
-          sleep 30
 
       - name: Run tests
+        env:
+          REDIS_URL: redis://localhost:6379/15
+          TEST_REDIS_URL: redis://localhost:6379/15
         run: |
           uv run pytest . --cov=.
 
       - name: Lint with Ruff
         run: |
           uv run ruff check .
-      
-      # Stop the bakend server by killing the process [13]
-      - name: Stop the backend server
-        run: |
-          kill -9 `lsof -i:8000 -t`

@@ -25,8 +25,8 @@ class DuplicateCharacterId(Exception):
 class UserCharacterDataService:
     """This class provides functions to manipulate the user's character in the database."""
 
-    def __init__(self):
-        self.redis_client = get_redis()
+    def __init__(self, redis_client=None):
+        self.redis_client = redis_client if redis_client is not None else get_redis()
 
     def create_user_character(
         self, user_id: str, character_name: str, user_name: str, character_id: str
