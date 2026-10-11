@@ -160,7 +160,7 @@ class UserCharacterDataService:
             self (redis.Redis): The Redis database connection
             user_id (str): The user's ID from Google Firebase Authentication
             character_id (str): The unique ID of the user's character
-            skill_label (str): The label to indicate whether the Expertise skills or the Proficient skills are being added
+            skill_label (str): The label to indicate whether the list of skills is the proficiency skills or the expertise skills in the character data
             skills_list (list[dict[str,Any]]): The list of skills to add or update
 
         Returns:

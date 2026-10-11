@@ -34,6 +34,8 @@ class CharacterRecord(BaseModel):
     owner: str
     name: str
     character_class: str | None = Field(default=None, alias="class")
+    character_proficient_skills: list[str] | None = Field(default=None, alias="proficient_skills"),
+    character_expertise_skills: list[str] | None = Field(default=None, alias="expertise_skills")
 
 
 class ErrorResponse(BaseModel):
@@ -59,6 +61,16 @@ class ClassSelection(BaseModel):
     )
 
     character_class: str = Field(alias="class", min_length=1)
+
+
+class SkillsList(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={"example": {"proficient_skills": ["arcana", "history"], "expertise_skills": ["athletics"]}},
+    )
+
+    character_proficient_skills: list[str] = Field(alias="proficient_skills")
+    character_expertise_skills: list[str] = Field(alias="expertise_skills")
 
 
 # TODO(US-19/auth): replace with Firebase ID-token verification.
@@ -171,3 +183,36 @@ def set_character_class(character_id: str, selection: ClassSelection, uid: str =
         return _service.set_character_class(uid, character_id, selection.character_class)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
+
+
+@router.put(
+    "/{character_id}/skills",
+    operation_id="set_character_skills",
+    response_model=CharacterRecord,
+    response_model_exclude_unset=True,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Set character's proficient and expertise skills",
+    description=(
+        'Replace the record\'s single class value, e.g. `{"class":"Wizard"}`. '
+        "Seeded names/slugs persist verbatim."
+    ),
+)
+def set_character_class(character_id: str, skills: SkillsList, uid: str = Depends(get_uid)):
+    updated_character = None # Initialize the updated_character variable that this function returns
+    if _service.get_character_by_id(uid, character_id) is None:
+        raise HTTPException(status_code=404, detail="character not found")
+    for proficient_skill in skills.character_proficient_skills:
+        if _service.skill_exists(proficient_skill) == False:
+            raise HTTPException(status_code=400, detail="unknown skill in proficient skills list: " + proficient_skill)
+    for expertise_skill in skills.character_expertise_skills:
+        if not _service.skill_exists(expertise_skill):
+            raise HTTPException(status_code=400, detail="unknown skill in expertise skills list: " + expertise_skill)
+    try:
+        updated_character = _service.set_character_skills(uid, character_id, "proficientSkillIds", skills.character_proficient_skills)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found while setting the proficient skills list")
+    try:
+        updated_character = _service.set_character_skills(uid, character_id, "expertiseIds", skills.character_expertise_skills)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found while setting the expertise skills list")
+    return updated_character # Updated character now has the new skills

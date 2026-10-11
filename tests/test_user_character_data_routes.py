@@ -5,6 +5,13 @@ OTHER_UID = "route-test-other"
 CHARACTER_NAME = "Joe Schmoe"
 USER_NAME = "moobelle"
 EXPECTED_RECORD = {"owner": USER_NAME, "name": CHARACTER_NAME}
+# TODO - Merge with EXPECTED_RECORD and use the new format later
+EXPECTED_RECORD_FOR_SKILLS = {
+    "owner": USER_NAME,
+    "name": CHARACTER_NAME,
+    "proficientSkillIds": ["arcana", "history"],
+    "expertiseIds": ["athletics"]
+}
 
 
 def _headers(uid=UID):
@@ -73,6 +80,13 @@ def test_other_uid_isolated(api_client, redis_conn):
     )
     assert other_class.status_code == 404
     assert api_client.get(f"/characters/{cid}", headers=_headers()).json() == EXPECTED_RECORD
+    other_skills = api_client.put(
+        f"/characters/{cid}/skills",
+        headers=_headers(OTHER_UID),
+        json={"proficient_skills": ["arcana", "history"], "expertise_skills": ["athletics"]},
+    )
+    assert other_skills.status_code == 404
+    assert api_client.get(f"/characters/{cid}", headers=_headers()).json() == EXPECTED_RECORD
 
 
 @pytest.mark.integration
@@ -85,6 +99,7 @@ def test_other_uid_isolated(api_client, redis_conn):
         ("GET", "/characters/count", {}),
         ("GET", "/characters/deadbeef", {}),
         ("PUT", "/characters/deadbeef/class", {"json": {"class": "Wizard"}}),
+        ("PUT", "/characters/deadbeef/skills", {"json": {"proficient_skills": ["arcana", "history"], "expertise_skills": ["athletics"]}}),
     ],
 )
 def test_missing_and_empty_headers_fail_all_operations(api_client, method, path, kwargs):
@@ -147,3 +162,39 @@ def test_extra_record_fields_retained(api_client, redis_conn):
     assert "class" not in detail
     listing = api_client.get("/characters", headers=_headers()).json()
     assert listing[0]["notes"] == "retained"
+
+
+@pytest.mark.integration
+def test_set_character_skills_200(api_client):
+    cid = _create(api_client)
+    resp = api_client.put(
+        f"/characters/{cid}/skills",
+        headers=_headers(UID),
+        json={"proficient_skills": ["arcana", "history"], "expertise_skills": ["athletics"]},
+    )
+    assert resp.status_code == 200
+    assert resp.json() == (EXPECTED_RECORD_FOR_SKILLS)
+
+
+@pytest.mark.integration
+def test_unknown_proficiency_skill_400(api_client):
+    cid = _create(api_client)
+    resp = api_client.put(
+        f"/characters/{cid}/skills",
+        headers=_headers(UID),
+        json={"proficient_skills": ["fakeSkill"], "expertise_skills": []},
+    )
+    assert resp.status_code == 400
+    assert resp.json() == {"detail": "unknown skill in proficient skills list: fakeSkill"}
+
+
+@pytest.mark.integration
+def test_unknown_expertise_skill_400(api_client):
+    cid = _create(api_client)
+    resp = api_client.put(
+        f"/characters/{cid}/skills",
+        headers=_headers(UID),
+        json={"proficient_skills": [], "expertise_skills": ["fakeSkill"]},
+    )
+    assert resp.status_code == 400
+    assert resp.json() == {"detail": "unknown skill in expertise skills list: fakeSkill"}
