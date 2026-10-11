@@ -210,7 +210,6 @@ def test_get_spells(mock_list_reference_records, mock_get_redis):
     assert results[1]["name"] == "Magic Missile"
     assert results[2]["name"] == "Light"
 
-
 @patch("forge_backend.character_data_service.get_redis")
 @patch("forge_backend.character_data_service.list_reference_records")
 def test_get_skills(mock_list_reference_records, mock_get_redis):

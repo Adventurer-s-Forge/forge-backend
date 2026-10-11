@@ -219,3 +219,5 @@ __marimo__/
 
 sampleCharacterJSON.json
 /src/cleanup.py
+
+env.download

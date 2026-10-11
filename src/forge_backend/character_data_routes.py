@@ -55,7 +55,7 @@ def get_backgrounds():
 
 
 @router.get(
-    "/items",
+    "/equipments",
     operation_id="list_items",
     response_model=list[ReferenceRecord],
     summary="List items",

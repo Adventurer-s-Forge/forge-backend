@@ -1,4 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
+from fastapi import HTTPException
+
+from forge_backend import user_character_data_routes
+from forge_backend.user_character_data_service import UserCharacterDataService
 
 UID = "route-test-user"
 OTHER_UID = "route-test-other"
@@ -147,3 +153,96 @@ def test_extra_record_fields_retained(api_client, redis_conn):
     assert "class" not in detail
     listing = api_client.get("/characters", headers=_headers()).json()
     assert listing[0]["notes"] == "retained"
+
+@patch("forge_backend.user_character_data_service.update_character")
+@patch("forge_backend.user_character_data_service.get_redis")
+def test_set_user_character_spells(mock_get_redis, mock_update_character):
+    user_id = "user123"
+    character_id = "char123"
+    spells = ["Fireball", "Magic Missile", "Light"]
+
+    service = UserCharacterDataService()
+
+    # Mock the existing character
+    service.get_character_by_id = MagicMock(
+        return_value={
+            "owner": "testuser",
+            "name": "Test Character",
+        }
+    )
+
+    result = service.set_character_spells(user_id, character_id, spells)
+
+    assert result["spells"] == spells
+
+    mock_update_character.assert_called_once_with(
+        service.redis_client, user_id, character_id, result
+    )
+
+
+
+@patch("forge_backend.user_character_data_service.update_character")
+@patch("forge_backend.user_character_data_service.get_redis")
+def test_update_character_spells(mock_get_redis, mock_update_character):
+    user_id = "user123"
+    character_id = "char123"
+
+    original_spells = ["Fireball", "Magic Missile", "Light"]
+    updated_spells = ["Fireball", "Light"]
+
+    service = UserCharacterDataService()
+
+    # Mock a character with previously saved spells
+    service.get_character_by_id = MagicMock(
+        return_value={
+            "owner": "testuser",
+            "name": "Test Character",
+            "spells": original_spells,
+        }
+    )
+
+    result = service.set_character_spells(user_id, character_id, updated_spells)
+
+    assert result["spells"] == updated_spells
+    assert "Magic Missile" not in result["spells"]
+
+    mock_update_character.assert_called_once_with(
+        service.redis_client, user_id, character_id, result
+    )
+
+
+@patch("forge_backend.user_character_data_routes.CharacterDataService")
+@patch("forge_backend.user_character_data_routes.UserCharacterDataService")
+def test_invalid_class_spells(mock_user_service, mock_reference_service):
+    user_id = "user123"
+    character_id = "char123"
+
+    # Mock an existing Wizard character
+    mock_user_service.return_value.get_character_by_id.return_value = {
+        "owner": "testuser",
+        "name": "Test Character",
+        "class": "Wizard",
+    }
+
+    # Both spells exist
+    mock_user_service.return_value.spells_exist.return_value = True
+
+    # Aid is not available to Wizards
+    mock_reference_service.return_value.get_spell.return_value = {
+        "data": {
+            "classes": [{"name": "Cleric"}]
+        }
+    }
+
+    selection = user_character_data_routes.SpellsSelection(spells=["Aid"])
+
+    with pytest.raises(HTTPException) as error:
+        user_character_data_routes.set_character_spells(
+            character_id, selection, uid=user_id
+        )
+
+    assert error.value.status_code == 400
+    assert error.value.detail == "The spell isn't available for the selected class"
+
+    mock_user_service.return_value.set_character_spells.assert_not_called()
+
