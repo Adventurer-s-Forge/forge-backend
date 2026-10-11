@@ -134,7 +134,7 @@ def test_key_error_when_setting_skills(redis_conn):
     
     error_setting_skills = None
     try:
-        char = service.set_character_skills(user_id, "fakeCharID", test_skill_label, test_skill_list)
+        service.set_character_skills(user_id, "fakeCharID", test_skill_label, test_skill_list)
     except KeyError as error:
         error_setting_skills = error
     

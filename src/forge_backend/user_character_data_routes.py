@@ -197,7 +197,7 @@ def set_character_class(character_id: str, selection: ClassSelection, uid: str =
         "Seeded names/slugs persist verbatim."
     ),
 )
-def set_character_class(character_id: str, skills: SkillsList, uid: str = Depends(get_uid)):
+def set_character_skills(character_id: str, skills: SkillsList, uid: str = Depends(get_uid)):
     updated_character = None # Initialize the updated_character variable that this function returns
     if _service.get_character_by_id(uid, character_id) is None:
         raise HTTPException(status_code=404, detail="character not found")
