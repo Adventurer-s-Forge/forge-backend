@@ -146,6 +146,7 @@ class UserCharacterDataService:
         """True when all value matches a seeded spell slug or display name."""
         valid_spells = self.valid_spell_values()
         return all(value in valid_spells for value in values)
+    
     def valid_item_values(self) -> set[str]:
         """Slugs and display names of all seeded item records."""
         records = list_reference_records(self.redis_client, "item")

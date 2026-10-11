@@ -251,7 +251,7 @@ def test_items_served_from_seed_with_no_outbound_http(client, redis_conn, monkey
     monkeypatch.setattr(requests.sessions.Session, "request", _blocked)
     assert real_request is not None  # keep linters honest about the saved reference
 
-    resp = client.get("/items")
+    resp = client.get("/equipments")
     assert resp.status_code == 200
     names = sorted(r["name"] for r in resp.json())
     assert names == ["Dagger", "Longsword", "Shield"]
