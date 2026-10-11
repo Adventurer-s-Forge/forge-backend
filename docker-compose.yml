@@ -7,8 +7,7 @@ services:
             - '6379:6379' # Redis server port
         volumes:
             - redis-data:/data
-        environment:
-            - REDIS_ARGS=--appendonly yes
+        command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
         restart: unless-stopped
 
     redis-insight:
