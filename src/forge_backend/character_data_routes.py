@@ -20,9 +20,6 @@ class ReferenceRecord(BaseModel):
     document: str
     data: dict[str, Any]
 
-class SpellsSelection(BaseModel):
-    spells: list[str]
-
 
 @router.get(
     "/races",
@@ -78,16 +75,6 @@ def get_items():
 def get_spells():
     return service.get_spells()
 
-
-#TODO: Need to have more robust spells validity check for class. Explore it.
-@router.put("/characters/{character_id}/spells")
-def set_user_character_spells(character_id: str, selection: SpellsSelection, uid: str = Depends(get_uid)):
-    user_service = UserCharacterDataService()
-    if user_service.get_character_by_id(uid, character_id) is None:
-        raise HTTPException(status_code=404, detail="Character not found")
-    if not user_service.spells_exist(selection.spells):
-        raise HTTPException(status_code=400, detail="Spells not found")
-    return user_service.set_character_spells(uid, character_id, selection.spells)
 
 @router.get(
     "/skills",

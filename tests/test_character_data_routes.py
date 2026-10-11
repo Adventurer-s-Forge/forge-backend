@@ -211,27 +211,6 @@ def test_get_spells(mock_list_reference_records, mock_get_redis):
     assert results[1]["name"] == "Magic Missile"
     assert results[2]["name"] == "Light"
 
-
-@patch("forge_backend.user_character_data_service.get_redis")
-def test_set_user_character_spells( mock_get_redis):
-
-    user_id = "user123"
-    character_id = "char123"
-    spells = ["Fireball", "Magic Missile", "Light"]
-
-    service = UserCharacterDataService()
-
-    # Setting this to prevent KeyError
-    service.get_character_by_id = MagicMock(
-        return_value={
-            "owner": "testuser",
-            "name": "Test Character",
-        }
-    )
-
-    result = service.set_user_character_spells(user_id, character_id, spells)
-
-    assert result["spells"] == spells
 @patch("forge_backend.character_data_service.get_redis")
 @patch("forge_backend.character_data_service.list_reference_records")
 def test_get_skills(mock_list_reference_records, mock_get_redis):

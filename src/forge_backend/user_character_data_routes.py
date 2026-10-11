@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from forge_backend.character_data_service import CharacterDataService
 
 from forge_backend.user_character_data_service import (
     DuplicateCharacterId,
@@ -38,6 +39,9 @@ class CharacterRecord(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+class SpellsSelection(BaseModel):
+    spells: list[str]
 
 
 class NewCharacterData(BaseModel):
@@ -171,3 +175,35 @@ def set_character_class(character_id: str, selection: ClassSelection, uid: str =
         return _service.set_character_class(uid, character_id, selection.character_class)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
+
+
+@router.put("/{character_id}/spells")
+def set_character_spells(character_id: str, selection: SpellsSelection, uid: str = Depends(get_uid)):
+    user_service = UserCharacterDataService()
+    reference_service = CharacterDataService()
+
+    character = user_service.get_character_by_id(uid, character_id)
+
+    if character is None:
+        raise HTTPException(status_code=404, detail="Character not found")
+    if not user_service.spells_exist(selection.spells):
+        raise HTTPException(status_code=400, detail="Spells not found")    
+    
+    selected_class = character.get("class")
+
+    if not selected_class:
+        raise HTTPException(status_code=400, detail="Character has no class selected")
+
+    for selected_spell in selection.spells:
+        spell_data = reference_service.get_spell(selected_spell)    
+        spell_data_classes = spell_data.get("data").get("classes",[])
+
+        for cls in spell_data_classes:
+            if selected_class == cls.get("name") or selected_class == cls.get("key"):
+                break
+        else:
+            raise HTTPException(status_code=400, detail="The spell isn't available for the selected class")
+
+    return user_service.set_character_spells(uid, character_id, selection.spells)
+            
+    
