@@ -35,6 +35,7 @@ class CharacterRecord(BaseModel):
     owner: str
     name: str
     character_class: str | None = Field(default=None, alias="class")
+    equipment: list[str] = Field(default_factory=list)
 
 
 class ErrorResponse(BaseModel):
@@ -63,6 +64,14 @@ class ClassSelection(BaseModel):
     )
 
     character_class: str = Field(alias="class", min_length=1)
+
+
+class EquipmentSelection(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"equipment": ["Longsword", "Shield"]}},
+    )
+
+    equipment: list[str]
 
 
 # TODO(US-19/auth): replace with Firebase ID-token verification.
@@ -207,3 +216,21 @@ def set_character_spells(character_id: str, selection: SpellsSelection, uid: str
     return user_service.set_character_spells(uid, character_id, selection.spells)
             
     
+@router.put(
+    "/{character_id}/equipment",
+    operation_id="set_character_equipment",
+    response_model=CharacterRecord,
+    response_model_exclude_unset=True,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Set character equipment",
+    description="Replace the equipment list; seeded names/slugs persist verbatim. An empty list clears the selection.",
+)
+def set_character_equipment(
+    character_id: str, selection: EquipmentSelection, uid: str = Depends(get_uid)
+):
+    try:
+        return _service.set_character_equipment(uid, character_id, selection.equipment)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="unknown item")
