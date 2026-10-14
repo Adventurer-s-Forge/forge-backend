@@ -11,11 +11,27 @@ def test_create_documents_201_not_200():
     assert "200" not in responses
 
 
-def test_character_record_uses_wire_key_class():
+def test_character_record_uses_canonical_fields():
     schemas = client.get("/openapi.json").json()["components"]["schemas"]
     record = schemas["CharacterRecord"]
-    assert "class" in record["properties"]
+    for field in (
+        "id",
+        "name",
+        "level",
+        "raceId",
+        "classId",
+        "backgroundId",
+        "abilities",
+        "proficientSkillIds",
+        "expertiseIds",
+        "spellIds",
+        "equipmentIds",
+        "completedSteps",
+    ):
+        assert field in record["properties"]
+    assert "owner" not in record["properties"]
     assert "character_class" not in record["properties"]
+    assert record.get("additionalProperties") is False
     record_list = client.get("/openapi.json").json()["paths"]["/characters"]["get"]["responses"][
         "200"
     ]["content"]["application/json"]["schema"]
@@ -42,8 +58,10 @@ def test_every_character_operation_requires_nonempty_header():
         ("/characters/ids", "get"),
         ("/characters/count", "get"),
         ("/characters/{character_id}", "get"),
+        ("/characters/{character_id}", "put"),
         ("/characters/{character_id}/class", "put"),
         ("/characters/{character_id}/equipment", "put"),
+        ("/characters/{character_id}/spells", "put"),
     ]
     for path, method in paths:
         params = schema["paths"][path][method].get("parameters", [])
@@ -69,14 +87,52 @@ def test_declared_errors_expose_string_detail():
     )
     put_responses = schema["paths"]["/characters/{character_id}/class"]["put"]["responses"]
     assert "400" in put_responses and "404" in put_responses
+    spell_responses = schema["paths"]["/characters/{character_id}/spells"]["put"]["responses"]
+    assert "400" in spell_responses and "404" in spell_responses
+
+
+def test_save_operation_exposed():
+    schema = client.get("/openapi.json").json()
+    put = schema["paths"]["/characters/{character_id}"]["put"]
+    assert put["operationId"] == "save_character"
+    assert "400" in put["responses"] and "404" in put["responses"]
+    ref = put["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+    assert ref.endswith("CharacterRecord")
 
 
 def test_equipment_contract_exposes_array_and_errors():
     schema = client.get("/openapi.json").json()
     schemas = schema["components"]["schemas"]
-    assert schemas["EquipmentSelection"]["properties"]["equipment"]["type"] == "array"
-    assert schemas["EquipmentSelection"]["properties"]["equipment"]["items"]["type"] == "string"
-    assert "equipment" in schemas["EquipmentSelection"]["required"]
-    assert schemas["CharacterRecord"]["properties"]["equipment"]["type"] == "array"
+    assert schemas["EquipmentSelection"]["properties"]["equipmentIds"]["type"] == "array"
+    assert schemas["EquipmentSelection"]["properties"]["equipmentIds"]["items"]["type"] == "string"
+    assert "equipmentIds" in schemas["EquipmentSelection"]["required"]
+    assert "equipment" not in schemas["EquipmentSelection"]["properties"]
+    assert schemas["CharacterRecord"]["properties"]["equipmentIds"]["type"] == "array"
     put = schema["paths"]["/characters/{character_id}/equipment"]["put"]
     assert "400" in put["responses"] and "404" in put["responses"]
+    assert schemas["ClassSelection"]["properties"]["classId"]["type"] == "string"
+    assert "class" not in schemas["ClassSelection"]["properties"]
+
+
+def test_spell_contract_exposes_strict_ids_and_operation():
+    schema = client.get("/openapi.json").json()
+    schemas = schema["components"]["schemas"]
+    selection = schemas["SpellSelection"]
+    assert selection["properties"]["spellIds"]["type"] == "array"
+    assert selection["properties"]["spellIds"]["items"]["type"] == "string"
+    assert selection["required"] == ["spellIds"]
+    assert selection.get("additionalProperties") is False
+    assert "spells" not in selection["properties"]
+    put = schema["paths"]["/characters/{character_id}/spells"]["put"]
+    assert put["operationId"] == "set_character_spells"
+    assert "400" in put["responses"] and "404" in put["responses"]
+    ref = put["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+    assert ref.endswith("CharacterRecord")
+
+
+def test_equipment_path_is_singular():
+    paths = client.get("/openapi.json").json()["paths"]
+    assert "/equipment" in paths
+    assert paths["/equipment"]["get"]["operationId"] == "list_items"
+    assert "/items" not in paths
+    assert "/equipments" not in paths

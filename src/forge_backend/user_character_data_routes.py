@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 
-from forge_backend.character_data_service import CharacterDataService
+from forge_backend.character_models import CharacterRecord
 from forge_backend.user_character_data_service import (
     DuplicateCharacterId,
     UserCharacterDataService,
@@ -16,62 +16,43 @@ router = APIRouter(prefix="/characters", tags=["Characters"])
 _service = UserCharacterDataService()
 
 
-class CreateCharacterResponse(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={"example": {"character_id": "1a2b3c4d", "result": 1}}
-    )
-
-    character_id: str
-    result: int
-
-
-class CharacterRecord(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-        json_schema_extra={"example": {"owner": "test-user", "name": "Gandalf"}},
-    )
-
-    owner: str
-    name: str
-    character_class: str | None = Field(default=None, alias="class")
-    equipment: list[str] = Field(default_factory=list)
-
-
 class ErrorResponse(BaseModel):
     detail: str
 
-class SpellsSelection(BaseModel):
-    spells: list[str]
 
-
-class NewCharacterData(BaseModel):
-    """Expected schema for new characters being created."""
-
+class SpellSelection(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
-        json_schema_extra={"example": {"character_name": "Gandalf", "user_name": "test-user"}},
+        json_schema_extra={"example": {"spellIds": ["srd-2024_fireball"]}},
     )
 
-    character_name: str
-    user_name: str
+    spellIds: list[StrictStr]
+
+    @field_validator("spellIds")
+    @classmethod
+    def _validate_id_list(cls, v: list[str]) -> list[str]:
+        for entry in v:
+            if entry == "":
+                raise ValueError("id list entries must be nonempty strings")
+        return v
 
 
 class ClassSelection(BaseModel):
     model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={"example": {"class": "Wizard"}},
+        extra="forbid",
+        json_schema_extra={"example": {"classId": "srd-2024_wizard"}},
     )
 
-    character_class: str = Field(alias="class", min_length=1)
+    classId: str = Field(min_length=1)
 
 
 class EquipmentSelection(BaseModel):
     model_config = ConfigDict(
-        json_schema_extra={"example": {"equipment": ["Longsword", "Shield"]}},
+        extra="forbid",
+        json_schema_extra={"example": {"equipmentIds": ["srd-2024_longsword"]}},
     )
 
-    equipment: list[str]
+    equipmentIds: list[str]
 
 
 # TODO(US-19/auth): replace with Firebase ID-token verification.
@@ -89,34 +70,29 @@ def get_uid(
     "",
     operation_id="create_character",
     status_code=201,
-    response_model=CreateCharacterResponse,
+    response_model=CharacterRecord,
     responses={409: {"model": ErrorResponse}},
     summary="Create a character",
     description=(
-        "Create a blank character record. `owner` is a display name and the "
+        "Create a full character record. The caller supplies the UUID. The "
         "X-User-Id header selects the storage namespace; the header does not "
         "authenticate the caller."
     ),
 )
-def create_new_character(new_character_data: NewCharacterData, uid: str = Depends(get_uid)):
-    character_id = _service.generate_character_id(uid)
+def create_new_character(character: CharacterRecord, uid: str = Depends(get_uid)):
     try:
-        result = _service.create_user_character(
-            uid,
-            new_character_data.character_name,
-            new_character_data.user_name,
-            character_id,
-        )
+        _service.create_user_character(uid, character)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except DuplicateCharacterId:
         raise HTTPException(status_code=409, detail="Character ID collision, retry")
-    return {"character_id": character_id, "result": result}
+    return character
 
 
 @router.get(
     "",
     operation_id="list_characters",
     response_model=list[CharacterRecord],
-    response_model_exclude_unset=True,
     summary="List characters",
     description="List stored character records for the X-User-Id storage namespace.",
 )
@@ -150,11 +126,9 @@ def get_num_user_characters(uid: str = Depends(get_uid)):
     "/{character_id}",
     operation_id="get_character",
     response_model=CharacterRecord,
-    response_model_exclude_unset=True,
     responses={404: {"model": ErrorResponse}},
     summary="Get a character",
-    description="Return one stored record. Blank records look like "
-    '`{"owner":"test-user","name":"Gandalf"}`.',
+    description="Return one stored character record.",
 )
 def get_character_by_id(character_id: str, uid: str = Depends(get_uid)):
     record = _service.get_character_by_id(uid, character_id)
@@ -164,73 +138,80 @@ def get_character_by_id(character_id: str, uid: str = Depends(get_uid)):
 
 
 @router.put(
+    "/{character_id}",
+    operation_id="save_character",
+    response_model=CharacterRecord,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Save a character",
+    description=(
+        "Full-replacement save of one owned character record. The path ID and "
+        "body id must match. The X-User-Id header selects the storage namespace; "
+        "the header does not authenticate the caller."
+    ),
+)
+def save_character(character_id: str, character: CharacterRecord, uid: str = Depends(get_uid)):
+    try:
+        return _service.save_character(uid, character_id, character)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put(
     "/{character_id}/class",
     operation_id="set_character_class",
     response_model=CharacterRecord,
-    response_model_exclude_unset=True,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Set character class",
     description=(
-        'Replace the record\'s single class value, e.g. `{"class":"Wizard"}`. '
-        "Seeded names/slugs persist verbatim."
+        'Replace the record\'s classId, e.g. `{"classId":"srd-2024_wizard"}`. '
+        "Only seeded reference keys are accepted."
     ),
 )
 def set_character_class(character_id: str, selection: ClassSelection, uid: str = Depends(get_uid)):
-    if _service.get_character_by_id(uid, character_id) is None:
-        raise HTTPException(status_code=404, detail="character not found")
-    if not _service.class_exists(selection.character_class):
-        raise HTTPException(status_code=400, detail="unknown class")
     try:
-        return _service.set_character_class(uid, character_id, selection.character_class)
+        return _service.set_character_class(uid, character_id, selection.classId)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/{character_id}/spells")
-def set_character_spells(character_id: str, selection: SpellsSelection, uid: str = Depends(get_uid)):
-    user_service = UserCharacterDataService()
-    reference_service = CharacterDataService()
+@router.put(
+    "/{character_id}/spells",
+    operation_id="set_character_spells",
+    response_model=CharacterRecord,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    summary="Set character spells",
+    description=(
+        "Replace the spellIds list with seeded keys available to classId. "
+        "An empty list clears the selection."
+    ),
+)
+def set_character_spells(character_id: str, selection: SpellSelection, uid: str = Depends(get_uid)):
+    try:
+        return _service.set_character_spells(uid, character_id, selection.spellIds)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="character not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    character = user_service.get_character_by_id(uid, character_id)
 
-    if character is None:
-        raise HTTPException(status_code=404, detail="Character not found")
-    if not user_service.spells_exist(selection.spells):
-        raise HTTPException(status_code=400, detail="Spells not found")    
-    
-    selected_class = character.get("class")
-
-    if not selected_class:
-        raise HTTPException(status_code=400, detail="Character has no class selected")
-
-    for selected_spell in selection.spells:
-        spell_data = reference_service.get_spell(selected_spell)    
-        spell_data_classes = spell_data.get("data").get("classes",[])
-
-        for cls in spell_data_classes:
-            if selected_class == cls.get("name") or selected_class == cls.get("key"):
-                break
-        else:
-            raise HTTPException(status_code=400, detail="The spell isn't available for the selected class")
-
-    return user_service.set_character_spells(uid, character_id, selection.spells)
-            
-    
 @router.put(
     "/{character_id}/equipment",
     operation_id="set_character_equipment",
     response_model=CharacterRecord,
-    response_model_exclude_unset=True,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Set character equipment",
-    description="Replace the equipment list; seeded names/slugs persist verbatim. An empty list clears the selection.",
+    description="Replace the equipmentIds list. An empty list clears the selection.",
 )
 def set_character_equipment(
     character_id: str, selection: EquipmentSelection, uid: str = Depends(get_uid)
 ):
     try:
-        return _service.set_character_equipment(uid, character_id, selection.equipment)
+        return _service.set_character_equipment(uid, character_id, selection.equipmentIds)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="unknown item")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -5,47 +5,47 @@ from forge_backend.character_data_service import CharacterDataService
 mock_race_records = [
     {
         "type": "race",
-        "key": "srd_elf",
+        "key": "srd-2024_elf",
         "name": "Elf",
-        "document": "srd-2014",
-        "data": {"key": "srd_elf", "name": "Elf", "document": {"key": "srd-2014"}},
+        "document": "srd-2024",
+        "data": {"key": "srd-2024_elf", "name": "Elf", "document": {"key": "srd-2024"}},
     },
     {
         "type": "race",
-        "key": "srd_human",
+        "key": "srd-2024_human",
         "name": "Human",
-        "document": "srd-2014",
-        "data": {"key": "srd_human", "name": "Human", "document": {"key": "srd-2014"}},
+        "document": "srd-2024",
+        "data": {"key": "srd-2024_human", "name": "Human", "document": {"key": "srd-2024"}},
     },
     {
         "type": "race",
-        "key": "srd_dwarf",
+        "key": "srd-2024_dwarf",
         "name": "Dwarf",
-        "document": "srd-2014",
-        "data": {"key": "srd_dwarf", "name": "Dwarf", "document": {"key": "srd-2014"}},
+        "document": "srd-2024",
+        "data": {"key": "srd-2024_dwarf", "name": "Dwarf", "document": {"key": "srd-2024"}},
     },
 ]
 
 mock_class_records = [
     {
         "type": "class",
-        "key": "srd_fighter",
+        "key": "srd-2024_fighter",
         "name": "Fighter",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"hit_dice": "1d10"},
     },
     {
         "type": "class",
-        "key": "srd_wizard",
+        "key": "srd-2024_wizard",
         "name": "Wizard",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"hit_dice": "1d6"},
     },
     {
         "type": "class",
-        "key": "srd_ranger",
+        "key": "srd-2024_ranger",
         "name": "Ranger",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"hit_dice": "1d10"},
     },
 ]
@@ -53,23 +53,23 @@ mock_class_records = [
 mock_background_records = [
     {
         "type": "background",
-        "key": "srd_acolyte",
+        "key": "srd-2024_acolyte",
         "name": "Acolyte",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {},
     },
     {
         "type": "background",
-        "key": "srd_criminal",
+        "key": "srd-2024_criminal",
         "name": "Criminal",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {},
     },
     {
         "type": "background",
-        "key": "srd_hermit",
-        "name": "Hermit",
-        "document": "srd-2014",
+        "key": "srd-2024_sage",
+        "name": "Sage",
+        "document": "srd-2024",
         "data": {},
     },
 ]
@@ -77,23 +77,23 @@ mock_background_records = [
 mock_item_records = [
     {
         "type": "item",
-        "key": "srd_longsword",
+        "key": "srd-2024_longsword",
         "name": "Longsword",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {},
     },
     {
         "type": "item",
-        "key": "srd_dagger",
+        "key": "srd-2024_dagger",
         "name": "Dagger",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {},
     },
     {
         "type": "item",
-        "key": "srd_shield",
+        "key": "srd-2024_shield",
         "name": "Shield",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {},
     },
 ]
@@ -101,23 +101,23 @@ mock_item_records = [
 mock_spell_records = [
     {
         "type": "spell",
-        "key": "srd_fireball",
+        "key": "srd-2024_fireball",
         "name": "Fireball",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"level": 3},
     },
     {
         "type": "spell",
-        "key": "srd_magic_missile",
+        "key": "srd-2024_magic_missile",
         "name": "Magic Missile",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"level": 1},
     },
     {
         "type": "spell",
-        "key": "srd_light",
+        "key": "srd-2024_light",
         "name": "Light",
-        "document": "srd-2014",
+        "document": "srd-2024",
         "data": {"level": 0},
     },
 ]
@@ -127,22 +127,31 @@ mock_skill_records = [
         "type": "skill",
         "key": "acrobatics",
         "name": "Acrobatics",
-        "document": "srd-2014",
-        "data": {"ability": "dex"},
+        "document": "core",
+        "data": {
+            "ability": "dex",
+            "descriptions": [{"document": {"key": "srd-2024"}, "text": "x"}],
+        },
     },
     {
         "type": "skill",
         "key": "arcana",
         "name": "Arcana",
-        "document": "srd-2014",
-        "data": {"ability": "int"},
+        "document": "core",
+        "data": {
+            "ability": "int",
+            "descriptions": [{"document": {"key": "srd-2024"}, "text": "x"}],
+        },
     },
     {
         "type": "skill",
         "key": "stealth",
         "name": "Stealth",
-        "document": "srd-2014",
-        "data": {"ability": "dex"},
+        "document": "core",
+        "data": {
+            "ability": "dex",
+            "descriptions": [{"document": {"key": "srd-2024"}, "text": "x"}],
+        },
     },
 ]
 
@@ -182,7 +191,7 @@ def test_get_backgrounds(mock_list_reference_records, mock_get_redis):
 
     assert results[0]["name"] == "Acolyte"
     assert results[1]["name"] == "Criminal"
-    assert results[2]["name"] == "Hermit"
+    assert results[2]["name"] == "Sage"
 
 
 @patch("forge_backend.character_data_service.get_redis")
@@ -209,6 +218,7 @@ def test_get_spells(mock_list_reference_records, mock_get_redis):
     assert results[0]["name"] == "Fireball"
     assert results[1]["name"] == "Magic Missile"
     assert results[2]["name"] == "Light"
+
 
 @patch("forge_backend.character_data_service.get_redis")
 @patch("forge_backend.character_data_service.list_reference_records")

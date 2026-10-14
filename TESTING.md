@@ -107,8 +107,10 @@ for data specific to that area and `tests/conftest.py` for genuinely shared setu
 | Area | Examples to consult |
 | --- | --- |
 | Pure storage key and record validation | `tests/test_storage.py` |
+| Pure spell class-eligibility rules | `tests/test_spell_rules.py` |
 | Redis persistence, refresh, idempotency, and namespace isolation | `tests/test_storage_integration.py` |
-| Mocked service boundaries | `tests/test_character_data_service.py` |
+| Spell selection service (stateful stubs) and class transitions | `tests/test_user_character_spell_service.py` |
+| Spell selection API roundtrips, failures, transitions, isolation | `tests/test_character_data_routes_us1.py` |
 | API persistence, identity namespaces, validation, and collisions | `tests/test_user_character_data_routes.py` |
 | Reference routes and class-selection transitions | `tests/test_character_data_routes_us35.py` |
 | Ingestion formatting and application lifespan | `tests/test_startup_seed.py` |

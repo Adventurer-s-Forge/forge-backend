@@ -1,4 +1,4 @@
-"""Redis-free unit tests for equipment selection (US-20 service slice)."""
+"""Key-only equipment validation tests (US-20 service slice)."""
 
 from unittest.mock import patch
 
@@ -6,42 +6,11 @@ import pytest
 
 from forge_backend.user_character_data_service import UserCharacterDataService
 
-SEED = [
-    {"key": "srd_longsword", "name": "Longsword"},
-    {"key": "srd_dagger", "name": "Dagger"},
-    {"key": "srd_shield", "name": "Shield"},
-]
+SEED_KEYS = ["srd-2024_longsword", "srd-2024_dagger", "srd-2024_shield"]
 
 
 def _service():
     return UserCharacterDataService(redis_client=object())
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        ("Longsword", True),
-        ("srd_dagger", True),
-        ("Shield", True),
-        ("Vorpal Kumquat", False),
-        ("longsword", False),
-        ("SRD_DAGGER", False),
-        ("", False),
-    ],
-)
-def test_item_exists_resolves_names_slugs_case_sensitively(value, expected):
-    svc = _service()
-    with patch(
-        "forge_backend.user_character_data_service.list_reference_records", return_value=list(SEED)
-    ):
-        assert svc.item_exists(value) is expected
-
-
-def test_item_exists_with_no_seeded_records():
-    svc = _service()
-    with patch("forge_backend.user_character_data_service.list_reference_records", return_value=[]):
-        assert svc.valid_item_values() == set()
-        assert svc.item_exists("Longsword") is False
 
 
 def _stub_storage(initial):
@@ -57,23 +26,27 @@ def _stub_storage(initial):
     return state, _get_character, _update
 
 
-def test_setter_rejects_mixed_valid_invalid_without_write():
+def _patch_refs(keys):
+    return patch(
+        "forge_backend.user_character_data_service.list_reference_keys",
+        return_value=list(keys),
+    )
+
+
+def test_validate_equipment_rejects_unknown_without_write():
     svc = _service()
-    base = {"owner": "test-user", "name": "Gandalf", "class": "Wizard"}
+    base = {"name": "Gandalf", "classId": "srd-2024_warden"}
     state, get_character, update = _stub_storage(base)
     with (
-        patch(
-            "forge_backend.user_character_data_service.list_reference_records",
-            return_value=list(SEED),
-        ),
+        _patch_refs(SEED_KEYS),
         patch(
             "forge_backend.user_character_data_service.get_user_character",
             side_effect=get_character,
         ),
         patch("forge_backend.user_character_data_service.update_character", side_effect=update),
-        pytest.raises(ValueError, match="unknown item"),
+        pytest.raises(ValueError, match="unknown equipmentIds"),
     ):
-        svc.set_character_equipment("uid", "char", ["Longsword", "Vorpal Kumquat"])
+        svc.set_character_equipment("uid", "char", ["srd-2024_longsword", "Vorpal Kumquat"])
     assert state["writes"] == 0
     assert state["record"] == base
 
@@ -82,42 +55,38 @@ def test_setter_missing_record_raises_key_error():
     svc = _service()
     with (
         patch("forge_backend.user_character_data_service.get_user_character", return_value=None),
-        patch("forge_backend.user_character_data_service.list_reference_records") as refs,
+        patch("forge_backend.user_character_data_service.list_reference_keys") as refs,
     ):
         with pytest.raises(KeyError):
-            svc.set_character_equipment("uid", "missing", ["Longsword"])
+            svc.set_character_equipment("uid", "missing", ["srd-2024_longsword"])
         refs.assert_not_called()
 
 
 def test_setter_replaces_and_clears_preserving_unrelated_fields():
     svc = _service()
-    base = {"owner": "test-user", "name": "Gandalf", "class": "Wizard"}
+    base = {"name": "Gandalf", "classId": "srd-2024_warden"}
     state, get_character, update = _stub_storage(base)
     with (
-        patch(
-            "forge_backend.user_character_data_service.list_reference_records",
-            return_value=list(SEED),
-        ),
+        _patch_refs(SEED_KEYS),
         patch(
             "forge_backend.user_character_data_service.get_user_character",
             side_effect=get_character,
         ),
         patch("forge_backend.user_character_data_service.update_character", side_effect=update),
     ):
-        record = svc.set_character_equipment("uid", "char", ["srd_dagger", "Shield"])
-        assert record["equipment"] == ["srd_dagger", "Shield"]
-        assert record["class"] == "Wizard"
-        assert record["owner"] == "test-user"
+        record = svc.set_character_equipment("uid", "char", ["srd-2024_dagger", "srd-2024_shield"])
+        assert record["equipmentIds"] == ["srd-2024_dagger", "srd-2024_shield"]
+        assert record["classId"] == "srd-2024_warden"
         cleared = svc.set_character_equipment("uid", "char", [])
-        assert cleared["equipment"] == []
-        assert cleared["class"] == "Wizard"
+        assert cleared["equipmentIds"] == []
+        assert cleared["classId"] == "srd-2024_warden"
     assert state["writes"] == 2
-    assert state["record"]["equipment"] == []
+    assert state["record"]["equipmentIds"] == []
 
 
 def test_setter_clear_skips_reference_lookup():
     svc = _service()
-    base = {"owner": "test-user", "name": "Gandalf"}
+    base = {"name": "Gandalf"}
     state, get_character, update = _stub_storage(base)
     with (
         patch(
@@ -125,8 +94,8 @@ def test_setter_clear_skips_reference_lookup():
             side_effect=get_character,
         ),
         patch("forge_backend.user_character_data_service.update_character", side_effect=update),
-        patch("forge_backend.user_character_data_service.list_reference_records") as refs,
+        patch("forge_backend.user_character_data_service.list_reference_keys") as refs,
     ):
-        assert svc.set_character_equipment("uid", "char", [])["equipment"] == []
+        assert svc.set_character_equipment("uid", "char", [])["equipmentIds"] == []
         refs.assert_not_called()
     assert state["writes"] == 1

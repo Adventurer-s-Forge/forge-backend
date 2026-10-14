@@ -1,37 +1,29 @@
 import pytest
 
 from forge_backend import user_character_data_routes
+from forge_backend.character_models import CharacterRecord
 from forge_backend.storage import refresh_reference_type
 
 UID = "us35-test-user"
-CHARID = "26957"
-
-CLASS_NAMES = [
-    "Barbarian",
-    "Bard",
-    "Cleric",
-    "Druid",
-    "Fighter",
-    "Monk",
-    "Paladin",
-    "Ranger",
-    "Rogue",
-    "Sorcerer",
-    "Warlock",
-    "Wizard",
-]
+CHARID = "0f8c1a7e-3d52-4b91-a7c8-6e2f91b40d35"
 
 
 def _class_records():
     return [
         {
             "type": "class",
-            "key": f"srd_{name.lower()}",
-            "name": name,
-            "document": "srd-2014",
+            "key": "srd-2024_warden",
+            "name": "Warden",
+            "document": "srd-2024",
             "data": {},
-        }
-        for name in CLASS_NAMES
+        },
+        {
+            "type": "class",
+            "key": "srd-2024_rogue",
+            "name": "Rogue",
+            "document": "srd-2024",
+            "data": {},
+        },
     ]
 
 
@@ -42,52 +34,56 @@ def _headers():
 @pytest.fixture
 def client(api_client, redis_conn):
     refresh_reference_type(redis_conn, "class", _class_records())
-    user_character_data_routes._service.create_user_character(UID, "Gandalf", "test-user", CHARID)
+    user_character_data_routes._service.create_user_character(
+        UID, CharacterRecord.model_validate({"id": CHARID, "name": "Gandalf"})
+    )
     return api_client
 
 
 @pytest.mark.integration
 def test_save_valid_class_persists(client):
-    """Selecting a valid class persists it on the character record."""
-    resp = client.put(f"/characters/{CHARID}/class", json={"class": "Wizard"}, headers=_headers())
-    assert resp.status_code == 200
-    record = client.get(f"/characters/{CHARID}", headers=_headers()).json()
-    assert record["class"] == "Wizard"
-
-
-@pytest.mark.integration
-def test_save_class_by_slug_persists(client):
-    """The seeded slug form is accepted and persisted verbatim."""
+    """Selecting a valid class key persists it on the character record."""
     resp = client.put(
-        f"/characters/{CHARID}/class", json={"class": "srd_rogue"}, headers=_headers()
+        f"/characters/{CHARID}/class", json={"classId": "srd-2024_warden"}, headers=_headers()
     )
     assert resp.status_code == 200
     record = client.get(f"/characters/{CHARID}", headers=_headers()).json()
-    assert record["class"] == "srd_rogue"
+    assert record["classId"] == "srd-2024_warden"
+
+
+@pytest.mark.integration
+def test_display_name_rejected(client):
+    """Display names are not accepted; only reference keys validate."""
+    resp = client.put(f"/characters/{CHARID}/class", json={"classId": "Warden"}, headers=_headers())
+    assert resp.status_code == 400
+    assert resp.json() == {"detail": "unknown classId"}
 
 
 @pytest.mark.test_id("ST-5")
 @pytest.mark.integration
-def test_invalid_class_rejected_without_write(client):
+def test_invalid_class_rejected_without_write(client, redis_conn):
     """Unknown class is rejected and the record is unchanged."""
-    before = client.get(f"/characters/{CHARID}", headers=_headers()).json()
-    assert "class" not in before
-    resp = client.put(
-        f"/characters/{CHARID}/class", json={"class": "Illiudicor"}, headers=_headers()
-    )
+    before = redis_conn.get(f"char:{UID}:{CHARID}")
+    resp = client.put(f"/characters/{CHARID}/class", json={"classId": "nope"}, headers=_headers())
     assert resp.status_code == 400
-    after = client.get(f"/characters/{CHARID}", headers=_headers()).json()
-    assert after == before
+    assert resp.json() == {"detail": "unknown classId"}
+    assert redis_conn.get(f"char:{UID}:{CHARID}") == before
 
 
 @pytest.mark.test_id("ST-5")
 @pytest.mark.integration
 def test_missing_class_rejected(client):
-    """Absent/null class fails body validation."""
+    """Absent classId fails body validation."""
     assert client.put(f"/characters/{CHARID}/class", json={}, headers=_headers()).status_code == 422
+
+
+@pytest.mark.test_id("ST-5")
+@pytest.mark.integration
+def test_empty_class_rejected(client):
+    """Empty classId fails body validation."""
     assert (
         client.put(
-            f"/characters/{CHARID}/class", json={"class": None}, headers=_headers()
+            f"/characters/{CHARID}/class", json={"classId": ""}, headers=_headers()
         ).status_code
         == 422
     )
@@ -95,11 +91,10 @@ def test_missing_class_rejected(client):
 
 @pytest.mark.test_id("ST-5")
 @pytest.mark.integration
-def test_empty_class_rejected(client):
-    """Empty class fails body validation."""
+def test_old_alias_rejected(client):
     assert (
         client.put(
-            f"/characters/{CHARID}/class", json={"class": ""}, headers=_headers()
+            f"/characters/{CHARID}/class", json={"class": "srd-2024_warden"}, headers=_headers()
         ).status_code
         == 422
     )
@@ -108,22 +103,17 @@ def test_empty_class_rejected(client):
 @pytest.mark.test_id("ST-6")
 @pytest.mark.integration
 def test_reselecting_class_replaces(client):
-    """Exactly one class value exists after re-selection."""
-    assert (
-        client.put(
-            f"/characters/{CHARID}/class", json={"class": "Rogue"}, headers=_headers()
-        ).status_code
-        == 200
+    """Exactly one classId value exists after re-selection."""
+    client.put(
+        f"/characters/{CHARID}/class", json={"classId": "srd-2024_warden"}, headers=_headers()
     )
-    assert (
-        client.put(
-            f"/characters/{CHARID}/class", json={"class": "Cleric"}, headers=_headers()
-        ).status_code
-        == 200
+    resp = client.put(
+        f"/characters/{CHARID}/class", json={"classId": "srd-2024_rogue"}, headers=_headers()
     )
+    assert resp.status_code == 200
     record = client.get(f"/characters/{CHARID}", headers=_headers()).json()
-    assert record["class"] == "Cleric"
-    assert "classes" not in record
+    assert record["classId"] == "srd-2024_rogue"
+    assert "class" not in record
 
 
 @pytest.mark.integration
@@ -131,14 +121,16 @@ def test_class_list_served_from_seed(client):
     """GET /classes returns the seeded records from Redis."""
     resp = client.get("/classes")
     assert resp.status_code == 200
-    names = sorted(r["name"] for r in resp.json())
-    assert names == sorted(CLASS_NAMES)
+    keys = sorted(r["key"] for r in resp.json())
+    assert keys == ["srd-2024_rogue", "srd-2024_warden"]
 
 
 @pytest.mark.integration
 def test_unknown_character_returns_404(client):
     assert client.get("/characters/nonexistent", headers=_headers()).status_code == 404
-    resp = client.put("/characters/nonexistent/class", json={"class": "Wizard"}, headers=_headers())
+    resp = client.put(
+        "/characters/nonexistent/class", json={"classId": "srd-2024_warden"}, headers=_headers()
+    )
     assert resp.status_code == 404
 
 
@@ -147,9 +139,7 @@ def test_missing_uid_header_returns_422():
 
     from forge_backend.main import app
 
-    client = TestClient(app)
-    assert client.get(f"/characters/{CHARID}").status_code == 422
-    resp = client.put(f"/characters/{CHARID}/class", json={"class": "Wizard"})
+    resp = TestClient(app).put("/characters/x/class", json={"classId": "srd-2024_warden"})
     assert resp.status_code == 422
 
 
@@ -158,8 +148,9 @@ def test_blank_uid_header_returns_422():
 
     from forge_backend.main import app
 
-    client = TestClient(app)
-    headers = {"X-User-Id": ""}
-    assert client.get(f"/characters/{CHARID}", headers=headers).status_code == 422
-    resp = client.put(f"/characters/{CHARID}/class", json={"class": "Wizard"}, headers=headers)
+    resp = TestClient(app).put(
+        "/characters/x/class",
+        json={"classId": "srd-2024_warden"},
+        headers={"X-User-Id": ""},
+    )
     assert resp.status_code == 422
