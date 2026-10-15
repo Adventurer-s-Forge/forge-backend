@@ -55,7 +55,7 @@ class UserCharacterDataService:
     def _validate_equipment_ids(self, equipment_ids: list[str]) -> None:
         if not equipment_ids:
             return
-        valid = set(list_reference_keys(self.redis_client, "item"))
+        valid = set(list_reference_keys(self.redis_client, "equipment"))
         for entry in equipment_ids:
             if entry not in valid:
                 raise ValueError("unknown equipmentIds")
