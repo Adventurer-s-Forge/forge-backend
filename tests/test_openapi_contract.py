@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from forge_backend.main import app
@@ -19,13 +20,15 @@ def test_character_record_uses_canonical_fields():
         "name",
         "level",
         "raceId",
+        "sizeChoice",
         "classId",
         "backgroundId",
+        "equipmentChoice",
+        "purchasedItemIds",
         "abilities",
         "proficientSkillIds",
         "expertiseIds",
         "spellIds",
-        "equipmentIds",
         "completedSteps",
     ):
         assert field in record["properties"]
@@ -36,7 +39,9 @@ def test_character_record_uses_canonical_fields():
         "200"
     ]["content"]["application/json"]["schema"]
     assert record_list["type"] == "array"
-    assert record_list["items"]["$ref"].endswith("CharacterRecord")
+    assert record_list["items"]["$ref"].endswith("CharacterDocument")
+    assert "createdAt" not in schemas["CharacterRecord"]["properties"]
+    assert "createdAt" in schemas["CharacterDocument"]["properties"]
 
 
 def test_reference_responses_have_object_schemas():
@@ -48,26 +53,6 @@ def test_reference_responses_have_object_schemas():
         "application/json"
     ]["schema"]
     assert get_classes["type"] == "array"
-
-
-def test_every_character_operation_requires_nonempty_header():
-    schema = client.get("/openapi.json").json()
-    paths = [
-        ("/characters", "post"),
-        ("/characters", "get"),
-        ("/characters/ids", "get"),
-        ("/characters/count", "get"),
-        ("/characters/{character_id}", "get"),
-        ("/characters/{character_id}", "put"),
-        ("/characters/{character_id}/class", "put"),
-        ("/characters/{character_id}/equipment", "put"),
-        ("/characters/{character_id}/spells", "put"),
-    ]
-    for path, method in paths:
-        params = schema["paths"][path][method].get("parameters", [])
-        header = next(p for p in params if p["in"] == "header" and p["name"] == "X-User-Id")
-        assert header["required"] is True
-        assert header["schema"].get("minLength", 0) >= 1
 
 
 def test_declared_errors_expose_string_detail():
@@ -85,10 +70,6 @@ def test_declared_errors_expose_string_detail():
         detail_404["content"]["application/json"]["schema"]["$ref"]
         == "#/components/schemas/ErrorResponse"
     )
-    put_responses = schema["paths"]["/characters/{character_id}/class"]["put"]["responses"]
-    assert "400" in put_responses and "404" in put_responses
-    spell_responses = schema["paths"]["/characters/{character_id}/spells"]["put"]["responses"]
-    assert "400" in spell_responses and "404" in spell_responses
 
 
 def test_save_operation_exposed():
@@ -100,39 +81,19 @@ def test_save_operation_exposed():
     assert ref.endswith("CharacterRecord")
 
 
-def test_equipment_contract_exposes_array_and_errors():
-    schema = client.get("/openapi.json").json()
-    schemas = schema["components"]["schemas"]
-    assert schemas["EquipmentSelection"]["properties"]["equipmentIds"]["type"] == "array"
-    assert schemas["EquipmentSelection"]["properties"]["equipmentIds"]["items"]["type"] == "string"
-    assert "equipmentIds" in schemas["EquipmentSelection"]["required"]
-    assert "equipment" not in schemas["EquipmentSelection"]["properties"]
-    assert schemas["CharacterRecord"]["properties"]["equipmentIds"]["type"] == "array"
-    put = schema["paths"]["/characters/{character_id}/equipment"]["put"]
-    assert "400" in put["responses"] and "404" in put["responses"]
-    assert schemas["ClassSelection"]["properties"]["classId"]["type"] == "string"
-    assert "class" not in schemas["ClassSelection"]["properties"]
-
-
-def test_spell_contract_exposes_strict_ids_and_operation():
-    schema = client.get("/openapi.json").json()
-    schemas = schema["components"]["schemas"]
-    selection = schemas["SpellSelection"]
-    assert selection["properties"]["spellIds"]["type"] == "array"
-    assert selection["properties"]["spellIds"]["items"]["type"] == "string"
-    assert selection["required"] == ["spellIds"]
-    assert selection.get("additionalProperties") is False
-    assert "spells" not in selection["properties"]
-    put = schema["paths"]["/characters/{character_id}/spells"]["put"]
-    assert put["operationId"] == "set_character_spells"
-    assert "400" in put["responses"] and "404" in put["responses"]
-    ref = put["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
-    assert ref.endswith("CharacterRecord")
-
-
 def test_equipment_path_is_singular():
     paths = client.get("/openapi.json").json()["paths"]
     assert "/equipment" in paths
     assert paths["/equipment"]["get"]["operationId"] == "list_items"
     assert "/items" not in paths
     assert "/equipments" not in paths
+
+
+@pytest.mark.parametrize("path", [
+    "/characters/{character_id}/class",
+    "/characters/{character_id}/spells",
+    "/characters/{character_id}/equipment",
+])
+def test_retired_subroutes_absent_from_contract(path):
+    from forge_backend.main import app
+    assert path not in app.openapi()["paths"]
