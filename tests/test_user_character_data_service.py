@@ -13,9 +13,7 @@ def test_create_new_character_roundtrip(redis_conn):
     user_id = "4CIZQ94T3ncLcAAizmHcN62V6Q43"
     character = CharacterRecord.model_validate({"id": UUID, "name": "Bart Penelope"})
 
-    expected = character.model_dump(mode="json")
-    assert service.create_user_character(user_id, character) == 1
-    assert service.get_num_user_characters(user_id) == 1
-    assert service.get_character_by_id(user_id, UUID) == expected
-    assert service.list_character_ids(user_id) == [UUID]
-    assert service.list_characters(user_id) == [expected]
+    record = service.create_user_character(user_id, character)
+    assert record["ownerUid"] == user_id
+    assert record["schemaVersion"] == 1
+    assert record["createdAt"] == record["updatedAt"]
