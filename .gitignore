@@ -221,3 +221,6 @@ sampleCharacterJSON.json
 /src/cleanup.py
 
 env.download
+
+# VSCode
+.vscode/
