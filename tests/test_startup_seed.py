@@ -40,7 +40,7 @@ class StubCaller:
             self._rec("srd_background", "Background", "srd-2014"),
         ]
 
-    def get_items(self):
+    def get_equipment(self):
         return [
             self._rec("srd-2024_item_1", "Item 1", "srd-2024"),
             self._rec("srd-2024_item_2", "Item 2", "srd-2024"),
@@ -98,7 +98,7 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
         "race": 1,
         "class": 1,
         "background": 1,
-        "item": 3,
+        "equipment": 3,
         "spell": 1,
         "skill": 2,
     }
@@ -107,7 +107,7 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
     assert [r["key"] for r in by_type["race"]] == ["srd-2024_elf"]
     assert [r["key"] for r in by_type["class"]] == ["srd-2024_class"]
     assert [r["key"] for r in by_type["background"]] == ["srd-2024_background"]
-    assert [r["key"] for r in by_type["item"]] == [
+    assert [r["key"] for r in by_type["equipment"]] == [
         "srd-2024_item_1",
         "srd-2024_item_2",
         "srd-2024_item_3",
@@ -267,7 +267,7 @@ def test_malformed_skill_blocks_refresh(monkeypatch, redis_conn):
         def get_backgrounds(self):
             return []
 
-        def get_items(self):
+        def get_equipment(self):
             return []
 
         def get_spells(self):

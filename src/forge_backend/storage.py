@@ -27,7 +27,7 @@ import redis
 
 from forge_backend import config
 
-REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "item", "spell", "skill")
+REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill")
 
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
@@ -284,3 +284,12 @@ def update_character(
     )
     pipe.sadd(char_index_key(uid), charid)  # idempotent: no-op when already indexed
     pipe.execute()
+
+
+def delete_character(conn: redis.Redis, uid: str, charid: str) -> bool:
+    """Delete one character and de-index it; ``False`` when it did not exist."""
+    pipe = conn.pipeline(transaction=True)
+    pipe.delete(char_key(uid, charid))
+    pipe.srem(char_index_key(uid), charid)
+    deleted, _ = pipe.execute()
+    return bool(deleted)

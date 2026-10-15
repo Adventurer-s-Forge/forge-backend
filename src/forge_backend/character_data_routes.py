@@ -14,7 +14,7 @@ service = CharacterDataService()
 class ReferenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    type: Literal["race", "class", "background", "item", "spell", "skill"]
+    type: Literal["race", "class", "background", "equipment", "skill", "spell"]
     key: str
     name: str
     document: str
