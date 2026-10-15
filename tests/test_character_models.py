@@ -20,13 +20,15 @@ def test_minimal_draft_produces_blank_defaults():
         "name",
         "level",
         "raceId",
+        "sizeChoice",
         "classId",
         "backgroundId",
+        "equipmentChoice",
+        "purchasedItemIds",
         "abilities",
         "proficientSkillIds",
         "expertiseIds",
         "spellIds",
-        "equipmentIds",
         "completedSteps",
     ]
     assert dumped["level"] == 1
@@ -40,8 +42,11 @@ def test_full_payload_roundtrips_verbatim():
         "name": "Gandalf",
         "level": 1,
         "raceId": "draft_race",
+        "sizeChoice" : "Medium",
         "classId": "test_warden",
         "backgroundId": "draft_background",
+        "equipmentChoice": {"class": "A", "background": "B"},
+        "purchasedItemIds": [],
         "abilities": {
             "method": "roll",
             "base": {"STR": 15, "DEX": 14},
@@ -51,10 +56,12 @@ def test_full_payload_roundtrips_verbatim():
         "proficientSkillIds": ["arcana"],
         "expertiseIds": ["arcana"],
         "spellIds": ["draft_spell"],
-        "equipmentIds": ["srd_shield", "srd_shield"],
-        "completedSteps": ["name", "class", "item"],
+        "completedSteps": ["name", "race", "class", "background", "equipment", "attributes", "skills", "spells"],
     }
-    assert CharacterRecord.model_validate(payload).model_dump(mode="json") == payload
+    assert (
+        CharacterRecord.model_validate(payload).model_dump(mode="json", by_alias=True)
+        == payload
+    )
 
 
 @pytest.mark.parametrize(
@@ -74,11 +81,10 @@ def test_full_payload_roundtrips_verbatim():
         _payload(abilities={"base": {"FOO": 15}}),
         _payload(abilities={"unknown": 1}),
         _payload(proficientSkillIds=[""]),
-        _payload(equipmentIds=[5]),
-        _payload(completedSteps=["equipment"]),
+        _payload(purchasedItemIds=[5]),
+        _payload(completedSteps=["item"]),
         _payload(owner="test-user"),
         _payload(**{"class": "Wizard"}),
-        _payload(equipment=["Shield"]),
     ],
 )
 def test_structural_rejections(payload):
