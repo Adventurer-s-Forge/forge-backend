@@ -22,6 +22,9 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 from typing import Any, Final
+import json
+import logging
+import re
 
 import redis
 
@@ -32,6 +35,8 @@ REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment",
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
 _redis_client: redis.Redis | None = None
+
+logger = logging.getLogger(__name__)
 
 
 def get_redis() -> redis.Redis:
@@ -169,17 +174,22 @@ def list_reference_keys(conn: redis.Redis, ref_type: str) -> list[str]:
 
 
 def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
-    """
-    Consruct the index and then get the list of the index keys for a user's characters from the database.
+    """Character ids for one player; the stored records are the source of truth.
 
-    Args:
-        conn (redis.Redis): the Redist database connection
-        uid (str): The user's ID from Google Firebase Authentication
+    ``char:idx:{uid}`` is a convenience index for listing. If a record exists at
+    ``char:{uid}:{id}`` but its id is missing from the index, re-add it rather than
+    hiding tht character.
 
-    Returns:
-        (list[str]): The list of index keys for a user's characters
+    Returns the scan result, not the index, so a listing stays correct even if the 
+    repairing ``SADD`` fails.
     """
-    return sorted(conn.smembers(char_index_key(uid)))
+    prefix = f"char:{uid}:"
+    actual ={key[len(prefix) :] for key in conn.scan_iter(match=f"{prefix}*", count=200)}
+    missing = actual - set(conn.smembers(char_index_key(uid)))
+    if missing:
+        logger.warning("char index drift uid=%s; re-indexing %d id(s)", uid, len(missing))
+        conn.sadd(char_index_key(uid), *missing)
+    return sorted(actual)
 
 
 def list_reference_records(conn: redis.Redis, ref_type: str) -> list[dict[str, Any]]:
