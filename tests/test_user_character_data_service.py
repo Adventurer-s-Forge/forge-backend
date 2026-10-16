@@ -17,3 +17,24 @@ def test_create_new_character_roundtrip(redis_conn):
     assert record["ownerUid"] == user_id
     assert record["schemaVersion"] == 1
     assert record["createdAt"] == record["updatedAt"]
+
+
+
+def test_validate_skills_no_skills(redis_conn):
+    service = UserCharacterDataService(redis_conn)
+    assert service._validate_skill_ids(None) == None
+
+
+def test_validate_skills_invalid_skills(redis_conn):
+    service = UserCharacterDataService(redis_conn)
+    error_validating_skills = None # Initialize the result to validate
+    expected_error_message = "unknown skill IDs"
+    expected_error_type = ValueError
+
+    try:
+        service._validate_skill_ids(["arcana", "fakeSkill", "history"])
+    except ValueError as error:
+        error_validating_skills = error
+
+    assert type(error_validating_skills) == expected_error_type
+    assert error_validating_skills.args[0] == expected_error_message

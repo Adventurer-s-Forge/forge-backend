@@ -45,8 +45,8 @@ class UserCharacterDataService:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.purchasedItemIds)
         self._validate_spell_selection(character.classId, character.spellIds)
-        self._validate_skill_selection(character.proficientSkillIds) # validate the list of proficient skills
-        self._validate_skill_selection(character.expertiseIds) # validate the list of expertise skills
+        self._validate_skill_ids(character.proficientSkillIds) # validate the list of proficient skills
+        self._validate_skill_ids(character.expertiseIds) # validate the list of expertise skills
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
