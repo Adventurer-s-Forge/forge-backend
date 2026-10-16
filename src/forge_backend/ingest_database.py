@@ -25,7 +25,7 @@ REF_DOCUMENTS: dict[str, str] = {
     "race": "srd-2024",
     "class": "srd-2024",
     "background": "srd-2024",
-    "item": "srd-2024",
+    "equipment": "srd-2024",
     "spell": "srd-2024",
     "skill": "core",
 }
@@ -77,7 +77,7 @@ def run_ingestion() -> dict[str, int]:
         "race": caller.get_races,
         "class": caller.get_classes,
         "background": caller.get_backgrounds,
-        "item": caller.get_items,
+        "equipment": caller.get_equipment,
         "spell": caller.get_spells,
         "skill": caller.get_skills,
     }

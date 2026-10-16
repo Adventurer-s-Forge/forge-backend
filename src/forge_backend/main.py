@@ -47,8 +47,8 @@ app = FastAPI(
     title="Adventurer's Forge API",
     version="0.1.0",
     description=(
-        "D&D reference content and player-character API. Character operations use a "
-        "temporary X-User-Id header, not verified authentication."
+        "D&D reference content and player-character API. Character operations "
+        "require a Firebase ID token as `Authorization: Bearer <token>`."
     ),
     docs_url="/docs",
     redoc_url="/redoc",

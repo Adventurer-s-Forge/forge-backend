@@ -28,7 +28,7 @@ class Open5eCaller:
     def get_backgrounds(self):
         return self.pagination_data("https://api.open5e.com/v2/backgrounds/")
 
-    def get_items(self):
+    def get_equipment(self):
         return self.pagination_data("https://api.open5e.com/v2/items/")
 
     def get_spells(self):

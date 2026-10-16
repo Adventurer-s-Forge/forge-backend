@@ -29,10 +29,10 @@ class CharacterDataService:
         return response
 
     def get_item(self, item):
-        return get_reference(self.redis_client, "item", item)
+        return get_reference(self.redis_client, "equipment", item)
 
     def get_items(self):
-        response = list_reference_records(self.redis_client, "item")
+        response = list_reference_records(self.redis_client, "equipment")
         return response
 
     def get_spell(self, spell):

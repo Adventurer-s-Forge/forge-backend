@@ -1,10 +1,11 @@
 from typing import Any
 
-from forge_backend.character_models import CharacterRecord
+from forge_backend.character_models import CharacterRecord, utcnow
 from forge_backend.spell_rules import validate_spell_class_eligibility
 from forge_backend.storage import (
     add_new_character,
     count_characters,
+    delete_character,
     get_redis,
     get_reference,
     get_user_character,
@@ -29,17 +30,6 @@ class UserCharacterDataService:
     def __init__(self, redis_client=None):
         self.redis_client = redis_client if redis_client is not None else get_redis()
 
-    def create_user_character(self, user_id: str, character: CharacterRecord) -> int:
-        """Validate selections, persist the complete record; raises DuplicateCharacterId."""
-        self.validate_character_references(character)
-        record = character.model_dump(mode="json")
-        result = add_new_character(self.redis_client, user_id, character.id, record)
-        if result == 0:
-            raise DuplicateCharacterId(
-                "Cannot add duplicate character with ID: " + character.id + "!"
-            )
-        return result
-
     def _validate_spell_selection(self, class_id: str | None, spell_ids: list[str]) -> None:
         if not spell_ids:
             return
@@ -53,7 +43,7 @@ class UserCharacterDataService:
 
     def validate_character_references(self, character: CharacterRecord) -> None:
         self._validate_class_id(character.classId)
-        self._validate_equipment_ids(character.equipmentIds)
+        self._validate_equipment_ids(character.purchasedItemIds)
         self._validate_spell_selection(character.classId, character.spellIds)
 
     def _validate_class_id(self, class_id: str | None) -> None:
@@ -65,22 +55,10 @@ class UserCharacterDataService:
     def _validate_equipment_ids(self, equipment_ids: list[str]) -> None:
         if not equipment_ids:
             return
-        valid = set(list_reference_keys(self.redis_client, "item"))
+        valid = set(list_reference_keys(self.redis_client, "equipment"))
         for entry in equipment_ids:
             if entry not in valid:
                 raise ValueError("unknown equipmentIds")
-
-    def save_character(self, user_id: str, character_id: str, character: CharacterRecord) -> dict:
-        """Full-replacement save of an owned record; raises KeyError/ValueError."""
-        existing = get_user_character(self.redis_client, user_id, character_id)
-        if existing is None:
-            raise KeyError(character_id)
-        if character.id != character_id:
-            raise ValueError("id must match character_id")
-        self.validate_character_references(character)
-        record = character.model_dump(mode="json")
-        update_character(self.redis_client, user_id, character_id, record)
-        return record
 
     def list_character_ids(self, user_id) -> list[str]:
         """
@@ -122,28 +100,36 @@ class UserCharacterDataService:
         """
         return get_user_character(self.redis_client, user_id, character_id)
 
-    def set_character_class(self, user_id: str, character_id: str, class_id: str) -> dict:
-        """Replace the record's classId; raises KeyError/ValueError."""
-        record = self.get_character_by_id(user_id, character_id)
-        if record is None:
+    # Removed `set_character_class`, `set_character_spell`, and `set_character_equipment`
+    # Replaced them with these two below:
+    def create_user_character(self, user_id: str, character: CharacterRecord) -> dict:
+        self.validate_character_references(character)
+        now = utcnow()
+        record = character.to_record(user_id, created_at=now, updated_at=now)
+        if add_new_character(self.redis_client, user_id, character.id, record) == 0:
+            raise DuplicateCharacterId(f"character {character.id} already exists")
+        return record
+
+    def save_character(
+        self, user_id: str, character_id: str, character: CharacterRecord
+    ) -> dict:
+        """Full replacement save of an owned record; raises KeyError/ValueError."""
+        existing = get_user_character(self.redis_client, user_id, character_id)
+        if existing is None:
             raise KeyError(character_id)
-        self._validate_class_id(class_id)
-        self._validate_spell_selection(class_id, record.get("spellIds", []))
-        record["classId"] = class_id
+        if character.id != character_id:
+            raise ValueError("id must match character_id")
+        self.validate_character_references(character)
+        record = character.to_record(
+            user_id,
+            created_at=existing.get("createdAt") or utcnow(),
+            updated_at=utcnow(),
+        )
         update_character(self.redis_client, user_id, character_id, record)
         return record
 
-    def set_character_equipment(
-        self, user_id: str, character_id: str, equipment_ids: list[str]
-    ) -> dict:
-        """Replace the record's equipmentIds; raises KeyError/ValueError."""
-        record = self.get_character_by_id(user_id, character_id)
-        if record is None:
-            raise KeyError(character_id)
-        self._validate_equipment_ids(equipment_ids)
-        record["equipmentIds"] = equipment_ids
-        update_character(self.redis_client, user_id, character_id, record)
-        return record
+    def remove_character(self, user_id: str, character_id: str) -> bool:
+        return delete_character(self.redis_client, user_id, character_id)
 
     def get_num_user_characters(self, user_id) -> int:
         """
@@ -157,15 +143,3 @@ class UserCharacterDataService:
             (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)
-
-    def set_character_spells(self, user_id: str, character_id: str, spell_ids: list[str]) -> dict:
-        """Replace the record's spellIds; raises KeyError/ValueError."""
-        record = self.get_character_by_id(user_id, character_id)
-        if record is None:
-            raise KeyError(character_id)
-        if spell_ids:
-            self._validate_class_id(record.get("classId"))
-            self._validate_spell_selection(record.get("classId"), spell_ids)
-        record["spellIds"] = spell_ids
-        update_character(self.redis_client, user_id, character_id, record)
-        return record
