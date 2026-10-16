@@ -107,12 +107,18 @@ for data specific to that area and `tests/conftest.py` for genuinely shared setu
 | Area | Examples to consult |
 | --- | --- |
 | Pure storage key and record validation | `tests/test_storage.py` |
+| Pure spell class-eligibility rules | `tests/test_spell_rules.py` |
+| Request/response model validation | `tests/test_character_models.py` |
 | Redis persistence, refresh, idempotency, and namespace isolation | `tests/test_storage_integration.py` |
-| Mocked service boundaries | `tests/test_character_data_service.py` |
-| API persistence, identity namespaces, validation, and collisions | `tests/test_user_character_data_routes.py` |
-| Reference routes and class-selection transitions | `tests/test_character_data_routes_us35.py` |
+| Character CRUD over HTTP | `tests/test_character_contract.py` |
+| Cross-user isolation (404 not 403) | `tests/test_character_ownership.py` |
+| Token verification and rejection paths | `tests/test_auth.py` |
+| Reference routes served from the seed | `tests/test_reference_routes.py` |
+| The no-outbound-HTTP invariant | `tests/test_no_outbound_http.py` |
+| Character service behaviour | `tests/test_user_character_data_service.py` |
 | Ingestion formatting and application lifespan | `tests/test_startup_seed.py` |
 | Public API schema and browser CORS behavior | `tests/test_openapi_contract.py`, `tests/test_cors.py` |
+
 
 Two custom markers are registered:
 
@@ -144,6 +150,10 @@ expected results so cases are reproducible.
   `user_character_data_routes._service`, then returns `TestClient(app)`. It exercises
   in-process HTTP routing against real test Redis; no uvicorn process is required.
   Monkeypatch restores the replaced attributes after the test.
+- `no_outbound_http`: patches `requests.sessions.Session.request` to raise. Open5e is a
+  deploy-time dependency only, so any outbound HTTP while serving a request is a bug --
+  if a route reached for live referenced data, a slow Open5e would become a slow API.
+  Combine it with `api_client` to assert a route is served entirely from the seed.
 
 Services take an optional `redis_client` (`CharacterDataService(redis_conn)`,
 `UserCharacterDataService(redis_conn)`) and default to the runtime `get_redis()`
@@ -157,10 +167,27 @@ startup ingestion. For lifespan behavior, follow `test_startup_seed.py`: patch
 Do not enter a client context without isolating ingestion; startup can access Redis
 and the upstream content API.
 
-Character requests currently use `headers={"X-User-Id": "test-user"}` to select an
-owner namespace. This is temporary identity plumbing, not Firebase authentication.
-Test missing/blank headers and cross-user isolation, but do not treat header-based
-tests as proof of authenticated authorization.
+Character routes take identity from a verified Firebase ID token, never from a header
+or body field. Real tokens cannot be minted in tests, so `api_client` overrides the
+`current_uid` dependency instead:
+
+    app.dependency_overrides[current_uid] = lambda: UID
+
+The fixture clears the override on teardown. `dependency_overrides` is app-global
+state, so an uncleared override leaks the identity into every later test in the run.
+
+Use `as_user(client, OTHER_UID)` from `conftest.py` to switch identity mid-test — that
+is how cross-user isolation is exercised. Assert **404, not 403**, when a caller
+reaches a character they do not own: a 403 would confirm the id exists.
+
+Because the override bypasses verification entirely, these tests prove *authorization*
+(namespace scoping) and not *authentication*. Token handling itself — missing header,
+malformed token, JWKS outage, missing `sub` — is covered in `tests/test_auth.py`,
+which calls `auth.current_uid` directly rather than going through a route.
+
+`as_user(client, uid)` is a plain helper rather than a fixture: it repoints the
+`current_uid` override on an existing client and returns it, so a single test can act
+as two different users in sequence.
 
 ## Writing focused, deterministic tests
 
@@ -175,9 +202,10 @@ a short docstring should explain a non-obvious invariant, not restate each line.
   duplicate IDs, empty refreshes, re-selection, orphan cleanup, idempotent reruns, and
   reference/player or user/user isolation where relevant to the change.
 - **Parameterize cases sharing the same behavior.** `test_storage.py` uses
-  `@pytest.mark.parametrize` for invalid records; route tests parameterize missing
-  identity headers across endpoints. Keep different behaviors separate for useful
-  failure messages; descriptive parameter IDs are helpful for larger tables.
+  `@pytest.mark.parametrize` for invalid records; route tests parametrize the reference
+  endpoint acorss `REFERENCE_ROUTES`, and the write verbs across `get` / `put` / `delete`
+  for ownership checks. Keep different behaviors separate for useful failure messages;
+  descriptive parameter IDs are helpful for larger tables.
 - **Use `pytest.raises` for expected exceptions.** Assert the intended exception type;
   check message content only when it is part of the contract. Do not catch broad
   exceptions or suppress failures to make a test pass.

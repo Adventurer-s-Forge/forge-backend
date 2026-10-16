@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from forge_backend.main import app
@@ -11,16 +12,36 @@ def test_create_documents_201_not_200():
     assert "200" not in responses
 
 
-def test_character_record_uses_wire_key_class():
+def test_character_record_uses_canonical_fields():
     schemas = client.get("/openapi.json").json()["components"]["schemas"]
     record = schemas["CharacterRecord"]
-    assert "class" in record["properties"]
+    for field in (
+        "id",
+        "name",
+        "level",
+        "raceId",
+        "sizeChoice",
+        "classId",
+        "backgroundId",
+        "equipmentChoice",
+        "purchasedItemIds",
+        "abilities",
+        "proficientSkillIds",
+        "expertiseIds",
+        "spellIds",
+        "completedSteps",
+    ):
+        assert field in record["properties"]
+    assert "owner" not in record["properties"]
     assert "character_class" not in record["properties"]
+    assert record.get("additionalProperties") is False
     record_list = client.get("/openapi.json").json()["paths"]["/characters"]["get"]["responses"][
         "200"
     ]["content"]["application/json"]["schema"]
     assert record_list["type"] == "array"
-    assert record_list["items"]["$ref"].endswith("CharacterRecord")
+    assert record_list["items"]["$ref"].endswith("CharacterDocument")
+    assert "createdAt" not in schemas["CharacterRecord"]["properties"]
+    assert "createdAt" in schemas["CharacterDocument"]["properties"]
 
 
 def test_reference_responses_have_object_schemas():
@@ -32,23 +53,6 @@ def test_reference_responses_have_object_schemas():
         "application/json"
     ]["schema"]
     assert get_classes["type"] == "array"
-
-
-def test_every_character_operation_requires_nonempty_header():
-    schema = client.get("/openapi.json").json()
-    paths = [
-        ("/characters", "post"),
-        ("/characters", "get"),
-        ("/characters/ids", "get"),
-        ("/characters/count", "get"),
-        ("/characters/{character_id}", "get"),
-        ("/characters/{character_id}/class", "put"),
-    ]
-    for path, method in paths:
-        params = schema["paths"][path][method].get("parameters", [])
-        header = next(p for p in params if p["in"] == "header" and p["name"] == "X-User-Id")
-        assert header["required"] is True
-        assert header["schema"].get("minLength", 0) >= 1
 
 
 def test_declared_errors_expose_string_detail():
@@ -66,5 +70,30 @@ def test_declared_errors_expose_string_detail():
         detail_404["content"]["application/json"]["schema"]["$ref"]
         == "#/components/schemas/ErrorResponse"
     )
-    put_responses = schema["paths"]["/characters/{character_id}/class"]["put"]["responses"]
-    assert "400" in put_responses and "404" in put_responses
+
+
+def test_save_operation_exposed():
+    schema = client.get("/openapi.json").json()
+    put = schema["paths"]["/characters/{character_id}"]["put"]
+    assert put["operationId"] == "save_character"
+    assert "400" in put["responses"] and "404" in put["responses"]
+    ref = put["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+    assert ref.endswith("CharacterRecord")
+
+
+def test_equipment_path_is_singular():
+    paths = client.get("/openapi.json").json()["paths"]
+    assert "/equipment" in paths
+    assert paths["/equipment"]["get"]["operationId"] == "list_items"
+    assert "/items" not in paths
+    assert "/equipments" not in paths
+
+
+@pytest.mark.parametrize("path", [
+    "/characters/{character_id}/class",
+    "/characters/{character_id}/spells",
+    "/characters/{character_id}/equipment",
+])
+def test_retired_subroutes_absent_from_contract(path):
+    from forge_backend.main import app
+    assert path not in app.openapi()["paths"]

@@ -1,5 +1,7 @@
 import os
 
+FIREBASE_PROJECT_ID: str = os.environ.get("FIREBASE_PROJECT_ID", "adv-forge")
+
 REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 CORS_ORIGINS: list[str] = [

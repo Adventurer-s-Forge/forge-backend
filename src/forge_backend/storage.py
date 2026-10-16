@@ -19,6 +19,7 @@ Stored-record JSON contract (produced by the Open5e seed transform)::
 from __future__ import annotations
 
 import json
+import logging
 import re
 from collections.abc import Iterable, Mapping
 from typing import Any, Final
@@ -27,11 +28,13 @@ import redis
 
 from forge_backend import config
 
-REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "item", "spell", "skill")
+REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill")
 
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
 _redis_client: redis.Redis | None = None
+
+logger = logging.getLogger(__name__)
 
 
 def get_redis() -> redis.Redis:
@@ -169,17 +172,22 @@ def list_reference_keys(conn: redis.Redis, ref_type: str) -> list[str]:
 
 
 def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
-    """
-    Consruct the index and then get the list of the index keys for a user's characters from the database.
+    """Character ids for one player; the stored records are the source of truth.
 
-    Args:
-        conn (redis.Redis): the Redist database connection
-        uid (str): The user's ID from Google Firebase Authentication
+    ``char:idx:{uid}`` is a convenience index for listing. If a record exists at
+    ``char:{uid}:{id}`` but its id is missing from the index, re-add it rather than
+    hiding tht character.
 
-    Returns:
-        (list[str]): The list of index keys for a user's characters
+    Returns the scan result, not the index, so a listing stays correct even if the 
+    repairing ``SADD`` fails.
     """
-    return sorted(conn.smembers(char_index_key(uid)))
+    prefix = f"char:{uid}:"
+    actual ={key[len(prefix) :] for key in conn.scan_iter(match=f"{prefix}*", count=200)}
+    missing = actual - set(conn.smembers(char_index_key(uid)))
+    if missing:
+        logger.warning("char index drift uid=%s; re-indexing %d id(s)", uid, len(missing))
+        conn.sadd(char_index_key(uid), *missing)
+    return sorted(actual)
 
 
 def list_reference_records(conn: redis.Redis, ref_type: str) -> list[dict[str, Any]]:
@@ -231,7 +239,7 @@ def count_characters(conn: redis.Redis, uid: str) -> int:
 
 
 def add_new_character(
-    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, Any]
 ) -> int:
     """
     Add a new character for a user to the database.
@@ -240,7 +248,7 @@ def add_new_character(
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
         charid (str): The unique ID of the user's character
-        user_character (Mapping[str, str]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
+        user_character (Mapping[str, Any]): The actual data for the user's character (e.g. {"name": "Joe Schmoe"})
 
     Returns:
         (int): Returns 1 since only 1 character is created at a t
@@ -263,7 +271,7 @@ def add_new_character(
 
 
 def update_character(
-    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, str]
+    conn: redis.Redis, uid: str, charid: str, user_character: Mapping[str, Any]
 ) -> None:
     """
     Overwrite an existing character record in place.
@@ -275,7 +283,7 @@ def update_character(
         conn (redis.Redis): the Redist database connection
         uid (str): The user's ID from Google Firebase Authentication
         charid (str): The unique ID of the user's character
-        user_character (Mapping[str, str]): The full record to store
+        user_character (Mapping[str, Any]): The full record to store
     """
     pipe = conn.pipeline(transaction=True)
     pipe.set(
@@ -284,3 +292,12 @@ def update_character(
     )
     pipe.sadd(char_index_key(uid), charid)  # idempotent: no-op when already indexed
     pipe.execute()
+
+
+def delete_character(conn: redis.Redis, uid: str, charid: str) -> bool:
+    """Delete one character and de-index it; ``False`` when it did not exist."""
+    pipe = conn.pipeline(transaction=True)
+    pipe.delete(char_key(uid, charid))
+    pipe.srem(char_index_key(uid), charid)
+    deleted, _ = pipe.execute()
+    return bool(deleted)

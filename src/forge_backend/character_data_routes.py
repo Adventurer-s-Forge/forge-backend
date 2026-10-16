@@ -14,7 +14,7 @@ service = CharacterDataService()
 class ReferenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    type: Literal["race", "class", "background", "item", "spell", "skill"]
+    type: Literal["race", "class", "background", "equipment", "skill", "spell"]
     key: str
     name: str
     document: str
@@ -37,7 +37,7 @@ def get_races():
     operation_id="list_classes",
     response_model=list[ReferenceRecord],
     summary="List classes",
-    description='List seeded class reference records, e.g. `key="srd_wizard"`.',
+    description='List seeded class reference records, e.g. `key="srd-2024_wizard"`.',
 )
 def get_classes():
     return service.get_classes()
@@ -55,11 +55,11 @@ def get_backgrounds():
 
 
 @router.get(
-    "/items",
+    "/equipment",
     operation_id="list_items",
     response_model=list[ReferenceRecord],
-    summary="List items",
-    description="List seeded item reference records.",
+    summary="List equipment",
+    description="List seeded equipment reference records.",
 )
 def get_items():
     return service.get_items()

@@ -217,5 +217,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-/src/moo.py
-/src/test.json
+sampleCharacterJSON.json
+/src/cleanup.py
+
+env.download
+
+# VSCode
+.vscode/

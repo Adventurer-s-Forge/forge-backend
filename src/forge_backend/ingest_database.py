@@ -5,10 +5,10 @@ Redis via :func:`storage.refresh_reference_type`. Importing this module has no
 side effects; call :func:`run_ingestion` explicitly (FastAPI lifespan in
 ``forge_backend.main``) or via ``python -m forge_backend.ingest_database``.
 
-SRD edition is pinned per resource category, never mixed within a category:
-backgrounds and items seed from ``srd-2024``; races, classes, and spells seed
-from ``srd-2014``; skills seed from ``core`` (the Open5e v2 edition-neutral
-SRD skill set the 18-skill list is unchanged between the 2014 and 2024 SRDs).
+SRD edition policy: race, class, background, item, and spell seed from
+``srd-2024`` (SRD 5.2, 2024 rules, CC BY 4.0); skill seeds from ``core`` with
+only ``srd-2024`` description entries projected (edition-neutral skill
+IDs/metadata; Open5e has no separate top-level 2024 skill records).
 """
 
 import logging
@@ -22,13 +22,31 @@ from forge_backend.storage import REF_TYPES, get_redis, refresh_reference_type
 logger = logging.getLogger(__name__)
 
 REF_DOCUMENTS: dict[str, str] = {
-    "race": "srd-2014",
-    "class": "srd-2014",
+    "race": "srd-2024",
+    "class": "srd-2024",
     "background": "srd-2024",
-    "item": "srd-2024",
-    "spell": "srd-2014",
+    "equipment": "srd-2024",
+    "spell": "srd-2024",
     "skill": "core",
 }
+
+
+def _reference_data(raw: dict[str, Any], ref_type: str) -> dict[str, Any]:
+    """Return the envelope payload; project skill descriptions to 2024 only."""
+    if ref_type != "skill":
+        return raw
+    descriptions = raw.get("descriptions", [])
+    if descriptions is None:
+        return {**raw, "descriptions": []}
+    if not isinstance(descriptions, list):
+        raise ValueError("invalid skill descriptions")  # noqa: TRY004
+    kept = []
+    for entry in descriptions:
+        if not isinstance(entry, dict):
+            raise ValueError("invalid skill descriptions")  # noqa: TRY004
+        if _document_key(entry) == "srd-2024":
+            kept.append(entry)
+    return {**raw, "descriptions": kept}
 
 
 def _document_key(raw: dict[str, Any]) -> str | None:
@@ -59,7 +77,7 @@ def run_ingestion() -> dict[str, int]:
         "race": caller.get_races,
         "class": caller.get_classes,
         "background": caller.get_backgrounds,
-        "item": caller.get_items,
+        "equipment": caller.get_equipment,
         "spell": caller.get_spells,
         "skill": caller.get_skills,
     }
@@ -83,7 +101,7 @@ def run_ingestion() -> dict[str, int]:
                 "key": raw["key"],
                 "name": raw["name"],
                 "document": _document_key(raw),
-                "data": raw,
+                "data": _reference_data(raw, ref_type),
             }
             for raw in raw_records
             if _document_key(raw) == expected_doc and not raw.get("is_subspecies", False)

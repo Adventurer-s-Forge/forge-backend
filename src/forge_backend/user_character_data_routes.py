@@ -2,124 +2,58 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from forge_backend.auth import current_uid
+from forge_backend.character_models import CharacterDocument, CharacterRecord
 from forge_backend.user_character_data_service import (
     DuplicateCharacterId,
     UserCharacterDataService,
 )
+
+Uid = Annotated[str, Depends(current_uid)]
 
 router = APIRouter(prefix="/characters", tags=["Characters"])
 
 _service = UserCharacterDataService()
 
 
-class CreateCharacterResponse(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={"example": {"character_id": "1a2b3c4d", "result": 1}}
-    )
-
-    character_id: str
-    result: int
-
-
-class CharacterRecord(BaseModel):
-    model_config = ConfigDict(
-        extra="allow",
-        populate_by_name=True,
-        json_schema_extra={"example": {"owner": "test-user", "name": "Gandalf"}},
-    )
-
-    owner: str
-    name: str
-    character_class: str | None = Field(default=None, alias="class")
-    character_proficient_skills: list[str] | None = Field(default=None, alias="proficient_skills"),
-    character_expertise_skills: list[str] | None = Field(default=None, alias="expertise_skills")
-
-
 class ErrorResponse(BaseModel):
     detail: str
-
-
-class NewCharacterData(BaseModel):
-    """Expected schema for new characters being created."""
-
-    model_config = ConfigDict(
-        extra="forbid",
-        json_schema_extra={"example": {"character_name": "Gandalf", "user_name": "test-user"}},
-    )
-
-    character_name: str
-    user_name: str
-
-
-class ClassSelection(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={"example": {"class": "Wizard"}},
-    )
-
-    character_class: str = Field(alias="class", min_length=1)
-
-
-class SkillsList(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-        json_schema_extra={"example": {"proficient_skills": ["arcana", "history"], "expertise_skills": ["athletics"]}},
-    )
-
-    character_proficient_skills: list[str] = Field(alias="proficient_skills")
-    character_expertise_skills: list[str] = Field(alias="expertise_skills")
-
-
-# TODO(US-19/auth): replace with Firebase ID-token verification.
-def get_uid(
-    x_user_id: str = Header(
-        alias="X-User-Id",
-        min_length=1,
-        description="Temporary development identity; not authentication.",
-    ),
-) -> str:
-    return x_user_id
 
 
 @router.post(
     "",
     operation_id="create_character",
     status_code=201,
-    response_model=CreateCharacterResponse,
+    response_model=CharacterDocument,
     responses={409: {"model": ErrorResponse}},
     summary="Create a character",
     description=(
-        "Create a blank character record. `owner` is a display name and the "
-        "X-User-Id header selects the storage namespace; the header does not "
-        "authenticate the caller."
+        "Create a full character record. The caller supplies the UUID."
+        "Ownership comes from the verified Firebase ID token."
     ),
 )
-def create_new_character(new_character_data: NewCharacterData, uid: str = Depends(get_uid)):
-    character_id = _service.generate_character_id(uid)
+def create_new_character(character: CharacterRecord, uid: Uid):
     try:
-        result = _service.create_user_character(
-            uid,
-            new_character_data.character_name,
-            new_character_data.user_name,
-            character_id,
-        )
+        return _service.create_user_character(uid, character)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except DuplicateCharacterId:
         raise HTTPException(status_code=409, detail="Character ID collision, retry")
-    return {"character_id": character_id, "result": result}
 
 
 @router.get(
     "",
     operation_id="list_characters",
-    response_model=list[CharacterRecord],
-    response_model_exclude_unset=True,
+    response_model=list[CharacterDocument],
     summary="List characters",
-    description="List stored character records for the X-User-Id storage namespace.",
+    description="List stored character records for the authenticated caller.",
 )
-def list_characters(uid: str = Depends(get_uid)):
+def list_characters(uid: Uid):
     return _service.list_characters(uid)
 
 
@@ -128,9 +62,9 @@ def list_characters(uid: str = Depends(get_uid)):
     operation_id="list_character_ids",
     response_model=list[str],
     summary="List character IDs",
-    description="List sorted character IDs for the X-User-Id storage namespace.",
+    description="List sorted character IDs for the authenticated caller.",
 )
-def list_character_ids(uid: str = Depends(get_uid)):
+def list_character_ids(uid: Uid):
     return _service.list_character_ids(uid)
 
 
@@ -139,80 +73,58 @@ def list_character_ids(uid: str = Depends(get_uid)):
     operation_id="count_characters",
     response_model=int,
     summary="Count characters",
-    description="Count character index entries for the X-User-Id storage namespace.",
+    description="Count character index entries for the authenticated caller.",
 )
-def get_num_user_characters(uid: str = Depends(get_uid)):
+def get_num_user_characters(uid: Uid):
     return _service.get_num_user_characters(uid)
 
 
 @router.get(
     "/{character_id}",
     operation_id="get_character",
-    response_model=CharacterRecord,
-    response_model_exclude_unset=True,
+    response_model=CharacterDocument,
     responses={404: {"model": ErrorResponse}},
     summary="Get a character",
-    description="Return one stored record. Blank records look like "
-    '`{"owner":"test-user","name":"Gandalf"}`.',
+    description="Return one stored character record.",
 )
-def get_character_by_id(character_id: str, uid: str = Depends(get_uid)):
+def get_character_by_id(character_id: str, uid: Uid):
     record = _service.get_character_by_id(uid, character_id)
     if record is None:
         raise HTTPException(status_code=404, detail="character not found")
     return record
 
 
+# Other specific endpoint PUTs have been removed since there is only 1 PUT after POST in the client.
+# Client forces uses a confirmation if they accidentally hit escape or 'x' when creating character.
+# It provides user 3 options: "Keep editing", "Discard", and "Save and close"
+# "Save and close" **OR** "Complete" is the "1 PUT" the client sends out. Otherwise, no other PUTs happen between steps.
 @router.put(
-    "/{character_id}/class",
-    operation_id="set_character_class",
-    response_model=CharacterRecord,
-    response_model_exclude_unset=True,
+    "/{character_id}",
+    operation_id="save_character",
+    response_model=CharacterDocument,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
-    summary="Set character class",
+    summary="Save a character",
     description=(
-        'Replace the record\'s single class value, e.g. `{"class":"Wizard"}`. '
-        "Seeded names/slugs persist verbatim."
+        "Full-replacement save of one owned character record. The path ID and "
+        "body id must match. Ownership comes from the verified Firebase ID token."
     ),
 )
-def set_character_class(character_id: str, selection: ClassSelection, uid: str = Depends(get_uid)):
-    if _service.get_character_by_id(uid, character_id) is None:
-        raise HTTPException(status_code=404, detail="character not found")
-    if not _service.class_exists(selection.character_class):
-        raise HTTPException(status_code=400, detail="unknown class")
+def save_character(character_id: str, character: CharacterRecord, uid: Uid):
     try:
-        return _service.set_character_class(uid, character_id, selection.character_class)
+        return _service.save_character(uid, character_id, character)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put(
-    "/{character_id}/skills",
-    operation_id="set_character_skills",
-    response_model=CharacterRecord,
-    response_model_exclude_unset=True,
-    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
-    summary="Set character's proficient and expertise skills",
-    description=(
-        'Replace the record\'s proficient and expertise skills, e.g. `{"proficientSkillIds":["arcana", "history"], "expertiseIds":["athletics"]}`.  An empty list clears the selection.'
-        "Only seeded reference keys are accepted."
-    ),
+@router.delete(
+    "/{character_id}",
+    operation_id="delete_character",
+    status_code=204,
+    summary="Delete a character",
+    responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
 )
-def set_character_skills(character_id: str, skills: SkillsList, uid: str = Depends(get_uid)):
-    updated_character = None # Initialize the updated_character variable that this function returns
-    if _service.get_character_by_id(uid, character_id) is None:
-        raise HTTPException(status_code=404, detail="character not found")
-    for proficient_skill in skills.character_proficient_skills:
-        if _service.skill_exists(proficient_skill) == False:
-            raise HTTPException(status_code=400, detail="unknown skill in proficient skills list: " + proficient_skill)
-    for expertise_skill in skills.character_expertise_skills:
-        if not _service.skill_exists(expertise_skill):
-            raise HTTPException(status_code=400, detail="unknown skill in expertise skills list: " + expertise_skill)
-    try:
-        updated_character = _service.set_character_skills(uid, character_id, "proficientSkillIds", skills.character_proficient_skills)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="character not found while setting the proficient skills list")
-    try:
-        updated_character = _service.set_character_skills(uid, character_id, "expertiseIds", skills.character_expertise_skills)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="character not found while setting the expertise skills list")
-    return updated_character # Updated character now has the new skills
+def delete_character(character_id: str, uid: Uid) -> None:
+    if not _service.remove_character(uid, character_id):
+        raise HTTPException(404, "character not found")
