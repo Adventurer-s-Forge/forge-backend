@@ -24,15 +24,15 @@ def test_served_from_seed_without_outbound_http(
     refresh_reference_type(
         redis_conn,
         ref_type,
-        [{
-            "type": ref_type,
-            "key": "srd-2024_probe",
-            "name": "Probe",
-            "document": "srd-2024",
-            "data": {
-                "key": "srd-2024_probe"
+        [
+            {
+                "type": ref_type,
+                "key": "srd-2024_probe",
+                "name": "Probe",
+                "document": "srd-2024",
+                "data": {"key": "srd-2024_probe"},
             }
-        }]
+        ],
     )
 
     response = api_client.get(path)

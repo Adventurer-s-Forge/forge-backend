@@ -163,6 +163,7 @@ def test_run_ingestion_idempotent_against_redis(monkeypatch, redis_conn):
         assert count_reference(redis_conn, ref_type) == first[ref_type]
 
 
+@pytest.mark.test_id("ST-16")
 @pytest.mark.integration
 def test_reseed_removes_old_edition_preserves_character(monkeypatch, redis_conn):
     import json

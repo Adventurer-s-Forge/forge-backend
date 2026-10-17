@@ -33,7 +33,6 @@ def draft(character_id: str = CHAR_ID, **overrides) -> dict:
     return body | overrides
 
 
-
 @pytest.mark.integration
 def test_crud_roundtrip(api_client):
     assert api_client.get("/characters").json() == []

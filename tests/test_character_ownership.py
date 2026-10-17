@@ -29,8 +29,10 @@ def test_other_user_sees_an_empty_roster(seeded):
 def test_other_user_gets_404_not_403(seeded, method):
     as_user(seeded, OTHER_UID)
     call = getattr(seeded, method)
-    response = call(f"/characters/{CHAR_ID}", json=draft()) if method == "put" else call(
-        f"/characters/{CHAR_ID}"
+    response = (
+        call(f"/characters/{CHAR_ID}", json=draft())
+        if method == "put"
+        else call(f"/characters/{CHAR_ID}")
     )
     assert response.status_code == 404
 

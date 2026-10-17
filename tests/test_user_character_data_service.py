@@ -19,15 +19,14 @@ def test_create_new_character_roundtrip(redis_conn):
     assert record["createdAt"] == record["updatedAt"]
 
 
-
 def test_validate_skills_no_skills(redis_conn):
     service = UserCharacterDataService(redis_conn)
-    assert service._validate_skill_ids(None) == None
+    assert service._validate_skill_ids(None) is None
 
 
 def test_validate_skills_invalid_skills(redis_conn):
     service = UserCharacterDataService(redis_conn)
-    error_validating_skills = None # Initialize the result to validate
+    error_validating_skills = None  # Initialize the result to validate
     expected_error_message = "unknown skill IDs"
     expected_error_type = ValueError
 
@@ -36,5 +35,5 @@ def test_validate_skills_invalid_skills(redis_conn):
     except ValueError as error:
         error_validating_skills = error
 
-    assert type(error_validating_skills) == expected_error_type
+    assert type(error_validating_skills) is expected_error_type
     assert error_validating_skills.args[0] == expected_error_message

@@ -20,8 +20,7 @@ from forge_backend import config
 logger = logging.getLogger(__name__)
 
 _JWKS_URL: Final = (
-    "https://www.googleapis.com/service_accounts/v1/jwk/"
-    "securetoken@system.gserviceaccount.com"
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
 )
 
 # Caches fetched keys and re-fetches on an unknown kid, so Google's key rotation
@@ -62,9 +61,7 @@ def current_uid(
         claims = verify_token(cred.credentials)
     except jwt.exceptions.PyJWKClientConnectionError:
         logger.exception("JWKS fetch failed")
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "auth temporarily unavailable"
-        )
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "auth temporarily unavailable")
     except jwt.PyJWTError as exc:
         logger.info("token rejected: %s", exc)
         raise _unauthorized("invalid or expired token") from None

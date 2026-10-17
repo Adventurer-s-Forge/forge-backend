@@ -89,11 +89,15 @@ def test_equipment_path_is_singular():
     assert "/equipments" not in paths
 
 
-@pytest.mark.parametrize("path", [
-    "/characters/{character_id}/class",
-    "/characters/{character_id}/spells",
-    "/characters/{character_id}/equipment",
-])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/characters/{character_id}/class",
+        "/characters/{character_id}/spells",
+        "/characters/{character_id}/equipment",
+    ],
+)
 def test_retired_subroutes_absent_from_contract(path):
     from forge_backend.main import app
+
     assert path not in app.openapi()["paths"]

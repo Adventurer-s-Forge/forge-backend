@@ -178,11 +178,11 @@ def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
     ``char:{uid}:{id}`` but its id is missing from the index, re-add it rather than
     hiding tht character.
 
-    Returns the scan result, not the index, so a listing stays correct even if the 
+    Returns the scan result, not the index, so a listing stays correct even if the
     repairing ``SADD`` fails.
     """
     prefix = f"char:{uid}:"
-    actual ={key[len(prefix) :] for key in conn.scan_iter(match=f"{prefix}*", count=200)}
+    actual = {key[len(prefix) :] for key in conn.scan_iter(match=f"{prefix}*", count=200)}
     missing = actual - set(conn.smembers(char_index_key(uid)))
     if missing:
         logger.warning("char index drift uid=%s; re-indexing %d id(s)", uid, len(missing))

@@ -59,6 +59,5 @@ def test_token_without_subject_is_401(monkeypatch):
 def test_jwks_url_is_the_google_endpoint():
     """A missing slash here fetches a 404 and every token looks invalid."""
     assert auth._JWKS_URL == (
-        "https://www.googleapis.com/service_accounts/v1/jwk/"
-        "securetoken@system.gserviceaccount.com"
+        "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     )

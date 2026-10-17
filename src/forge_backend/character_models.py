@@ -10,7 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_v
 
 AbilityKey = Literal["STR", "DEX", "CON", "INT", "WIS", "CHA"]
 AbilityMethod = Literal["standard", "pointbuy", "roll"]
-StepId = Literal["name", "race", "class", "background", "attributes", "skills", "spells", "equipment"]
+StepId = Literal[
+    "name", "race", "class", "background", "attributes", "skills", "spells", "equipment"
+]
 Size = Literal["Small", "Medium"]
 
 SCHEMA_VERSION = 1
@@ -23,15 +25,17 @@ def utcnow() -> str:
 
 class EquipmentChoice(BaseModel):
     """The option *letter* from a "Choose A or B" starting-equipment list.
-    
+
     The Fighter offers A, B, *or* C, so this stays a free string. ``class`` is a
     Python keyword, hence the alias -- any dump must pass ``by_alias=True`` or the
     stored key becomes ``class_`` and the client reads ``undefined``.
     """
+
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     class_: StrictStr | None = Field(default=None, alias="class")
     background: StrictStr | None = None
+
 
 def _nonempty_str(v: str | None, field: str) -> str | None:
     if v is not None and (not isinstance(v, str) or v == ""):
@@ -66,9 +70,7 @@ class CharacterRecord(BaseModel):
     spellIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     completedSteps: list[StepId] = Field(default_factory=list, max_length=100)
 
-    def to_record(
-        self, uid: str, created_at: str, updated_at: str
-    ) -> dict[str, Any]:
+    def to_record(self, uid: str, created_at: str, updated_at: str) -> dict[str, Any]:
         """Stored shape: the client's fields plus four the server owns."""
         return {
             "schemaVersion": SCHEMA_VERSION,
@@ -111,7 +113,7 @@ class CharacterRecord(BaseModel):
 
 class CharacterDocument(CharacterRecord):
     """What the API returns: the client's 14 fields plus the 4 the server owns.
-    
+
     ``CharacterRecord`` is the *request* contract and forbids these four, so it cannot
     double as the response model -- a stored document always carries them.
     """
