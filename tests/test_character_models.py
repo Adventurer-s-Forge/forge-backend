@@ -42,7 +42,7 @@ def test_full_payload_roundtrips_verbatim():
         "name": "Gandalf",
         "level": 1,
         "raceId": "draft_race",
-        "sizeChoice" : "Medium",
+        "sizeChoice": "Medium",
         "classId": "test_warden",
         "backgroundId": "draft_background",
         "equipmentChoice": {"class": "A", "background": "B"},
@@ -56,12 +56,18 @@ def test_full_payload_roundtrips_verbatim():
         "proficientSkillIds": ["arcana"],
         "expertiseIds": ["arcana"],
         "spellIds": ["draft_spell"],
-        "completedSteps": ["name", "race", "class", "background", "equipment", "attributes", "skills", "spells"],
+        "completedSteps": [
+            "name",
+            "race",
+            "class",
+            "background",
+            "equipment",
+            "attributes",
+            "skills",
+            "spells",
+        ],
     }
-    assert (
-        CharacterRecord.model_validate(payload).model_dump(mode="json", by_alias=True)
-        == payload
-    )
+    assert CharacterRecord.model_validate(payload).model_dump(mode="json", by_alias=True) == payload
 
 
 @pytest.mark.parametrize(

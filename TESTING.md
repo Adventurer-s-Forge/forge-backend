@@ -111,6 +111,7 @@ for data specific to that area and `tests/conftest.py` for genuinely shared setu
 | Request/response model validation | `tests/test_character_models.py` |
 | Redis persistence, refresh, idempotency, and namespace isolation | `tests/test_storage_integration.py` |
 | Character CRUD over HTTP | `tests/test_character_contract.py` |
+| PUT validation, equipment selection, and resave | `tests/test_character_save_validation.py` |
 | Cross-user isolation (404 not 403) | `tests/test_character_ownership.py` |
 | Token verification and rejection paths | `tests/test_auth.py` |
 | Reference routes served from the seed | `tests/test_reference_routes.py` |

@@ -45,8 +45,10 @@ class UserCharacterDataService:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.purchasedItemIds)
         self._validate_spell_selection(character.classId, character.spellIds)
-        self._validate_skill_ids(character.proficientSkillIds) # validate the list of proficient skills
-        self._validate_skill_ids(character.expertiseIds) # validate the list of expertise skills
+        self._validate_skill_ids(
+            character.proficientSkillIds
+        )  # validate the list of proficient skills
+        self._validate_skill_ids(character.expertiseIds)  # validate the list of expertise skills
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
@@ -120,9 +122,7 @@ class UserCharacterDataService:
             raise DuplicateCharacterId(f"character {character.id} already exists")
         return record
 
-    def save_character(
-        self, user_id: str, character_id: str, character: CharacterRecord
-    ) -> dict:
+    def save_character(self, user_id: str, character_id: str, character: CharacterRecord) -> dict:
         """Full replacement save of an owned record; raises KeyError/ValueError."""
         existing = get_user_character(self.redis_client, user_id, character_id)
         if existing is None:

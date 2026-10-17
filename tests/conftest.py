@@ -26,11 +26,11 @@ def redis_conn():
 @pytest.fixture
 def api_client(redis_conn, monkeypatch):
     """In-process client with auth stubbed to `UID`
-    
+
     Real Firebase tokens cannot be minted in tests, so `current_uid` is overridden.
     `auth.py`'s own verification is covered separately in `test_auth.py`, which
     exercises the dependency directly rather than through a route.
-    
+
     Use `as_user(client, OTHER_UID)` to switch identity mid-test.
     """
     from forge_backend import character_data_routes, user_character_data_routes

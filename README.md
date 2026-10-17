@@ -32,7 +32,7 @@ docker compose up -d
 
 `TEST_REDIS_URL` is never derived from `REDIS_URL`, so the test suite cannot flush dev data.
 
-`FIREBASE_PROJECT_ID` is **NOT** a secret -- it already ships in the frontend budle as 
+`FIREBASE_PROJECT_ID` is **NOT** a secret -- it already ships in the frontend budle as
 `VITE_FIREBASE_PROJECT_ID`. It must match the project and client authenticates against, or
 ever token is rejected with `Invalid audience`.
 
@@ -62,7 +62,7 @@ Authorization: Bearer <firebase id token>
 
 `src/forge_backend/auth.py` is the only pace a uid enters the application. Tokens are verified
 agaisnt Google's published JWKS (signature, `aud`, `iss`, `exp`), and the owner uid is the verified
-`sub` claim. **No endpoint accepts a uid as a path segment, query parameter or body field.** -- if 
+`sub` claim. **No endpoint accepts a uid as a path segment, query parameter or body field.** -- if
 the client could name the uid, it could name someone else's.
 
 Verification needs no service-account credential, only `FIREBASE_PROJECT_ID`
@@ -73,12 +73,12 @@ Verification needs no service-account credential, only `FIREBASE_PROJECT_ID`
 | malformed, expired or wrong-project token | `401 {"detail": "invalid or expired token"}` |
 | google JWKS unreachable | `503 {"detail": "auth temporarily unavailable"}` |
 
-The `503` is deliberate: a JWKS outage is not an invalid token, and returning `401` would sign 
+The `503` is deliberate: a JWKS outage is not an invalid token, and returning `401` would sign
 users out over a transient network failure.
 
 Ownership is enforced by the key namespace rather than by a check: a caller can only address
 `char:{uid}:*` for their own verified uid, so another user's character is simply not found.
-`PUT` and `DELETE` on a character the caller does not own return **404, not 403** -- a `403` 
+`PUT` and `DELETE` on a character the caller does not own return **404, not 403** -- a `403`
 would confirm the id exists.
 
 ## API
@@ -117,8 +117,8 @@ All require `Authorization: Bearer <token>`; all can return `401`.
 | `PUT` | `/characters/{character_id}` | `save_character` | `200 CharacterRecord` (full replacement) | `400` (ID mismatch, unknown classId/equipmentIds/spellIds/skillIds, spell ineligible for class), `404`, `422` |
 | `DELETE` | `/characters/{character_id}` | `delete_character` | `204` no body | `404` |
 
-The client makes exactly **two writes** down from **eight writes** per character: a `POST` when the name is entered, 
-and one full `PUT` at the end of creation (or when the user chooses to save and exit mid-way). There are no per-field 
+The client makes exactly **two writes** down from **eight writes** per character: a `POST` when the name is entered,
+and one full `PUT` at the end of creation (or when the user chooses to save and exit mid-way). There are no per-field
 routes -- a class change also prunes skills and spells, so a single-field update would store an inconsistent record.
 The client recomputes the whole document and replaces it.
 
@@ -160,10 +160,10 @@ blank defaults:
 All four are **rejected in request bodies** -- the client strips them before sending, and `extra="forbid"`
 turns an attempt into a `422` naming the field rather than silently overwriting `createdAt`.
 
-Validation checks *shape, not completeness*: `null` means "not chosen yet", `{}` and `[]` mean "nothing assigned yet", 
+Validation checks *shape, not completeness*: `null` means "not chosen yet", `{}` and `[]` mean "nothing assigned yet",
 because the wizard saves mid-flow. D&D rules validation (legal skills for a class, ability spreads, spell counts) stays
-on the client -- it governs the user's own data, so it is a UX aid rather than a trust boundary. The one exception is 
-reference integrity: `classId`, `purchasedItemIds`, `spellIds`, and `skillIds` are checked against seeded content and `spellIds` 
+on the client -- it governs the user's own data, so it is a UX aid rather than a trust boundary. The one exception is
+reference integrity: `classId`, `purchasedItemIds`, `spellIds`, and `skillIds` are checked against seeded content and `spellIds`
 against class eligibility (`spell_rules.py`).
 
 Notes on individual fields:
@@ -173,7 +173,7 @@ Notes on individual fields:
 - `sizeChoice` is `"Small"`, `"Medium"` or `null`. Only Human and Tiefling offer a choice in SRD-2024; for the other
   sever species, the size is derived from `raceId` client-side.
 - `equipmentChoice` holds the option *letter* from a "Choose A or B" list, not item ids. The Fighter offers A, B, **or**
-  C, so it is a free string rather than an enum. `class` is a Python keyword, so the model aliases it and dumps with 
+  C, so it is a free string rather than an enum. `class` is a Python keyword, so the model aliases it and dumps with
 `by_alias=True`.
 - `proficientSkillIds` holds **class picks only** -- background-granted skills are derived from `backgroundId` on the
   client. Stored as given; gratnts are not merged in.
@@ -198,14 +198,14 @@ re-seed of a reference type to never touch player data.
 
 - `{type}` ∈ `race` | `class` | `background` | `equipment` | `spell` | `skill` (`storage.REF_TYPES`).
 - `{slug}` is the Open5e v2 key, constrained to `^[a-z0-9_-]+$` (e.g. `srd-2024_barbarian`).
-- `{uid}` is the Firebase uid from the verified token. Firebase uids are **mixed case**, so the 
+- `{uid}` is the Firebase uid from the verified token. Firebase uids are **mixed case**, so the
   lowercase `_SLUG_RE` must not be reused to validate them.
 - No hashes, no TTLs: reference records are immutable between seeds and always read whole,
   so each is one JSON string and no key ever expires.
 
 > **Do note delete `char:idx:*` keys by hand.** RedisInsight renders `:` as a path separator, so
 > they look like a folder of derived metadata. They are not: `list_character_records` builds its
-> result from the index, so removing one leaves the character documents intact but invisible to 
+> result from the index, so removing one leaves the character documents intact but invisible to
 > the API.
 
 ### Seed documents
@@ -269,8 +269,10 @@ Invariants:
 
 Schema behavior is pinned by tests: `test_storage.py` (key formats, envelope validation),
 `test_storage_integration.py` (refresh roundtrip, idempotency, orphan cleanup,
-`ref:*`/`char:*` isolation, wipe), and `test_startup_seed.py` (ingestion envelope/counts,
-lifespan seed-once, seed-failure-is-nonfatal, seed-level idempotent rerun).
+`ref:*`/`char:*` isolation, wipe), `test_startup_seed.py` (ingestion envelope/counts,
+lifespan seed-once, seed-failure-is-nonfatal, seed-level idempotent rerun), and
+`test_character_save_validation.py` (PUT reject-without-mutation, equipment roundtrip/clear,
+idempotent resave).
 
 ## Layout
 
@@ -297,6 +299,7 @@ tests/
   test_startup_seed.py                     # ingestion envelope/counts, lifespan seed + failure
   test_character_models.py                 # CharacterRecord/CharacterDocument validation
   test_character_contract.py               # character CRUD over HTTP
+  test_character_save_validation.py        # PUT validation/equipment/resave: reject-without-mutation, equipment roundtrip + clear, idempotent resave
   test_character_ownership.py              # cross-user isolation: 404 not 403
   test_auth.py                             # token verification and rejection paths
   test_reference_routes.py                 # reference endpoints served from the seed
