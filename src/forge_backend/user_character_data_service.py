@@ -45,6 +45,8 @@ class UserCharacterDataService:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.purchasedItemIds)
         self._validate_spell_selection(character.classId, character.spellIds)
+        self._validate_skill_ids(character.proficientSkillIds) # validate the list of proficient skills
+        self._validate_skill_ids(character.expertiseIds) # validate the list of expertise skills
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
@@ -59,6 +61,14 @@ class UserCharacterDataService:
         for entry in equipment_ids:
             if entry not in valid:
                 raise ValueError("unknown equipmentIds")
+
+    def _validate_skill_ids(self, skill_ids: list[str]) -> None:
+        if not skill_ids:
+            return
+        valid_skills = set(list_reference_keys(self.redis_client, "skill"))
+        for skill in skill_ids:
+            if skill not in valid_skills:
+                raise ValueError("unknown skill IDs")
 
     def list_character_ids(self, user_id) -> list[str]:
         """

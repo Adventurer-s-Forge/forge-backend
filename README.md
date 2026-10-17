@@ -109,12 +109,12 @@ All require `Authorization: Bearer <token>`; all can return `401`.
 
 | Method | Path | operationId | Success | Errors |
 |--------|------|-------------|---------|--------|
-| `POST` | `/characters` | `create_character` | `201 CharacterRecord` (caller-supplied UUID) | `400` (unknown classId/equipmentIds/spellIds, spell ineligible for class), `409` (id collision), `422` |
+| `POST` | `/characters` | `create_character` | `201 CharacterRecord` (caller-supplied UUID) | `400` (unknown classId/equipmentIds/spellIds/skillIds, spell ineligible for class), `409` (id collision), `422` |
 | `GET` | `/characters` | `list_characters` | `200 [CharacterRecord]` | `422` |
 | `GET` | `/characters/ids` | `list_character_ids` | `200 [string]` (sorted) | `422` |
 | `GET` | `/characters/count` | `count_characters` | `200 int` | `422` |
 | `GET` | `/characters/{character_id}` | `get_character` | `200 CharacterRecord` | `404`, `422` |
-| `PUT` | `/characters/{character_id}` | `save_character` | `200 CharacterRecord` (full replacement) | `400` (ID mismatch, unknown classId/equipmentIds/spellIds, spell ineligible for class), `404`, `422` |
+| `PUT` | `/characters/{character_id}` | `save_character` | `200 CharacterRecord` (full replacement) | `400` (ID mismatch, unknown classId/equipmentIds/spellIds/skillIds, spell ineligible for class), `404`, `422` |
 | `DELETE` | `/characters/{character_id}` | `delete_character` | `204` no body | `404` |
 
 The client makes exactly **two writes** down from **eight writes** per character: a `POST` when the name is entered, 
@@ -163,15 +163,15 @@ turns an attempt into a `422` naming the field rather than silently overwriting 
 Validation checks *shape, not completeness*: `null` means "not chosen yet", `{}` and `[]` mean "nothing assigned yet", 
 because the wizard saves mid-flow. D&D rules validation (legal skills for a class, ability spreads, spell counts) stays
 on the client -- it governs the user's own data, so it is a UX aid rather than a trust boundary. The one exception is 
-reference integrity: `classId`, `purchasedItemIds`, and `spellIds` are checked against seeded content and `spellIds` 
-against class eligibility (`spell_rules.py`)
+reference integrity: `classId`, `purchasedItemIds`, `spellIds`, and `skillIds` are checked against seeded content and `spellIds` 
+against class eligibility (`spell_rules.py`).
 
 Notes on individual fields:
 
 - `id` is **client-generated** (`crypto.randomUUID()`), validated as a canonical lowercase v4 UUID. The server never
   mints one. This makes `POST` retry-safe: a resend after a lost response returns `409` rather than creating a duplicate.
 - `sizeChoice` is `"Small"`, `"Medium"` or `null`. Only Human and Tiefling offer a choice in SRD-2024; for the other
-  sever species, the sizew is dervied from `raceId` client-side.
+  sever species, the size is derived from `raceId` client-side.
 - `equipmentChoice` holds the option *letter* from a "Choose A or B" list, not item ids. The Fighter offers A, B, **or**
   C, so it is a free string rather than an enum. `class` is a Python keyword, so the model aliases it and dumps with 
 `by_alias=True`.
