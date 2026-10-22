@@ -5,6 +5,22 @@ from forge_backend.character_models import CharacterRecord
 
 UUID = "0f8c1a7e-3d52-4b91-a7c8-6e2f91b40d35"
 
+PICK_A = {
+    "key": "A",
+    "label": "Chain Mail, Greatsword, Dungeoneer's Pack",
+    "goldCp": 400,
+    "grants": [
+        {"text": "Chain Mail", "quantity": 1, "itemId": "srd-2024_chain-mail", "choosableFrom": None},
+    ],
+}
+
+PICK_B = {
+    "key": "B",
+    "label": "50 GP",
+    "goldCp": 5000,
+    "grants": [],
+}
+
 
 def _payload(**overrides):
     base = {"id": UUID, "name": "Gandalf"}
@@ -22,9 +38,12 @@ def test_minimal_draft_produces_blank_defaults():
         "raceId",
         "sizeChoice",
         "classId",
+        "fightingStyleId",
+        "toolChoiceId",
         "backgroundId",
         "equipmentChoice",
         "purchasedItemIds",
+        "walletCp",
         "abilities",
         "proficientSkillIds",
         "expertiseIds",
@@ -33,6 +52,9 @@ def test_minimal_draft_produces_blank_defaults():
     ]
     assert dumped["level"] == 1
     assert dumped["raceId"] is None
+    assert dumped["walletCp"] == 0
+    assert dumped["fightingStyleId"] is None
+    assert dumped["toolChoiceId"] is None
     assert dumped["abilities"] == {"method": None, "base": {}, "rolled": [], "originBonuses": {}}
 
 
@@ -44,9 +66,12 @@ def test_full_payload_roundtrips_verbatim():
         "raceId": "draft_race",
         "sizeChoice": "Medium",
         "classId": "test_warden",
+        "fightingStyleId": None,
+        "toolChoiceId": None,
         "backgroundId": "draft_background",
-        "equipmentChoice": {"class": "A", "background": "B"},
+        "equipmentChoice": {"class": PICK_A, "background": PICK_B},
         "purchasedItemIds": [],
+        "walletCp": 0,
         "abilities": {
             "method": "roll",
             "base": {"STR": 15, "DEX": 14},

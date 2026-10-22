@@ -161,28 +161,44 @@ def test_nonempty_equipment_rejected_when_reference_set_empty(seeded, redis_conn
     assert redis_conn.get(RECORD_KEY) == before
 
 
+PICK_A = {
+    "key": "A",
+    "label": "Chain Mail, Greatsword, Dungeoneer's Pack",
+    "goldCp": 400,
+    "grants": [
+        {"text": "Chain Mail", "quantity": 1, "itemId": "srd-2024_chain-mail", "choosableFrom": None},
+    ],
+}
+
+PICK_B = {
+    "key": "B",
+    "label": "50 GP",
+    "goldCp": 5000,
+    "grants": [],
+}
+
 @pytest.mark.test_id("ST-18")
 @pytest.mark.integration
 def test_save_valid_equipment_persists_and_roundtrips(seeded, redis_conn):
     body = draft(
         classId="test_warden",
         purchasedItemIds=["srd-2024_longsword", "srd-2024_shield"],
-        equipmentChoice={"class": "A", "background": "B"},
+        equipmentChoice={"class": PICK_A, "background": PICK_B},
     )
     resp = seeded.put(f"/characters/{CHAR_ID}", json=body)
     assert resp.status_code == 200, resp.text
     expected = ["srd-2024_longsword", "srd-2024_shield"]
     assert resp.json()["purchasedItemIds"] == expected
-    assert resp.json()["equipmentChoice"] == {"class": "A", "background": "B"}
+    assert resp.json()["equipmentChoice"] == {"class": PICK_A, "background": PICK_B}
 
     fetched = seeded.get(f"/characters/{CHAR_ID}").json()
     assert fetched["purchasedItemIds"] == expected
-    assert fetched["equipmentChoice"] == {"class": "A", "background": "B"}
+    assert fetched["equipmentChoice"] == {"class": PICK_A, "background": PICK_B}
     assert fetched["classId"] == "test_warden"
 
     raw = _stored(redis_conn)
     assert raw["purchasedItemIds"] == expected
-    assert raw["equipmentChoice"] == {"class": "A", "background": "B"}
+    assert raw["equipmentChoice"] == {"class": PICK_A, "background": PICK_B}
 
     listed = seeded.get("/characters").json()
     assert next(r for r in listed if r["id"] == CHAR_ID)["purchasedItemIds"] == expected
