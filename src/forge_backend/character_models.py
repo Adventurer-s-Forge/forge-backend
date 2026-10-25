@@ -23,19 +23,24 @@ def utcnow() -> str:
     return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+class EquipmentGrant(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str
+    quantity: int
+    itemId: str | None
+    choosableFrom: str | None
+
+class EquipmentPick(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    key: str                # "A" | "B" | "C"
+    label: str              # the option's display text
+    goldCp: int             # frozen coin grant
+    grants: list[EquipmentGrant]
+
 class EquipmentChoice(BaseModel):
-    """The option *letter* from a "Choose A or B" starting-equipment list.
-
-    The Fighter offers A, B, *or* C, so this stays a free string. ``class`` is a
-    Python keyword, hence the alias -- any dump must pass ``by_alias=True`` or the
-    stored key becomes ``class_`` and the client reads ``undefined``.
-    """
-
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
-    class_: StrictStr | None = Field(default=None, alias="class")
-    background: StrictStr | None = None
-
+    class_: EquipmentPick | None = Field(None, alias="class")
+    background: EquipmentPick | None = None
 
 def _nonempty_str(v: str | None, field: str) -> str | None:
     if v is not None and (not isinstance(v, str) or v == ""):
@@ -61,9 +66,12 @@ class CharacterRecord(BaseModel):
     raceId: StrictStr | None = None
     sizeChoice: Size | None = None
     classId: StrictStr | None = None
+    fightingStyleId: str | None = None
+    toolChoiceId: str | None = None
     backgroundId: StrictStr | None = None
     equipmentChoice: EquipmentChoice = Field(default_factory=EquipmentChoice)
     purchasedItemIds: list[StrictStr] = Field(default_factory=list, max_length=100)
+    walletCp: int = 0
     abilities: CharacterAbilities = Field(default_factory=CharacterAbilities)
     proficientSkillIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     expertiseIds: list[StrictStr] = Field(default_factory=list, max_length=100)
