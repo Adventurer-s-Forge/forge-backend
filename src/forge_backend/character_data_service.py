@@ -48,3 +48,10 @@ class CharacterDataService:
     def get_skills(self):
         response = list_reference_records(self.redis_client, "skill")
         return response
+
+    def get_feat(self, feat):
+         return get_reference(self.redis_client, "feat", feat)
+
+    def get_feats(self):
+            response = list_reference_records(self.redis_client, "feat")
+            return response

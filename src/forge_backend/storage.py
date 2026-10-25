@@ -28,7 +28,7 @@ import redis
 
 from forge_backend import config
 
-REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill")
+REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill", "feat")
 
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 

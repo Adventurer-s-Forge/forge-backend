@@ -28,6 +28,7 @@ REF_DOCUMENTS: dict[str, str] = {
     "equipment": "srd-2024",
     "spell": "srd-2024",
     "skill": "core",
+    "feat": "srd-2024",
 }
 
 
@@ -80,6 +81,7 @@ def run_ingestion() -> dict[str, int]:
         "equipment": caller.get_equipment,
         "spell": caller.get_spells,
         "skill": caller.get_skills,
+        "feat": caller.get_feats,
     }
     counts: dict[str, int] = {}
     total_start = time.perf_counter()

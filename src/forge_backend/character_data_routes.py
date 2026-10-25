@@ -14,7 +14,7 @@ service = CharacterDataService()
 class ReferenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    type: Literal["race", "class", "background", "equipment", "skill", "spell"]
+    type: Literal["race", "class", "background", "equipment", "skill", "spell", "feat"]
     key: str
     name: str
     document: str
@@ -85,3 +85,14 @@ def get_spells():
 )
 def get_skills():
     return service.get_skills()
+
+
+@router.get(
+    "/feats",
+    operation_id="list_feats",
+    response_model=list[ReferenceRecord],
+    summary="List feats",
+    description="List seeded feat reference records.",
+)
+def get_feats():
+    return service.get_feats()

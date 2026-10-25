@@ -36,3 +36,6 @@ class Open5eCaller:
 
     def get_skills(self):
         return self.pagination_data("https://api.open5e.com/v2/skills/")
+
+    def get_feats(self):
+        return self.pagination_data("https://api.open5e.com/v2/feats/")
