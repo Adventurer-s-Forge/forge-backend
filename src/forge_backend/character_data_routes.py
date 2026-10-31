@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict
 
 from forge_backend.character_data_service import CharacterDataService
@@ -14,7 +14,17 @@ service = CharacterDataService()
 class ReferenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    type: Literal["race", "class", "background", "equipment", "skill", "spell"]
+    type: Literal[
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "skill",
+        "spell",
+        "monster",
+        "magic_item",
+        "condition",
+    ]
     key: str
     name: str
     document: str
@@ -85,3 +95,18 @@ def get_spells():
 )
 def get_skills():
     return service.get_skills()
+
+
+@router.get(
+    "/search",
+    operation_id="search_reference",
+    response_model=list[ReferenceRecord],
+    summary="Search reference content by name",
+    description="Case-insensitive substring search of reference record names across all types. "
+    "Results are sorted by name and paged at 100 per page; pass ?page=N for later pages.",
+)
+def search_reference(
+    q: Annotated[str, Query(min_length=1, pattern=r"\S")],
+    page: Annotated[int, Query(ge=1)] = 1,
+):
+    return service.search_reference(q, page)

@@ -28,7 +28,17 @@ import redis
 
 from forge_backend import config
 
-REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill")
+REF_TYPES: Final[tuple[str, ...]] = (
+    "race",
+    "class",
+    "background",
+    "equipment",
+    "spell",
+    "skill",
+    "monster",
+    "magic_item",
+    "condition",
+)
 
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
@@ -218,6 +228,32 @@ def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
     raws = conn.mget([char_key(uid, slug) for slug in slugs])
     # Iterate through each raw, deserialize the JSON if data exists, and add the result to the list to return
     return [json.loads(raw) for raw in raws if raw is not None]
+
+
+SEARCH_PAGE_SIZE: Final[int] = 100
+
+
+def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> list[dict[str, Any]]:
+    """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
+
+    Only ``name`` participates. Results are sorted by ``(name, type, key)``
+    casefolded so equal names remain distinct and ordering is deterministic.
+    Results are paged at ``SEARCH_PAGE_SIZE``; ``page`` is 1-based.
+    """
+    if page < 1:
+        raise ValueError(f"invalid page: {page!r} (must be >= 1)")
+    needle = query.strip().casefold()
+    if not needle:
+        return []
+    matches = [
+        record
+        for ref_type in REF_TYPES
+        for record in list_reference_records(conn, ref_type)
+        if needle in record["name"].casefold()
+    ]
+    matches.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
+    start = (page - 1) * SEARCH_PAGE_SIZE
+    return matches[start : start + SEARCH_PAGE_SIZE]
 
 
 def count_reference(conn: redis.Redis, ref_type: str) -> int:

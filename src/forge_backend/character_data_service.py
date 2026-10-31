@@ -1,5 +1,10 @@
 # import requests
-from forge_backend.storage import get_redis, get_reference, list_reference_records
+from forge_backend.storage import (
+    get_redis,
+    get_reference,
+    list_reference_records,
+    search_reference_records,
+)
 
 
 # This is the getter methods to grab information from the database.
@@ -48,3 +53,6 @@ class CharacterDataService:
     def get_skills(self):
         response = list_reference_records(self.redis_client, "skill")
         return response
+
+    def search_reference(self, query: str, page: int = 1):
+        return search_reference_records(self.redis_client, query, page)
