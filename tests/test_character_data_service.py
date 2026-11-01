@@ -49,17 +49,16 @@ def test_validate_filter_valueerror():
 @pytest.mark.integration
 def test_filter_search_result():
     service = CharacterDataService()
-    search_result = service.search_reference("par") # Do the initial search
-    assert len(search_result) == 2
-    # filtered_result = service.filter_search_result("magic_item", search_result) # Filter the search result
-    # assert len(filtered_result) == 2
-    # for result in filtered_result:
-    #     assert result["type"] == "magic_item"
+    search_result = service.search_reference("par", 1) # Do the initial search
+    filtered_result = service.filter_search_result("magic_item", search_result) # Filter the search result
+    assert len(filtered_result) == 2
+    for result in filtered_result:
+        assert result["type"] == "magic_item"
 
 
 @pytest.mark.integration
 def test_filter_search_result_no_results():
     service = CharacterDataService()
-    search_result = service.search_reference("par") # Do the initial search
+    search_result = service.search_reference("par", 1) # Do the initial search
     filtered_result = service.filter_search_result("race", search_result) # Filter the search result
     assert len(filtered_result) == 0
