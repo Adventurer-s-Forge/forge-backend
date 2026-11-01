@@ -233,6 +233,25 @@ def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
 SEARCH_PAGE_SIZE: Final[int] = 100
 
 
+def validate_page_for_search(page: int):
+    """
+    Helper function to validate that a valid page number is used in the search API.
+    This is used by the search_reference_records function in this file and the filter_search_result function in the character_data_service.py file.
+    """
+    if page < 1:
+        raise ValueError(f"invalid page: {page!r} (must be >= 1)")
+
+
+def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: int = 1):
+    """
+    Helper function to sort and paginate search results.
+    This is used by the search_reference_records function in this file and the filter_search_result function in the character_data_service.py file.
+    """
+    search_result.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
+    start = (page - 1) * SEARCH_PAGE_SIZE
+    return search_result[start : start + SEARCH_PAGE_SIZE]
+
+
 def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> list[dict[str, Any]]:
     """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
 
@@ -240,8 +259,7 @@ def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> li
     casefolded so equal names remain distinct and ordering is deterministic.
     Results are paged at ``SEARCH_PAGE_SIZE``; ``page`` is 1-based.
     """
-    if page < 1:
-        raise ValueError(f"invalid page: {page!r} (must be >= 1)")
+    validate_page_for_search(page)
     needle = query.strip().casefold()
     if not needle:
         return []
@@ -251,9 +269,7 @@ def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> li
         for record in list_reference_records(conn, ref_type)
         if needle in record["name"].casefold()
     ]
-    matches.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
-    start = (page - 1) * SEARCH_PAGE_SIZE
-    return matches[start : start + SEARCH_PAGE_SIZE]
+    return sort_and_paginate_search_result(matches, page)
 
 
 def count_reference(conn: redis.Redis, ref_type: str) -> int:

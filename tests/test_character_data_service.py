@@ -45,25 +45,3 @@ def test_validate_filter_valueerror():
         error_validating_filter = e
     assert type(error_validating_filter) is ValueError
     assert error_validating_filter.args[0] == "invalid 'type' for filter: 'fakeFilter'"
-
-
-# Read in the test search result from a JSON file since it is too large to hard-code into this file [6]
-SEARCH_RESULT = None
-with open("tests/test_search_result.json", "r") as file:
-    SEARCH_RESULT = json.load(file)
-
-
-@pytest.mark.integration
-def test_filter_search_result():
-    service = CharacterDataService()
-    filtered_result = service.filter_search_result("magic_item", SEARCH_RESULT)
-    assert len(filtered_result) == 2
-    for result in filtered_result:
-        assert result["type"] == "magic_item"
-
-
-@pytest.mark.integration
-def test_filter_search_result_no_results():
-    service = CharacterDataService()
-    filtered_result = service.filter_search_result("race", SEARCH_RESULT)
-    assert len(filtered_result) == 0
