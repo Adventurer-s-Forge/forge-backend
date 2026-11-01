@@ -12,7 +12,13 @@ from forge_backend.storage import (
     list_char_keys,
     list_character_records,
     list_reference_keys,
+    list_reference_records,
     update_character,
+)
+from forge_backend.feat_rules import (
+    FEATS_BY_TYPE,
+    available_background_feats,
+    available_class_feats,
 )
 
 
@@ -49,6 +55,8 @@ class UserCharacterDataService:
             character.proficientSkillIds
         )  # validate the list of proficient skills
         self._validate_skill_ids(character.expertiseIds)  # validate the list of expertise skills
+        self._validate_feat_ids(character.featIds)
+        self._validate_class_feat_choices(character)
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
@@ -71,6 +79,11 @@ class UserCharacterDataService:
         for skill in skill_ids:
             if skill not in valid_skills:
                 raise ValueError("unknown skill IDs")
+
+    def _validate_feat_ids(self, feat_ids: list[str]) -> None:
+        for feat_id in feat_ids:
+            if get_reference(self.redis_client, "feat", feat_id) is None:
+                raise ValueError("unknown featIds")
 
     def list_character_ids(self, user_id) -> list[str]:
         """
@@ -115,6 +128,7 @@ class UserCharacterDataService:
     # Removed `set_character_class`, `set_character_spell`, and `set_character_equipment`
     # Replaced them with these two below:
     def create_user_character(self, user_id: str, character: CharacterRecord) -> dict:
+        self._set_character_feats(character)
         self.validate_character_references(character)
         now = utcnow()
         record = character.to_record(user_id, created_at=now, updated_at=now)
@@ -129,6 +143,7 @@ class UserCharacterDataService:
             raise KeyError(character_id)
         if character.id != character_id:
             raise ValueError("id must match character_id")
+        self._set_character_feats(character)
         self.validate_character_references(character)
         record = character.to_record(
             user_id,
@@ -153,3 +168,106 @@ class UserCharacterDataService:
             (int): The number of characters the user has
         """
         return count_characters(self.redis_client, user_id)
+
+
+    def _get_background_feats(self, background_id: str | None) -> list[str]:
+        if background_id is None:
+            return []
+
+        background_feats = available_background_feats(background_id)
+        feat_names = []
+
+        for feats in background_feats.values():
+            for feat_name in feats:
+                feat_names.append(feat_name)
+
+        return feat_names
+
+
+    def _get_class_feats(self, class_id: str | None, level: int) -> dict:
+        if class_id is None:
+            return {}
+
+        class_feats = available_class_feats(class_id, level)
+
+        return class_feats
+    
+
+    def _get_background_feat_ids(self, background_id: str | None) -> list[str]:
+        feat_names = self._get_background_feats(background_id)
+
+        if not feat_names:
+            return []
+
+        feat_records = list_reference_records(self.redis_client, "feat")
+        feat_ids = []
+
+        for feat in feat_records:
+            if feat["name"] in feat_names:
+                feat_ids.append(feat["key"])
+
+        return feat_ids
+
+
+    def _validate_class_feat_choices(self, character: CharacterRecord) -> None:
+        if not character.classFeatChoices:
+            return
+
+        if character.classId is None:
+            raise ValueError("class must be selected before choosing class feats")
+
+        available_feats = self._get_class_feats(character.classId, character.level)
+
+        unlocked_levels = []
+
+        for levels in available_feats.values():
+            for level in levels:
+                unlocked_levels.append(level)
+
+        selected_levels = []
+
+        for choice in character.classFeatChoices:
+            if choice.level not in unlocked_levels:
+                raise ValueError("feat choice is not available at this level")
+
+            if choice.level in selected_levels:
+                raise ValueError("multiple feats selected at the same level")
+
+            selected_levels.append(choice.level)
+            feat = get_reference(self.redis_client, "feat", choice.featId)
+
+            if feat is None:
+                raise ValueError("unknown class featId")
+
+            feat_name = feat["name"]
+            allowed_feat_names = []
+
+            for feature_name, levels in available_feats.items():
+                if choice.level in levels:
+                    for name in FEATS_BY_TYPE.get(feature_name, []):
+                        allowed_feat_names.append(name)
+
+            if feat_name not in allowed_feat_names:
+                raise ValueError("feat is not available for this class feature")
+
+
+    def _set_character_feats(self, character: CharacterRecord) -> None:
+        feat_ids = []
+
+        # Automatically granted background feats
+        background_feat_ids = self._get_background_feat_ids(character.backgroundId)
+
+        for feat_id in background_feat_ids:
+            if feat_id not in feat_ids:
+                feat_ids.append(feat_id)
+
+        # Feats selected from class opportunities
+        for choice in character.classFeatChoices:
+            if choice.featId not in feat_ids:
+                feat_ids.append(choice.featId)
+
+        character.featIds = feat_ids
+
+        
+
+
