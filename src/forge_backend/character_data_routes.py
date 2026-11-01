@@ -101,8 +101,8 @@ def get_skills():
     "/search",
     operation_id="search_reference",
     response_model=list[ReferenceRecord],
-    summary="Search reference content by name",
-    description="Case-insensitive substring search of reference record names across all types. "
+    summary="Search reference content by name and optionally filter by content type",
+    description="Case-insensitive substring search of reference record names across all types. An exact-match is used when filtering by content-type, if a filter is provided."
     "Results are sorted by name and paged at 100 per page; pass ?page=N for later pages.",
 )
 def search_reference(
