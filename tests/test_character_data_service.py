@@ -56,8 +56,7 @@ with open("tests/test_search_result.json", "r") as file:
 @pytest.mark.integration
 def test_filter_search_result():
     service = CharacterDataService()
-    SEARCH_RESULT = service.search_reference("par", 1) # Do the initial search
-    filtered_result = service.filter_search_result("magic_item", SEARCH_RESULT) # Filter the search result
+    filtered_result = service.filter_search_result("magic_item", SEARCH_RESULT)
     assert len(filtered_result) == 2
     for result in filtered_result:
         assert result["type"] == "magic_item"
@@ -66,6 +65,5 @@ def test_filter_search_result():
 @pytest.mark.integration
 def test_filter_search_result_no_results():
     service = CharacterDataService()
-    SEARCH_RESULT = service.search_reference("par", 1) # Do the initial search
-    filtered_result = service.filter_search_result("race", SEARCH_RESULT) # Filter the search result
+    filtered_result = service.filter_search_result("race", SEARCH_RESULT)
     assert len(filtered_result) == 0
