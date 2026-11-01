@@ -186,7 +186,7 @@ def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
 
     ``char:idx:{uid}`` is a convenience index for listing. If a record exists at
     ``char:{uid}:{id}`` but its id is missing from the index, re-add it rather than
-    hiding tht character.
+    hiding that character.
 
     Returns the scan result, not the index, so a listing stays correct even if the
     repairing ``SADD`` fails.
@@ -337,3 +337,7 @@ def delete_character(conn: redis.Redis, uid: str, charid: str) -> bool:
     pipe.srem(char_index_key(uid), charid)
     deleted, _ = pipe.execute()
     return bool(deleted)
+
+
+def validate_content_type(content_type: str) -> bool:
+    return content_type in REF_TYPES
