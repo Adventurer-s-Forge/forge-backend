@@ -209,3 +209,35 @@ def test_dal_search_pages_are_disjoint_and_cover_all_matches(monkeypatch):
 def test_dal_search_invalid_page_raises():
     with pytest.raises(ValueError, match="invalid page"):
         search_reference_records(None, "bulk", page=0)
+
+
+@pytest.mark.integration
+def test_filter_has_results_after_filter(api_client, populated):
+    expected = [
+        ("Magic Lens", "magic_item", "srd-2024_magic-lens"),
+    ]
+    response = _public(api_client, "/search", {"q": "Magic", "content_filter": "magic_item"})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert _triples(response.json()) == expected
+
+
+@pytest.mark.integration
+def test_filter_has_no_results_after_filter(api_client, populated):
+    response = _public(api_client, "/search", {"q": "Magic", "content_filter": "race"})
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+    assert response.json() == []
+
+
+@pytest.mark.integration
+def test_filter_invalid_filter(api_client, populated):
+    error_filtering = None
+    response = _public(api_client, "/search", {"q": "Magic", "content_filter": "fakeFilter"})
+    assert response.status_code == 400
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("page", ["0", "-1", "abc"])
+def test_filter_invalid_page(api_client, populated, page):
+    assert _public(api_client, "/search", {"q": "Magic", "page": page, "content_filter": "magic_item"}).status_code == 422

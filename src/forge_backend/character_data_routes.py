@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
 
 from forge_backend.character_data_service import CharacterDataService
@@ -108,5 +108,18 @@ def get_skills():
 def search_reference(
     q: Annotated[str, Query(min_length=1, pattern=r"\S")],
     page: Annotated[int, Query(ge=1)] = 1,
+    content_filter: Annotated[str, Query(min_length=1, pattern=r"\S")] = "N/A", # [6]
 ):
-    return service.search_reference(q, page)
+    search_result = service.search_reference(q, page)
+    """
+    If the user does not apply any filters, then return the base search result.
+    Otherwise, filter the base search result using the incoming content filter and return the filtered result.
+    """
+    if content_filter == "N/A":
+        return search_result
+    else:
+        try:
+            service.validate_filter(content_filter)
+            return service.filter_search_result(content_filter, search_result, page)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
