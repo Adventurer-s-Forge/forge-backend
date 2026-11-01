@@ -70,8 +70,8 @@ class CharacterDataService:
         if page < 1:
             raise ValueError(f"invalid page: {page!r} (must be >= 1)")
         """Assumes that the filter has already been verified as valid."""
-        filtered_results = [d for d in search_result if d['type']==content_filter] # [4] [5]
+        filtered_result = [d for d in search_result if d['type']==content_filter] # [4] [5]
         """Ensure that the results are sorted and paginated properly even after being filtered"""
-        filtered_results.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
+        filtered_result.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
         start = (page - 1) * SEARCH_PAGE_SIZE
-        return filtered_results[start : start + SEARCH_PAGE_SIZE]
+        return filtered_result[start : start + SEARCH_PAGE_SIZE]

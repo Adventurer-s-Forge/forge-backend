@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import patch
 
 from forge_backend.character_data_service import CharacterDataService
@@ -21,3 +22,42 @@ def test_get_class(mock_get_reference, mock_get_redis):
     service = CharacterDataService()
     result_mock_return = service.get_class("wizard")
     assert result_mock_return["name"] == "Wizard"
+
+
+def test_validate_filter_success():
+    service = CharacterDataService()
+    error_validating_filter = None
+    try:
+        service.validate_filter("magic_item")
+    except ValueError as e:
+        error_validating_filter = e
+    assert error_validating_filter is None
+
+
+def test_validate_filter_valueerror():
+    service = CharacterDataService()
+    error_validating_filter = None
+    try:
+        service.validate_filter("fakeFilter")
+    except ValueError as e:
+        error_validating_filter = e
+    assert type(error_validating_filter) is ValueError
+    assert error_validating_filter.args[0] == "invalid 'type' for filter: 'fakeFilter'"
+
+
+@pytest.mark.integration
+def test_filter_search_result():
+    service = CharacterDataService()
+    search_result = service.search_reference("par") # Do the initial search
+    filtered_result = service.filter_search_result("magic_item", search_result) # Filter the search result
+    assert len(filtered_result) == 2
+    for result in filtered_result:
+        assert result["type"] == "magic_item"
+
+
+@pytest.mark.integration
+def test_filter_search_result_no_results():
+    service = CharacterDataService()
+    search_result = service.search_reference("par") # Do the initial search
+    filtered_result = service.filter_search_result("race", search_result) # Filter the search result
+    assert len(filtered_result) == 0

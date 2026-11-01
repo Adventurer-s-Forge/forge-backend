@@ -5,6 +5,7 @@ from forge_backend.storage import (
     char_key,
     ref_index_key,
     ref_key,
+    validate_content_type,
     validate_reference_record,
 )
 
@@ -63,3 +64,11 @@ def test_validate_accepts_valid_record_with_extra_fields():
 def test_validate_rejects_bad_records(overrides, ref_type):
     with pytest.raises(ValueError):
         validate_reference_record(_valid_record(**overrides), ref_type)
+
+
+def test_validate_content_type_valid():
+    assert validate_content_type("magic_item") == True
+
+
+def test_validate_content_type_invalid():
+    assert validate_content_type("fakeContentType") == False
