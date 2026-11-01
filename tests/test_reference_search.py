@@ -231,6 +231,18 @@ def test_filter_has_no_results_after_filter(api_client, populated):
 
 
 @pytest.mark.integration
+def test_filter_using_page_number(api_client, populated):
+    """The data seems to only result in 1 page of results after filtering."""
+    expected = [
+        ("Magic Lens", "magic_item", "srd-2024_magic-lens"),
+    ]
+    response = _public(api_client, "/search", {"q": "Magic", "page": 1, "content_filter": "magic_item"})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert _triples(response.json()) == expected
+
+
+@pytest.mark.integration
 def test_filter_invalid_filter(api_client, populated):
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "fakeFilter"})
     assert response.status_code == 400
