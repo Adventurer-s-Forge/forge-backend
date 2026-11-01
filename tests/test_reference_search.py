@@ -212,6 +212,7 @@ def test_dal_search_invalid_page_raises():
 
 
 @pytest.mark.integration
+@pytest.mark.test_id("ST-31")
 def test_filter_has_results_after_filter(api_client, populated):
     expected = [
         ("Magic Lens", "magic_item", "srd-2024_magic-lens"),
@@ -223,6 +224,7 @@ def test_filter_has_results_after_filter(api_client, populated):
 
 
 @pytest.mark.integration
+@pytest.mark.test_id("ST-31")
 def test_filter_has_no_results_after_filter(api_client, populated):
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "race"})
     assert response.status_code == 200
@@ -231,6 +233,7 @@ def test_filter_has_no_results_after_filter(api_client, populated):
 
 
 @pytest.mark.integration
+@pytest.mark.test_id("UT-57")
 def test_filter_using_page_number(api_client, populated):
     """The data seems to only result in 1 page of results after filtering."""
     expected = [
@@ -243,12 +246,14 @@ def test_filter_using_page_number(api_client, populated):
 
 
 @pytest.mark.integration
+@pytest.mark.test_id("UT-55")
 def test_filter_invalid_filter(api_client, populated):
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "fakeFilter"})
     assert response.status_code == 400
 
 
 @pytest.mark.integration
+@pytest.mark.test_id("UT-58")
 @pytest.mark.parametrize("page", ["0", "-1", "abc"])
 def test_filter_invalid_page(api_client, populated, page):
     assert _public(api_client, "/search", {"q": "Magic", "page": page, "content_filter": "magic_item"}).status_code == 422

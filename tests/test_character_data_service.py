@@ -23,6 +23,7 @@ def test_get_class(mock_get_reference, mock_get_redis):
     assert result_mock_return["name"] == "Wizard"
 
 
+@pytest.mark.test_id("UT-56")
 def test_validate_filter_success():
     service = CharacterDataService()
     error_validating_filter = None
@@ -33,6 +34,7 @@ def test_validate_filter_success():
     assert error_validating_filter is None
 
 
+@pytest.mark.test_id("UT-55")
 def test_validate_filter_valueerror():
     service = CharacterDataService()
     error_validating_filter = None

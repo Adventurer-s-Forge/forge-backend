@@ -70,6 +70,7 @@ def test_validate_rejects_bad_records(overrides, ref_type):
         validate_reference_record(_valid_record(**overrides), ref_type)
 
 
+@pytest.mark.test_id("UT-57")
 def test_validate_page_for_search_valid_page():
     error_with_page = None
     try:
@@ -79,6 +80,7 @@ def test_validate_page_for_search_valid_page():
     assert error_with_page == None
 
 
+@pytest.mark.test_id("UT-58")
 def test_validate_page_for_search_invalid_page():
     error_with_page = None
     try:
@@ -98,13 +100,16 @@ with open("tests/static_test_data/expected_sorted_result.json", "r") as file:
     EXPECTED_RESULT = json.load(file)
 
 
+@pytest.mark.test_id("UT-59")
 def test_sort_and_paginate_results():
     assert sort_and_paginate_search_result(SEARCH_RESULT) == EXPECTED_RESULT
 
 
+@pytest.mark.test_id("UT-56")
 def test_validate_content_type_valid():
     assert validate_content_type("magic_item") == True
 
 
+@pytest.mark.test_id("UT-55")
 def test_validate_content_type_invalid():
     assert validate_content_type("fakeContentType") == False
