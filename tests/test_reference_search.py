@@ -232,7 +232,6 @@ def test_filter_has_no_results_after_filter(api_client, populated):
 
 @pytest.mark.integration
 def test_filter_invalid_filter(api_client, populated):
-    error_filtering = None
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "fakeFilter"})
     assert response.status_code == 400
 

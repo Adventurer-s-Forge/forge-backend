@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from forge_backend.storage import (

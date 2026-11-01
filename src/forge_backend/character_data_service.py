@@ -1,5 +1,5 @@
 # import requests
-from typing import Any, Final
+from typing import Any
 
 from forge_backend.storage import (
     get_redis,

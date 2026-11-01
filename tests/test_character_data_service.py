@@ -1,7 +1,4 @@
-import json
 from unittest.mock import patch
-
-import pytest
 
 from forge_backend.character_data_service import CharacterDataService
 
