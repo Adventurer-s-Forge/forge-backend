@@ -1,4 +1,7 @@
+import copy
+
 import pytest
+import requests
 from fastapi.testclient import TestClient
 
 from forge_backend import ingest_database, main
@@ -77,6 +80,37 @@ class StubCaller:
             self._rec("a5e-ag_culture", "Culture", "a5e-ag"),
         ]
 
+    def get_monsters(self):
+        return [
+            self._rec("srd-2024_aboleth", "Aboleth", "srd-2024"),
+            self._rec("srd-2014_aboleth", "Aboleth", "srd-2014"),
+        ]
+
+    def get_magic_items(self):
+        return [
+            self._rec("srd-2024_magic-lens", "Magic Lens", "srd-2024"),
+            self._rec("srd-2014_magic-lens", "Magic Lens", "srd-2014"),
+        ]
+
+    def get_conditions(self):
+        return [
+            {
+                "key": "blinded",
+                "name": "Blinded",
+                "document": {"key": "core"},
+                "descriptions": [
+                    {"document": "srd-2024", "desc": "2024 blinded"},
+                    {"document": "srd-2014", "desc": "2014 blinded"},
+                ],
+            },
+            {
+                "key": "charmed",
+                "name": "Charmed",
+                "document": "toh",
+                "descriptions": [],
+            },
+        ]
+
 
 def _patch_caller(monkeypatch):
     monkeypatch.setattr(ingest_database, "Open5eCaller", StubCaller)
@@ -101,6 +135,9 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
         "equipment": 3,
         "spell": 1,
         "skill": 2,
+        "monster": 1,
+        "magic_item": 1,
+        "condition": 1,
     }
     assert [ref_type for _, ref_type, _ in calls] == list(REF_TYPES)
     by_type = {ref_type: records for _, ref_type, records in calls}
@@ -212,38 +249,55 @@ def test_reseed_removes_old_edition_preserves_character(monkeypatch, redis_conn)
     assert redis_conn.smembers(f"char:idx:{uid}") == before_idx
 
 
-def test_skill_projection_boundaries():
+@pytest.mark.parametrize("ref_type", ["skill", "condition"])
+def test_projection_keeps_only_srd_2024_descriptions_without_mutation(ref_type):
     raw = {
-        "key": "acrobatics",
-        "name": "Acrobatics",
+        "key": "x",
+        "name": "X",
         "document": "core",
-        "ability": "dex",
-        "descriptions": [_desc("srd-2024", "new")],
+        "descriptions": [_desc("srd-2024", "new"), _desc("srd-2014", "old")],
     }
-    out = ingest_database._reference_data(dict(raw), "skill")
+    snapshot = copy.deepcopy(raw)
+    out = ingest_database._reference_data(raw, ref_type)
     assert out["descriptions"] == [_desc("srd-2024", "new")]
-    assert raw["descriptions"] == [_desc("srd-2024", "new")]
+    assert raw == snapshot
 
+
+def test_condition_projection_retains_real_desc_fields():
+    raw = {
+        "key": "blinded",
+        "name": "Blinded",
+        "document": {"key": "core"},
+        "descriptions": [
+            {"document": "srd-2024", "desc": "2024 blinded"},
+            {"document": "srd-2014", "desc": "2014 blinded"},
+        ],
+    }
+    out = ingest_database._reference_data(raw, "condition")
+    assert out["descriptions"] == [{"document": "srd-2024", "desc": "2024 blinded"}]
+
+
+@pytest.mark.parametrize("ref_type", ["skill", "condition"])
+@pytest.mark.parametrize("descriptions", [None, []])
+def test_missing_or_empty_descriptions_project_to_empty(ref_type, descriptions):
+    raw = {"key": "a", "document": "core", "descriptions": descriptions}
+    assert ingest_database._reference_data(raw, ref_type)["descriptions"] == []
     assert (
-        ingest_database._reference_data({"key": "a", "document": "core"}, "skill")["descriptions"]
+        ingest_database._reference_data({"key": "a", "document": "core"}, ref_type)["descriptions"]
         == []
     )
-    assert (
-        ingest_database._reference_data(
-            {"key": "a", "document": "core", "descriptions": []}, "skill"
-        )["descriptions"]
-        == []
-    )
-    # non-skill passes through unchanged (identity)
+
+
+def test_non_projected_type_passes_through_unchanged():
     other = {"key": "x", "descriptions": [_desc("srd-2014", "old")]}
-    assert ingest_database._reference_data(other, "class") is other
+    assert ingest_database._reference_data(other, "class") == other
 
 
-def test_malformed_skill_descriptions_fail():
-    with pytest.raises(ValueError, match="invalid skill descriptions"):
-        ingest_database._reference_data({"key": "a", "descriptions": "nope"}, "skill")
-    with pytest.raises(ValueError, match="invalid skill descriptions"):
-        ingest_database._reference_data({"key": "a", "descriptions": ["nope"]}, "skill")
+@pytest.mark.parametrize("ref_type", ["skill", "condition"])
+@pytest.mark.parametrize("bad", ["nope", ["nope"]])
+def test_malformed_descriptions_fail(ref_type, bad):
+    with pytest.raises(ValueError, match=f"invalid {ref_type} descriptions"):
+        ingest_database._reference_data({"key": "a", "descriptions": bad}, ref_type)
 
 
 @pytest.mark.integration
@@ -279,3 +333,126 @@ def test_malformed_skill_blocks_refresh(monkeypatch, redis_conn):
     with pytest.raises(ValueError, match="invalid skill descriptions"):
         ingest_database.run_ingestion()
     assert count_reference(redis_conn, "skill") == 0
+
+
+@pytest.mark.integration
+def test_malformed_condition_keeps_prior_cached_conditions(monkeypatch, redis_conn):
+    _patch_caller(monkeypatch)
+    monkeypatch.setattr(ingest_database, "get_redis", lambda: redis_conn)
+    ingest_database.run_ingestion()
+    assert count_reference(redis_conn, "condition") == 1
+
+    class BadConditions(StubCaller):
+        def get_conditions(self):
+            return [
+                {"key": "blinded", "name": "Blinded", "document": "core", "descriptions": "nope"}
+            ]
+
+    monkeypatch.setattr(ingest_database, "Open5eCaller", BadConditions)
+    with pytest.raises(ValueError, match="invalid condition descriptions"):
+        ingest_database.run_ingestion()
+    assert count_reference(redis_conn, "condition") == 1
+    assert get_reference(redis_conn, "condition", "blinded") is not None
+
+
+@pytest.mark.integration
+def test_failed_monster_fetch_keeps_prior_cache_and_lifespan_serves(monkeypatch, redis_conn):
+    _patch_caller(monkeypatch)
+    monkeypatch.setattr(ingest_database, "get_redis", lambda: redis_conn)
+    ingest_database.run_ingestion()
+    assert get_reference(redis_conn, "monster", "srd-2024_aboleth") is not None
+
+    class FailingMonsters(StubCaller):
+        def get_monsters(self):
+            raise requests.ConnectionError("Open5e down")
+
+    monkeypatch.setattr(ingest_database, "Open5eCaller", FailingMonsters)
+    monkeypatch.setattr(main, "run_ingestion", ingest_database.run_ingestion)
+    with pytest.raises(requests.ConnectionError):
+        ingest_database.run_ingestion()
+    assert get_reference(redis_conn, "monster", "srd-2024_aboleth") is not None
+
+    with TestClient(main.app) as client:
+        assert client.get("/health").json() == {"status": "ok", "seed_counts": None}
+
+
+def _fake_pages(monkeypatch, pages):
+    """Route requests.get by URL marker; ``pages`` maps a marker to (payload|Exception)."""
+    from forge_backend import open_5e_caller
+
+    def fake_get(url, **_kwargs):
+        for marker, outcome in pages.items():
+            if marker in url:
+                if isinstance(outcome, Exception):
+                    raise outcome
+                return _FakeResponse(outcome)
+        return _FakeResponse({"results": [], "next": None})
+
+    monkeypatch.setattr(open_5e_caller.requests, "get", fake_get)
+
+
+class _FakeResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self._payload
+
+
+_CREATURES_PAGE_2 = "https://api.open5e.com/v2/creatures/?page=2&format=json"
+
+
+@pytest.mark.integration
+def test_monster_pagination_accepts_second_page_and_filters_documents(monkeypatch, redis_conn):
+    def monster(key, doc):
+        return {"key": key, "name": key, "document": {"key": doc}}
+
+    _fake_pages(
+        monkeypatch,
+        {
+            "creatures/?document__key": {
+                "results": [monster("srd-2024_goblin", "srd-2024"), monster("x_wrong", "srd-2014")],
+                "next": _CREATURES_PAGE_2,
+            },
+            "creatures/?page=2": {
+                "results": [monster("srd-2024_ogre", "srd-2024"), monster("y_wrong", "other")],
+                "next": None,
+            },
+        },
+    )
+    monkeypatch.setattr(ingest_database, "get_redis", lambda: redis_conn)
+    assert ingest_database.run_ingestion()["monster"] == 2
+    assert get_reference(redis_conn, "monster", "srd-2024_ogre") is not None
+    assert get_reference(redis_conn, "monster", "x_wrong") is None
+
+
+@pytest.mark.integration
+def test_second_page_failure_keeps_prior_monsters(monkeypatch, redis_conn):
+    import requests as _requests
+
+    monster = {"key": "srd-2024_goblin", "name": "Goblin", "document": {"key": "srd-2024"}}
+    _fake_pages(
+        monkeypatch,
+        {
+            "creatures/?document__key": {"results": [monster], "next": _CREATURES_PAGE_2},
+            "creatures/?page=2": {"results": [], "next": None},
+        },
+    )
+    monkeypatch.setattr(ingest_database, "get_redis", lambda: redis_conn)
+    ingest_database.run_ingestion()
+    assert count_reference(redis_conn, "monster") == 1
+
+    _fake_pages(
+        monkeypatch,
+        {
+            "creatures/?document__key": {"results": [monster], "next": _CREATURES_PAGE_2},
+            "creatures/?page=2": _requests.HTTPError("502"),
+        },
+    )
+    with pytest.raises(_requests.HTTPError):
+        ingest_database.run_ingestion()
+    assert get_reference(redis_conn, "monster", "srd-2024_goblin") is not None
+    assert count_reference(redis_conn, "monster") == 1

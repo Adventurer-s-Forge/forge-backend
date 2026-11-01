@@ -28,22 +28,27 @@ REF_DOCUMENTS: dict[str, str] = {
     "equipment": "srd-2024",
     "spell": "srd-2024",
     "skill": "core",
+    "monster": "srd-2024",
+    "magic_item": "srd-2024",
+    "condition": "core",
 }
+
+_PROJECTED_TYPES: frozenset[str] = frozenset({"skill", "condition"})
 
 
 def _reference_data(raw: dict[str, Any], ref_type: str) -> dict[str, Any]:
-    """Return the envelope payload; project skill descriptions to 2024 only."""
-    if ref_type != "skill":
+    """Return the envelope payload; project skill/condition descriptions to 2024 only."""
+    if ref_type not in _PROJECTED_TYPES:
         return raw
     descriptions = raw.get("descriptions", [])
     if descriptions is None:
         return {**raw, "descriptions": []}
     if not isinstance(descriptions, list):
-        raise ValueError("invalid skill descriptions")  # noqa: TRY004
+        raise ValueError(f"invalid {ref_type} descriptions")  # noqa: TRY004
     kept = []
     for entry in descriptions:
         if not isinstance(entry, dict):
-            raise ValueError("invalid skill descriptions")  # noqa: TRY004
+            raise ValueError(f"invalid {ref_type} descriptions")  # noqa: TRY004
         if _document_key(entry) == "srd-2024":
             kept.append(entry)
     return {**raw, "descriptions": kept}
@@ -80,6 +85,9 @@ def run_ingestion() -> dict[str, int]:
         "equipment": caller.get_equipment,
         "spell": caller.get_spells,
         "skill": caller.get_skills,
+        "monster": caller.get_monsters,
+        "magic_item": caller.get_magic_items,
+        "condition": caller.get_conditions,
     }
     counts: dict[str, int] = {}
     total_start = time.perf_counter()
@@ -104,7 +112,8 @@ def run_ingestion() -> dict[str, int]:
                 "data": _reference_data(raw, ref_type),
             }
             for raw in raw_records
-            if _document_key(raw) == expected_doc and not raw.get("is_subspecies", False)
+            if _document_key(raw) == expected_doc
+            and not (ref_type == "race" and raw.get("is_subspecies", False))
         ]
         skipped = fetched - len(records)
         written = refresh_reference_type(redis_client, ref_type, records)

@@ -14,6 +14,7 @@ ALL_GET_ROUTES = [
     "/equipment",
     "/spells",
     "/skills",
+    "/search?q=Magic",
     "/characters",
     "/characters/ids",
     "characters/count",

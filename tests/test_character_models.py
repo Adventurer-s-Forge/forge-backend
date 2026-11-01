@@ -10,7 +10,12 @@ PICK_A = {
     "label": "Chain Mail, Greatsword, Dungeoneer's Pack",
     "goldCp": 400,
     "grants": [
-        {"text": "Chain Mail", "quantity": 1, "itemId": "srd-2024_chain-mail", "choosableFrom": None},
+        {
+            "text": "Chain Mail",
+            "quantity": 1,
+            "itemId": "srd-2024_chain-mail",
+            "choosableFrom": None,
+        },
     ],
 }
 
