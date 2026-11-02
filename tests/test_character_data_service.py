@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import pytest
+
 from forge_backend.character_data_service import CharacterDataService
 
 # TODO: More tests needs to be written. Pausing for now.
