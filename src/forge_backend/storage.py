@@ -236,7 +236,7 @@ SEARCH_PAGE_SIZE: Final[int] = 100
 def validate_page_for_search(page: int):
     """
     Helper function to validate that a valid page number is used in the search API.
-    This is used by the search_reference_records function in this file and the filter_search_result function in the character_data_service.py file.
+    This is used by the search_reference_records function in this file.
     """
     if page < 1:
         raise ValueError(f"invalid page: {page!r} (must be >= 1)")
@@ -252,7 +252,12 @@ def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: i
     return search_result[start : start + SEARCH_PAGE_SIZE]
 
 
-def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> list[dict[str, Any]]:
+def search_reference_records(
+        conn: redis.Redis,
+        query: str,
+        page: int = 1,
+        content_type: str | None = None
+) -> list[dict[str, Any]]:
     """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
 
     Only ``name`` participates. Results are sorted by ``(name, type, key)``
@@ -263,9 +268,10 @@ def search_reference_records(conn: redis.Redis, query: str, page: int = 1) -> li
     needle = query.strip().casefold()
     if not needle:
         return []
+    ref_types = (content_type,) if content_type is not None else REF_TYPES
     matches = [
         record
-        for ref_type in REF_TYPES
+        for ref_type in ref_types
         for record in list_reference_records(conn, ref_type)
         if needle in record["name"].casefold()
     ]

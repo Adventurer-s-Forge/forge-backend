@@ -108,18 +108,16 @@ def get_skills():
 def search_reference(
     q: Annotated[str, Query(min_length=1, pattern=r"\S")],
     page: Annotated[int, Query(ge=1)] = 1,
-    content_filter: Annotated[str, Query(min_length=1, pattern=r"\S")] = "N/A", # [6]
+    content_filter: Annotated[str | None, Query(min_length=1, pattern=r"\S")] = None,
 ):
-    search_result = service.search_reference(q, page)
+    """Search reference names, optionally narrowed to one content type.
+
+    The filter is applied before paging, so later pages of a filtered search
+    stay reachable.
     """
-    If the user does not apply any filters, then return the base search result.
-    Otherwise, filter the base search result using the incoming content filter and return the filtered result.
-    """
-    if content_filter == "N/A":
-        return search_result
-    else:
+    if content_filter is not None:
         try:
             service.validate_filter(content_filter)
-            return service.filter_search_result(content_filter, search_result, page)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return service.search_reference(q, page, content_filter)
