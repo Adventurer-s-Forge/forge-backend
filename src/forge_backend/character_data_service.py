@@ -1,5 +1,8 @@
 # import requests
+from typing import Any
+
 from forge_backend.storage import (
+    get_all_ref_types,
     get_redis,
     get_reference,
     list_reference_records,
@@ -61,3 +64,22 @@ class CharacterDataService:
     def validate_filter(self, filter: str,) -> None:
         if not validate_content_type(filter):
             raise ValueError(f"invalid 'type' for filter: {filter!r}")
+
+    def count_total_search_results(self, search_result: list[dict[str, Any]]) -> int:
+        return len(search_result)
+
+    def count_matching_searches_per_category(self, search_result: list[dict[str, Any]]) -> dict[str, int]:
+        # Start contstructing the counts dictionary by adding the ref types and initializing their counts to 0 [7]
+        #all_ref_types = get_all_ref_types()
+        counts_dict = {ref_type:0 for ref_type in get_all_ref_types()}
+
+        # Construct the list of all ref types/categories included in the search result [5]
+        all_categories_in_results = [result["type"] for result in search_result]
+        # Construct the list of distinct ref types/categories included in the search result [4]
+        distinct_categories_in_results = set(all_categories_in_results)
+
+        for category in distinct_categories_in_results:
+            num_instances_of_category = all_categories_in_results.count(category) # [6]
+            counts_dict[category] = num_instances_of_category
+        
+        return counts_dict

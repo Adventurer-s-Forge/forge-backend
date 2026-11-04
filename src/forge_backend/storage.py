@@ -361,5 +361,9 @@ def delete_character(conn: redis.Redis, uid: str, charid: str) -> bool:
     return bool(deleted)
 
 
+def get_all_ref_types() -> Final[tuple[str, ...]]:
+    return REF_TYPES
+
+
 def validate_content_type(content_type: str) -> bool:
     return content_type in REF_TYPES

@@ -100,9 +100,10 @@ def get_skills():
 @router.get(
     "/search",
     operation_id="search_reference",
-    response_model=list[ReferenceRecord],
+    response_model=dict[str, int | dict[str, int] | list[ReferenceRecord]],
     summary="Search reference content by name and optionally filter by content type",
-    description="Case-insensitive substring search of reference record names across all types. An exact-match is used when filtering by content-type, if a filter is provided."
+    description="Case-insensitive substring search of reference record names across all types. An exact-match is used when filtering by content-type, if a filter is provided.\n"
+    "The response includes the total number of results retrieved, the number of results for each category, and the results themselves.\n"
     "Results are sorted by name and paged at 100 per page; pass ?page=N for later pages.",
 )
 def search_reference(
@@ -110,6 +111,8 @@ def search_reference(
     page: Annotated[int, Query(ge=1)] = 1,
     content_filter: Annotated[str | None, Query(min_length=1, pattern=r"\S")] = None,
 ):
+    final_return_response = {"total": 0, "counts": {}, "result": []} # Initialize the final return response
+
     """Search reference names, optionally narrowed to one content type.
 
     The filter is applied before paging, so later pages of a filtered search
@@ -120,4 +123,10 @@ def search_reference(
             service.validate_filter(content_filter)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return service.search_reference(q, page, content_filter)
+    final_return_response["result"] = service.search_reference(q, page, content_filter)
+
+    """Calculate the total number of results and the number of results for each category"""
+    final_return_response["total"] = service.count_total_search_results(final_return_response["result"])
+    final_return_response["counts"] = service.count_matching_searches_per_category(final_return_response["result"])
+   
+    return final_return_response
