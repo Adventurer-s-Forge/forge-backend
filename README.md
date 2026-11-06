@@ -101,6 +101,8 @@ Read-only, unauthenticated, seeded from Open5e at startup.
 | `GET` | `/backgrounds` | `list_backgrounds` | `200 [ReferenceRecord]` | `422` |
 | `GET` | `/equipment` | `list_items` | `200 [ReferenceRecord]` | `422` |
 | `GET` | `/spells` | `list_spells` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/skills` | `list_skills` | `200 [ReferenceRecord]` | `422` |
+| `GET` | `/search` | `search_reference` | `200 [ReferenceRecord]` | `422`, `400` |
 | `GET` | `/health` | `get_health` | `200 HealthResponse` (`seed_counts` null when seeding failed) | N/A |
 
 ### Characters
@@ -255,6 +257,7 @@ Exactly five contract fields (extra keys ignored); every record is checked by
 | `list_char_keys`           | Sorted `SMEMBERS` of `char:idx:{uid}`. |
 | `list_character_records`   | Sorted ids then `MGET` of the records. |
 | `count_characters`         | `SCARD` of `char:idx:{uid}`. |
+| `search_reference_records` | Search the reference content. Returns full envelopes whose ``name`` contains ``query`` (case-folded literal match). |
 
 Invariants:
 
@@ -291,6 +294,9 @@ src/forge_backend/
   character_models.py               # CharacterRecord (request) / CharacterDocument (response), strict, extra="forbid"
   user_character_data_routes.py     # sole /characters router (create/list/ids/count/detail/save/delete)
 tests/
+  static_test_data/
+    expected_sorted_result.json            # static expected result for testing the search/filter reference content logic
+    test_search_result.json                # static test data for testing the search/filter reference content logic
   conftest.py                              # redis_conn (DB 15 + flush), api_client (token
                                            # override), no_outbound_http, as_user helper
   test_storage.py                          # unit: key formats, record validation
@@ -303,6 +309,7 @@ tests/
   test_character_ownership.py              # cross-user isolation: 404 not 403
   test_auth.py                             # token verification and rejection paths
   test_reference_routes.py                 # reference endpoints served from the seed
+  test_reference_search.py                 # search envelope results, search results sorting/pagination, correct error handling/codes returned, correct filtering results
   test_no_outbound_http.py                 # the app never calls Open5e while serving
   test_character_data_routes.py            # reference-content service (mocked)
   test_character_data_service.py           # reference read service

@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import pytest
+
 from forge_backend.character_data_service import CharacterDataService
 
 # TODO: More tests needs to be written. Pausing for now.
@@ -21,3 +23,26 @@ def test_get_class(mock_get_reference, mock_get_redis):
     service = CharacterDataService()
     result_mock_return = service.get_class("wizard")
     assert result_mock_return["name"] == "Wizard"
+
+
+@pytest.mark.test_id("UT-56")
+def test_validate_filter_success():
+    service = CharacterDataService()
+    error_validating_filter = None
+    try:
+        service.validate_filter("magic_item")
+    except ValueError as e:
+        error_validating_filter = e
+    assert error_validating_filter is None
+
+
+@pytest.mark.test_id("UT-55")
+def test_validate_filter_valueerror():
+    service = CharacterDataService()
+    error_validating_filter = None
+    try:
+        service.validate_filter("fakeFilter")
+    except ValueError as e:
+        error_validating_filter = e
+    assert type(error_validating_filter) is ValueError
+    assert error_validating_filter.args[0] == "invalid 'type' for filter: 'fakeFilter'"
