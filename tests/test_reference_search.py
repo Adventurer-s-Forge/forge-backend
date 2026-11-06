@@ -256,3 +256,49 @@ def test_filter_invalid_filter(api_client, populated):
 @pytest.mark.parametrize("page", ["0", "-1", "abc"])
 def test_filter_invalid_page(api_client, populated, page):
     assert _public(api_client, "/search", {"q": "Magic", "page": page, "content_filter": "magic_item"}).status_code == 422
+
+
+QUERY_FOR_COUNTS_TESTS = "a"
+
+
+@pytest.mark.integration
+@pytest.mark.test_id("ST-45")
+def test_search_return_total_count(api_client, populated):
+    response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS})
+    assert response.status_code == 200
+    assert response.json()["total"] == 6
+
+
+@pytest.mark.integration
+@pytest.mark.test_id("ST-46")
+def test_search_return_per_category_counts(api_client, populated):
+    expected = {
+        "race": 0,
+        "class": 1,
+        "background": 1,
+        "equipment": 0,
+        "spell": 1,
+        "skill": 1,
+        "monster": 1,
+        "magic_item": 1,
+        "condition": 0
+    }
+    response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS})
+    assert response.status_code == 200
+    assert response.json()["counts"] == expected
+
+
+@pytest.mark.integration
+@pytest.mark.test_id("ST-47")
+def test_search_return_pagination_count(api_client, populated):
+    response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS})
+    assert response.status_code == 200
+    assert response.json()["num items on page"] == 6
+
+
+@pytest.mark.integration
+@pytest.mark.test_id("ST-47")
+def test_search_return_pagination_count_second_page(api_client, populated):
+    response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS, "page": 2})
+    assert response.status_code == 200
+    assert response.json()["num items on page"] == 0
