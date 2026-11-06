@@ -81,14 +81,9 @@ def test_validate_page_for_search_valid_page():
 
 
 @pytest.mark.test_id("UT-58")
-def test_validate_page_for_search_invalid_page():
-    error_with_page = None
-    try:
+def test_dal_search_invalid_page_raises():
+    with pytest.raises(ValueError, match="invalid page"):
         validate_page_for_search(0)
-    except ValueError as e:
-        error_with_page = e
-    assert type(error_with_page) == ValueError
-    assert error_with_page.args[0] == "invalid page: 0 (must be >= 1)"
         
 
 # Read in the test search result and expected sorted result from JSON files since they are too large to hard-code into this file [7]

@@ -111,7 +111,9 @@ def search_reference(
     page: Annotated[int, Query(ge=1)] = 1,
     content_filter: Annotated[str | None, Query(min_length=1, pattern=r"\S")] = None,
 ):
-    final_return_response = {"total": 0, "counts": {}, "result": []} # Initialize the final return response
+    final_return_response = {"total": 0, "counts": {}, "num items on page": 0, "result": []} # Initialize the final return response
+
+    service.validate_page_for_search(page)
 
     """Search reference names, optionally narrowed to one content type.
 
@@ -123,10 +125,14 @@ def search_reference(
             service.validate_filter(content_filter)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-    final_return_response["result"] = service.search_reference(q, page, content_filter)
+    all_search_results = service.search_reference(q, content_filter)
 
     """Calculate the total number of results and the number of results for each category"""
-    final_return_response["total"] = service.count_total_search_results(final_return_response["result"])
-    final_return_response["counts"] = service.count_matching_searches_per_category(final_return_response["result"])
+    final_return_response["total"] = service.count_total_search_results(all_search_results)
+    final_return_response["counts"] = service.count_matching_searches_per_category(all_search_results)
+
+    sorted_and_paginated_results = service.sort_and_paginate_search_result(all_search_results, page)
+    final_return_response["num items on page"] = len(sorted_and_paginated_results)
+    final_return_response["result"] = sorted_and_paginated_results
    
     return final_return_response

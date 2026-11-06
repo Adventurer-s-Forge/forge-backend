@@ -245,7 +245,7 @@ def validate_page_for_search(page: int):
 def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: int = 1):
     """
     Helper function to sort and paginate search results.
-    This is used by the search_reference_records function in this file and the filter_search_result function in the character_data_service.py file.
+    Results are paged at ``SEARCH_PAGE_SIZE``; ``page`` is 1-based..
     """
     search_result.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
     start = (page - 1) * SEARCH_PAGE_SIZE
@@ -255,16 +255,13 @@ def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: i
 def search_reference_records(
         conn: redis.Redis,
         query: str,
-        page: int = 1,
         content_type: str | None = None
 ) -> list[dict[str, Any]]:
     """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
 
     Only ``name`` participates. Results are sorted by ``(name, type, key)``
     casefolded so equal names remain distinct and ordering is deterministic.
-    Results are paged at ``SEARCH_PAGE_SIZE``; ``page`` is 1-based.
     """
-    validate_page_for_search(page)
     needle = query.strip().casefold()
     if not needle:
         return []
@@ -275,7 +272,8 @@ def search_reference_records(
         for record in list_reference_records(conn, ref_type)
         if needle in record["name"].casefold()
     ]
-    return sort_and_paginate_search_result(matches, page)
+    
+    return matches
 
 
 def count_reference(conn: redis.Redis, ref_type: str) -> int:

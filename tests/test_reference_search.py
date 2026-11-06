@@ -1,7 +1,11 @@
 import pytest
 
 from forge_backend import storage
-from forge_backend.storage import refresh_reference_type, search_reference_records
+from forge_backend.storage import (
+    refresh_reference_type,
+    search_reference_records,
+    sort_and_paginate_search_result,
+)
 
 FIXTURES = [
     ("race", "srd-2024_elf", "Elf", "srd-2024"),
@@ -68,8 +72,8 @@ def _triples(body):
 def test_full_name_search_returns_exact_envelope(api_client, populated, query, expected):
     response = _public(api_client, "/search", {"q": query})
     assert response.status_code == 200
-    assert _triples(response.json()) == expected
-    body = response.json()[0]
+    assert _triples(response.json()["result"]) == expected
+    body = response.json()["result"][0]
     assert body["data"]["key"] == expected[0][2]
     assert set(body) == {"type", "key", "name", "document", "data"}
 
@@ -79,7 +83,7 @@ def test_full_name_search_returns_exact_envelope(api_client, populated, query, e
 def test_no_match_returns_empty_array(api_client, populated):
     response = _public(api_client, "/search", {"q": "zzzz-no-such-reference-us24"})
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["result"] == []
 
 
 @pytest.mark.integration
@@ -87,7 +91,7 @@ def test_no_match_returns_empty_array(api_client, populated):
 def test_valid_term_on_empty_database_returns_empty_array(api_client, redis_conn):
     response = _public(api_client, "/search", {"q": "Magic"})
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["result"] == []
 
 
 @pytest.mark.integration
@@ -114,9 +118,9 @@ def test_partial_name_matches_only_names_sorted(api_client, populated):
     plain = _public(api_client, "/search", {"q": "Magic"})
     padded = _public(api_client, "/search", {"q": "  mAgIc  "})
     assert plain.status_code == padded.status_code == 200
-    assert _triples(plain.json()) == expected
-    assert _triples(padded.json()) == expected
-    assert "Longsword" not in [r["name"] for r in plain.json()]
+    assert _triples(plain.json()["result"]) == expected
+    assert _triples(padded.json()["result"]) == expected
+    assert "Longsword" not in [r["name"] for r in plain.json()["result"]]
 
 
 @pytest.mark.integration
@@ -131,7 +135,7 @@ def test_blank_or_missing_query_is_422(api_client, populated, query):
 def test_glob_and_regex_characters_are_literal(api_client, populated, query):
     response = _public(api_client, "/search", {"q": query})
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["result"] == []
 
 
 @pytest.mark.integration
@@ -147,7 +151,7 @@ def test_equal_names_keep_separate_identities_with_tiebreak(api_client, populate
         [_envelope("magic_item", "srd-2024_magic-lens", "Magic Lens", "srd-2024")],
     )
     response = _public(api_client, "/search", {"q": "Magic Lens"})
-    assert _triples(response.json()) == [
+    assert _triples(response.json()["result"]) == [
         ("Magic Lens", "magic_item", "srd-2024_magic-lens"),
         ("Magic Lens", "spell", "srd-2024_magic-lens"),
     ]
@@ -180,8 +184,8 @@ def test_search_second_page_returns_remaining_sorted_results(api_client, redis_c
     first = _public(api_client, "/search", {"q": "Paged"})
     second = _public(api_client, "/search", {"q": "Paged", "page": 2})
     assert first.status_code == second.status_code == 200
-    assert len(first.json()) == 100
-    assert _triples(second.json()) == [("Paged 100", "spell", "paged-100")]
+    assert len(first.json()["result"]) == 100
+    assert _triples(second.json()["result"]) == [("Paged 100", "spell", "paged-100")]
 
 
 @pytest.mark.integration
@@ -197,18 +201,13 @@ def test_dal_search_pages_are_disjoint_and_cover_all_matches(monkeypatch):
         "list_reference_records",
         lambda _conn, ref_type: list(records) if ref_type == "spell" else [],
     )
-    first = search_reference_records(None, "bulk", page=1)
-    second = search_reference_records(None, "bulk", page=2)
-    third = search_reference_records(None, "bulk", page=3)
+    first = sort_and_paginate_search_result(search_reference_records(None, "bulk"), page=1)
+    second = sort_and_paginate_search_result(search_reference_records(None, "bulk"), page=2)
+    third = sort_and_paginate_search_result(search_reference_records(None, "bulk"), page=3)
     assert [r["key"] for r in first] == [f"k-{i:03d}" for i in range(100)]
     assert [r["key"] for r in second] == [f"k-{i:03d}" for i in range(100, 200)]
     assert [r["key"] for r in third] == [f"k-{i:03d}" for i in range(200, 205)]
-    assert search_reference_records(None, "bulk", page=4) == []
-
-
-def test_dal_search_invalid_page_raises():
-    with pytest.raises(ValueError, match="invalid page"):
-        search_reference_records(None, "bulk", page=0)
+    assert sort_and_paginate_search_result(search_reference_records(None, "bulk"), page=4) == []
 
 
 @pytest.mark.integration
@@ -219,8 +218,8 @@ def test_filter_has_results_after_filter(api_client, populated):
     ]
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "magic_item"})
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert _triples(response.json()) == expected
+    assert len(response.json()["result"]) == 1
+    assert _triples(response.json()["result"]) == expected
 
 
 @pytest.mark.integration
@@ -228,8 +227,8 @@ def test_filter_has_results_after_filter(api_client, populated):
 def test_filter_has_no_results_after_filter(api_client, populated):
     response = _public(api_client, "/search", {"q": "Magic", "content_filter": "race"})
     assert response.status_code == 200
-    assert len(response.json()) == 0
-    assert response.json() == []
+    assert len(response.json()["result"]) == 0
+    assert response.json()["result"] == []
 
 
 @pytest.mark.integration
@@ -241,8 +240,8 @@ def test_filter_using_page_number(api_client, populated):
     ]
     response = _public(api_client, "/search", {"q": "Magic", "page": 1, "content_filter": "magic_item"})
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert _triples(response.json()) == expected
+    assert len(response.json()["result"]) == 1
+    assert _triples(response.json()["result"]) == expected
 
 
 @pytest.mark.integration
