@@ -1,4 +1,4 @@
-import character_data_service
+from forge_backend import character_data_service
 
 
 FEATS_BY_TYPE = {
