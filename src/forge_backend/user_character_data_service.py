@@ -36,7 +36,42 @@ class UserCharacterDataService:
     def __init__(self, redis_client=None):
         self.redis_client = redis_client if redis_client is not None else get_redis()
 
-    def _validate_spell_selection(self, class_id: str | None, spell_ids: list[str]) -> None:
+    
+    def _get_background_spell_classes(
+        self, background_id: str | None
+    ) -> set[str]:
+        """
+        Retrieve the additional spell lists granted by a character's background.
+
+        Checks background benefits for Magic Initiate and returns the
+        corresponding class spell list keys. Returns an empty set if
+        the background does not grant any additional spell access.
+        """
+        if background_id is None:
+            return set()
+
+        background = get_reference(
+            self.redis_client, "background", background_id
+        )
+
+        if background is None:
+            raise ValueError("unknown backgroundId")
+
+        spell_classes = set()
+
+        for benefit in background.get("data", {}).get("benefits", []):
+            if benefit.get("type") == "feat":
+                desc = benefit.get("desc", "")
+
+                if desc.startswith("Magic Initiate (") and desc.endswith(")"):
+                    class_name = desc[len("Magic Initiate ("):-1]
+                    class_key = "srd-2024_" + class_name.lower().replace(" ", "-")
+                    spell_classes.add(class_key)
+
+        return spell_classes
+
+
+    def _validate_spell_selection(self, class_id: str | None, background_id: str | None, spell_ids: list[str]) -> None:
         if not spell_ids:
             return
         envelopes = []
@@ -45,12 +80,17 @@ class UserCharacterDataService:
             if envelope is None:
                 raise ValueError("unknown spellIds")
             envelopes.append(envelope)
-        validate_spell_class_eligibility(class_id, envelopes)
+
+        background_spell_classes = self._get_background_spell_classes(
+            background_id
+        )
+
+        validate_spell_class_eligibility(class_id, envelopes, background_spell_classes)
 
     def validate_character_references(self, character: CharacterRecord) -> None:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.purchasedItemIds)
-        self._validate_spell_selection(character.classId, character.spellIds)
+        self._validate_spell_selection(character.classId, character.backgroundId, character.spellIds)
         self._validate_skill_ids(
             character.proficientSkillIds
         )  # validate the list of proficient skills
@@ -174,7 +214,7 @@ class UserCharacterDataService:
         if background_id is None:
             return []
 
-        background_feats = available_background_feats(background_id)
+        background_feats = available_background_feats(background_id, self.redis_client)
         feat_names = []
 
         for feats in background_feats.values():

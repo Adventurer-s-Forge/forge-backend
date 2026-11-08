@@ -58,8 +58,8 @@ def available_class_feats(char_class: str, char_level: int):
     
 
 
-def available_background_feats(char_backgrd: str):
-    details = character_data_service.CharacterDataService()
+def available_background_feats(char_backgrd: str, redis_client=None):
+    details = character_data_service.CharacterDataService(redis_client)
     char_backgrd_details = details.get_background(char_backgrd)
 
     char_backgrd_feat = {}
