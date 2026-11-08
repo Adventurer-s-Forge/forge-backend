@@ -21,6 +21,7 @@ class ReferenceRecord(BaseModel):
         "equipment",
         "skill",
         "spell",
+        "feat",
         "monster",
         "magic_item",
         "condition",
@@ -98,6 +99,17 @@ def get_skills():
 
 
 @router.get(
+    "/feats",
+    operation_id="list_feats",
+    response_model=list[ReferenceRecord],
+    summary="List feats",
+    description="List seeded feat reference records.",
+)
+def get_feats():
+    return service.get_feats()
+
+
+@router.get(    
     "/search",
     operation_id="search_reference",
     response_model=dict[str, int | dict[str, int] | list[ReferenceRecord]],

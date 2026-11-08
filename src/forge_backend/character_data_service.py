@@ -60,6 +60,13 @@ class CharacterDataService:
         response = list_reference_records(self.redis_client, "skill")
         return response
 
+    def get_feat(self, feat):
+         return get_reference(self.redis_client, "feat", feat)
+
+    def get_feats(self):
+            response = list_reference_records(self.redis_client, "feat")
+            return response
+    
     def validate_page_for_search(self, page: int):
         """Does not have a default for page since the intent is to verify any page that is passed into the API call."""
         return validate_page_for_search(page)

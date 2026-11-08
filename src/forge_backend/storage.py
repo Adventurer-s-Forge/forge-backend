@@ -35,6 +35,7 @@ REF_TYPES: Final[tuple[str, ...]] = (
     "equipment",
     "spell",
     "skill",
+    "feat",
     "monster",
     "magic_item",
     "condition",

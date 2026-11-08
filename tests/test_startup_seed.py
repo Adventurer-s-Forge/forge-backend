@@ -80,6 +80,9 @@ class StubCaller:
             self._rec("a5e-ag_culture", "Culture", "a5e-ag"),
         ]
 
+    def get_feats(self):
+        return [self._rec("srd-2024_alert", "Alert", "srd-2024"),]
+
     def get_monsters(self):
         return [
             self._rec("srd-2024_aboleth", "Aboleth", "srd-2024"),
@@ -135,6 +138,7 @@ def test_run_ingestion_formats_and_counts(monkeypatch):
         "equipment": 3,
         "spell": 1,
         "skill": 2,
+        "feat": 1,
         "monster": 1,
         "magic_item": 1,
         "condition": 1,

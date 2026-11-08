@@ -33,6 +33,41 @@ def seeded(api_client, redis_conn):
             }
         ],
     )
+    # Seed backgrounds for spell eligibility testing
+    refresh_reference_type(
+        redis_conn,
+        "background",
+        [
+            {
+                "type": "background",
+                "key": "test_acolyte",
+                "name": "Acolyte",
+                "document": "srd-2024",
+                "data": {
+                    "benefits": [
+                        {
+                            "type": "feat",
+                            "desc": "Magic Initiate (Cleric)",
+                        }
+                    ]
+                },
+            },
+            {
+                "type": "background",
+                "key": "test_criminal",
+                "name": "Criminal",
+                "document": "srd-2024",
+                "data": {
+                    "benefits": [
+                        {
+                            "type": "feat",
+                            "desc": "Alert",
+                        }
+                    ]
+                },
+            },
+        ],
+    )
     refresh_reference_type(
         redis_conn,
         "spell",
@@ -43,7 +78,19 @@ def seeded(api_client, redis_conn):
                 "name": "Draft Spell",
                 "document": "srd-2024",
                 "data": {"classes": [{"key": "test_warden", "name": "Warden"}]},
-            }
+            },
+            {
+                "type": "spell",
+                "key": "test_sacred_flame",
+                "name": "Sacred Flame",
+                "document": "srd-2024",
+                "data": {
+                    "classes": [
+                        {"key": "srd-2024_cleric", "name": "Cleric"}
+                    ],
+                    "level": 0,
+                },
+            },
         ],
     )
     refresh_reference_type(
@@ -290,3 +337,48 @@ def test_reselecting_class_replaces(seeded, redis_conn):
     stored = _stored(redis_conn)
     assert stored["classId"] == "test_rogue"
     assert "class" not in stored
+
+@pytest.mark.integration
+def test_spell_allowed_by_background(seeded):
+    # Warden cannot use Cleric spells, but Acolyte grants Magic Initiate (Cleric)
+    body = draft(
+        classId="test_warden",
+        backgroundId="test_acolyte",
+        spellIds=["test_sacred_flame"],
+    )
+
+    response = seeded.put(f"/characters/{CHAR_ID}", json=body)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["spellIds"] == ["test_sacred_flame"]
+
+
+@pytest.mark.integration
+def test_spell_rejected_without_background_access(seeded):
+    # Criminal grants Alert, not additional spell access
+    body = draft(
+        classId="test_warden",
+        backgroundId="test_criminal",
+        spellIds=["test_sacred_flame"],
+    )
+
+    response = seeded.put(f"/characters/{CHAR_ID}", json=body)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == (
+        "The spell isn't available for the selected class or background"
+    )
+
+
+@pytest.mark.integration
+def test_spell_allowed_by_class_without_background(seeded):
+    # Existing class-based spell validation should still work
+    body = draft(
+        classId="test_warden",
+        spellIds=["draft_spell"],
+    )
+
+    response = seeded.put(f"/characters/{CHAR_ID}", json=body)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["spellIds"] == ["draft_spell"]

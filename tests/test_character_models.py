@@ -53,6 +53,8 @@ def test_minimal_draft_produces_blank_defaults():
         "proficientSkillIds",
         "expertiseIds",
         "spellIds",
+        "featIds",
+        "classFeatChoices",
         "completedSteps",
     ]
     assert dumped["level"] == 1
@@ -86,6 +88,13 @@ def test_full_payload_roundtrips_verbatim():
         "proficientSkillIds": ["arcana"],
         "expertiseIds": ["arcana"],
         "spellIds": ["draft_spell"],
+        "featIds": ["draft_feat"],
+        "classFeatChoices": [
+            {
+                "level": 4,
+                "featId": "draft_feat",
+            }
+        ],
         "completedSteps": [
             "name",
             "race",

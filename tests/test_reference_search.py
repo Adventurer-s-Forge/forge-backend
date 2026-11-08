@@ -279,6 +279,7 @@ def test_search_return_per_category_counts(api_client, populated):
         "equipment": 0,
         "spell": 1,
         "skill": 1,
+        "feat": 0,
         "monster": 1,
         "magic_item": 1,
         "condition": 0
