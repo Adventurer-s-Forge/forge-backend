@@ -1,3 +1,5 @@
+from typing import Any
+
 import requests
 
 
@@ -39,3 +41,16 @@ class Open5eCaller:
 
     def get_feats(self):
         return self.pagination_data("https://api.open5e.com/v2/feats/")
+    
+    def get_monsters(self) -> list[dict[str, Any]]:
+        return self.pagination_data(
+            "https://api.open5e.com/v2/creatures/?document__key=srd-2024&limit=100"
+        )
+
+    def get_magic_items(self) -> list[dict[str, Any]]:
+        # NOTE: /v2/magicitems/ ignores document__key server-side (returns all
+        # documents); the srd-2024 selection happens in ingest_database's filter.
+        return self.pagination_data("https://api.open5e.com/v2/magicitems/?limit=100")
+
+    def get_conditions(self) -> list[dict[str, Any]]:
+        return self.pagination_data("https://api.open5e.com/v2/conditions/?limit=100")

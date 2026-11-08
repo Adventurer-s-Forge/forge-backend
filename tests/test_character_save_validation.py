@@ -213,7 +213,12 @@ PICK_A = {
     "label": "Chain Mail, Greatsword, Dungeoneer's Pack",
     "goldCp": 400,
     "grants": [
-        {"text": "Chain Mail", "quantity": 1, "itemId": "srd-2024_chain-mail", "choosableFrom": None},
+        {
+            "text": "Chain Mail",
+            "quantity": 1,
+            "itemId": "srd-2024_chain-mail",
+            "choosableFrom": None,
+        },
     ],
 }
 
@@ -223,6 +228,7 @@ PICK_B = {
     "goldCp": 5000,
     "grants": [],
 }
+
 
 @pytest.mark.test_id("ST-18")
 @pytest.mark.integration

@@ -28,7 +28,18 @@ import redis
 
 from forge_backend import config
 
-REF_TYPES: Final[tuple[str, ...]] = ("race", "class", "background", "equipment", "spell", "skill", "feat")
+REF_TYPES: Final[tuple[str, ...]] = (
+    "race",
+    "class",
+    "background",
+    "equipment",
+    "spell",
+    "skill",
+    "feat",
+    "monster",
+    "magic_item",
+    "condition",
+)
 
 _SLUG_RE = re.compile(r"^[a-z0-9_-]+$")
 
@@ -176,7 +187,7 @@ def list_char_keys(conn: redis.Redis, uid: str) -> list[str]:
 
     ``char:idx:{uid}`` is a convenience index for listing. If a record exists at
     ``char:{uid}:{id}`` but its id is missing from the index, re-add it rather than
-    hiding tht character.
+    hiding that character.
 
     Returns the scan result, not the index, so a listing stays correct even if the
     repairing ``SADD`` fails.
@@ -218,6 +229,52 @@ def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
     raws = conn.mget([char_key(uid, slug) for slug in slugs])
     # Iterate through each raw, deserialize the JSON if data exists, and add the result to the list to return
     return [json.loads(raw) for raw in raws if raw is not None]
+
+
+SEARCH_PAGE_SIZE: Final[int] = 100
+
+
+def validate_page_for_search(page: int):
+    """
+    Helper function to validate that a valid page number is used in the search API.
+    This is used by the search_reference_records function in this file.
+    """
+    if page < 1:
+        raise ValueError(f"invalid page: {page!r} (must be >= 1)")
+
+
+def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: int = 1):
+    """
+    Helper function to sort and paginate search results.
+    Results are paged at ``SEARCH_PAGE_SIZE``; ``page`` is 1-based..
+    """
+    search_result.sort(key=lambda r: (r["name"].casefold(), r["type"], r["key"]))
+    start = (page - 1) * SEARCH_PAGE_SIZE
+    return search_result[start : start + SEARCH_PAGE_SIZE]
+
+
+def search_reference_records(
+        conn: redis.Redis,
+        query: str,
+        content_type: str | None = None
+) -> list[dict[str, Any]]:
+    """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
+
+    Only ``name`` participates. Results are sorted by ``(name, type, key)``
+    casefolded so equal names remain distinct and ordering is deterministic.
+    """
+    needle = query.strip().casefold()
+    if not needle:
+        return []
+    ref_types = (content_type,) if content_type is not None else REF_TYPES
+    matches = [
+        record
+        for ref_type in ref_types
+        for record in list_reference_records(conn, ref_type)
+        if needle in record["name"].casefold()
+    ]
+    
+    return matches
 
 
 def count_reference(conn: redis.Redis, ref_type: str) -> int:
@@ -301,3 +358,11 @@ def delete_character(conn: redis.Redis, uid: str, charid: str) -> bool:
     pipe.srem(char_index_key(uid), charid)
     deleted, _ = pipe.execute()
     return bool(deleted)
+
+
+def get_all_ref_types() -> Final[tuple[str, ...]]:
+    return REF_TYPES
+
+
+def validate_content_type(content_type: str) -> bool:
+    return content_type in REF_TYPES

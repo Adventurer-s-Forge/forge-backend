@@ -30,17 +30,20 @@ class EquipmentGrant(BaseModel):
     itemId: str | None
     choosableFrom: str | None
 
+
 class EquipmentPick(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    key: str                # "A" | "B" | "C"
-    label: str              # the option's display text
-    goldCp: int             # frozen coin grant
+    key: str  # "A" | "B" | "C"
+    label: str  # the option's display text
+    goldCp: int  # frozen coin grant
     grants: list[EquipmentGrant]
+
 
 class EquipmentChoice(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
     class_: EquipmentPick | None = Field(None, alias="class")
     background: EquipmentPick | None = None
+
 
 def _nonempty_str(v: str | None, field: str) -> str | None:
     if v is not None and (not isinstance(v, str) or v == ""):

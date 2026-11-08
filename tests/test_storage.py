@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from forge_backend.storage import (
@@ -5,6 +7,9 @@ from forge_backend.storage import (
     char_key,
     ref_index_key,
     ref_key,
+    sort_and_paginate_search_result,
+    validate_content_type,
+    validate_page_for_search,
     validate_reference_record,
 )
 
@@ -63,3 +68,43 @@ def test_validate_accepts_valid_record_with_extra_fields():
 def test_validate_rejects_bad_records(overrides, ref_type):
     with pytest.raises(ValueError):
         validate_reference_record(_valid_record(**overrides), ref_type)
+
+
+@pytest.mark.test_id("UT-57")
+def test_validate_page_for_search_valid_page():
+    error_with_page = None
+    try:
+        validate_page_for_search(1)
+    except ValueError as e:
+        error_with_page = e
+    assert error_with_page == None
+
+
+@pytest.mark.test_id("UT-58")
+def test_dal_search_invalid_page_raises():
+    with pytest.raises(ValueError, match="invalid page"):
+        validate_page_for_search(0)
+        
+
+# Read in the test search result and expected sorted result from JSON files since they are too large to hard-code into this file [7]
+SEARCH_RESULT = None
+with open("tests/static_test_data/test_search_result.json", "r") as file:
+    SEARCH_RESULT = json.load(file)
+EXPECTED_RESULT = None
+with open("tests/static_test_data/expected_sorted_result.json", "r") as file:
+    EXPECTED_RESULT = json.load(file)
+
+
+@pytest.mark.test_id("UT-59")
+def test_sort_and_paginate_results():
+    assert sort_and_paginate_search_result(SEARCH_RESULT) == EXPECTED_RESULT
+
+
+@pytest.mark.test_id("UT-56")
+def test_validate_content_type_valid():
+    assert validate_content_type("magic_item") == True
+
+
+@pytest.mark.test_id("UT-55")
+def test_validate_content_type_invalid():
+    assert validate_content_type("fakeContentType") == False

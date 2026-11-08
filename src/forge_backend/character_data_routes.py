@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
 
 from forge_backend.character_data_service import CharacterDataService
@@ -14,7 +14,18 @@ service = CharacterDataService()
 class ReferenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    type: Literal["race", "class", "background", "equipment", "skill", "spell", "feat"]
+    type: Literal[
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "skill",
+        "spell",
+        "feat",
+        "monster",
+        "magic_item",
+        "condition",
+    ]
     key: str
     name: str
     document: str
@@ -96,3 +107,44 @@ def get_skills():
 )
 def get_feats():
     return service.get_feats()
+
+
+@router.get(    
+    "/search",
+    operation_id="search_reference",
+    response_model=dict[str, int | dict[str, int] | list[ReferenceRecord]],
+    summary="Search reference content by name and optionally filter by content type",
+    description="Case-insensitive substring search of reference record names across all types. An exact-match is used when filtering by content-type, if a filter is provided.\n"
+    "The response includes the total number of results retrieved, the number of results for each category, and the results themselves.\n"
+    "Results are sorted by name and paged at 100 per page; pass ?page=N for later pages.",
+)
+def search_reference(
+    q: Annotated[str, Query(min_length=1, pattern=r"\S")],
+    page: Annotated[int, Query(ge=1)] = 1,
+    content_filter: Annotated[str | None, Query(min_length=1, pattern=r"\S")] = None,
+):
+    final_return_response = {"total": 0, "counts": {}, "num items on page": 0, "result": []} # Initialize the final return response
+
+    service.validate_page_for_search(page)
+
+    """Search reference names, optionally narrowed to one content type.
+
+    The filter is applied before paging, so later pages of a filtered search
+    stay reachable.
+    """
+    if content_filter is not None:
+        try:
+            service.validate_filter(content_filter)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+    all_search_results = service.search_reference(q, content_filter)
+
+    """Calculate the total number of results and the number of results for each category"""
+    final_return_response["total"] = service.count_total_search_results(all_search_results)
+    final_return_response["counts"] = service.count_matching_searches_per_category(all_search_results)
+
+    sorted_and_paginated_results = service.sort_and_paginate_search_result(all_search_results, page)
+    final_return_response["num items on page"] = len(sorted_and_paginated_results)
+    final_return_response["result"] = sorted_and_paginated_results
+   
+    return final_return_response
