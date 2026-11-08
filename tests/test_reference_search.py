@@ -290,7 +290,7 @@ def test_search_return_per_category_counts(api_client, populated):
 
 
 @pytest.mark.integration
-@pytest.mark.test_id("ST-47")
+@pytest.mark.test_id("ST-30")
 def test_search_return_pagination_count(api_client, populated):
     response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS})
     assert response.status_code == 200
@@ -298,7 +298,7 @@ def test_search_return_pagination_count(api_client, populated):
 
 
 @pytest.mark.integration
-@pytest.mark.test_id("ST-47")
+@pytest.mark.test_id("ST-30")
 def test_search_return_pagination_count_second_page(api_client, populated):
     response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS, "page": 2})
     assert response.status_code == 200
