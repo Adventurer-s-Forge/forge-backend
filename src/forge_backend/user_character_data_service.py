@@ -1,6 +1,11 @@
 from typing import Any
 
 from forge_backend.character_models import CharacterRecord, utcnow
+from forge_backend.feat_rules import (
+    FEATS_BY_TYPE,
+    available_background_feats,
+    available_class_feats,
+)
 from forge_backend.spell_rules import validate_spell_class_eligibility
 from forge_backend.storage import (
     add_new_character,
@@ -14,11 +19,6 @@ from forge_backend.storage import (
     list_reference_keys,
     list_reference_records,
     update_character,
-)
-from forge_backend.feat_rules import (
-    FEATS_BY_TYPE,
-    available_background_feats,
-    available_class_feats,
 )
 
 
@@ -218,8 +218,7 @@ class UserCharacterDataService:
         feat_names = []
 
         for feats in background_feats.values():
-            for feat_name in feats:
-                feat_names.append(feat_name)
+            feat_names.extend(feats)
 
         return feat_names
 
@@ -261,8 +260,7 @@ class UserCharacterDataService:
         unlocked_levels = []
 
         for levels in available_feats.values():
-            for level in levels:
-                unlocked_levels.append(level)
+            unlocked_levels.extend(levels)
 
         selected_levels = []
 
@@ -284,8 +282,7 @@ class UserCharacterDataService:
 
             for feature_name, levels in available_feats.items():
                 if choice.level in levels:
-                    for name in FEATS_BY_TYPE.get(feature_name, []):
-                        allowed_feat_names.append(name)
+                    allowed_feat_names.extend(FEATS_BY_TYPE.get(feature_name, []))
 
             if feat_name not in allowed_feat_names:
                 raise ValueError("feat is not available for this class feature")

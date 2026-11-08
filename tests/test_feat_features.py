@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
 from forge_backend.feat_rules import (
-    available_class_feats,
     available_background_feats,
+    available_class_feats,
 )
 
 
@@ -76,6 +76,7 @@ def test_class_feat_choice_rejected_below_required_level():
     from unittest.mock import patch
 
     import pytest
+
     from forge_backend.user_character_data_service import UserCharacterDataService
 
     character = SimpleNamespace(
