@@ -64,9 +64,15 @@ def available_background_feats(char_backgrd: str, redis_client=None):
     char_backgrd_feat = {}
 
     for feature in char_backgrd_details.get("data", {}).get("benefits", []):
-        if feature.get("type") == "feat":
-            for ref in feature.get("crossreferences", {}).get("to", []):
-                ft = ref.get("anchor")
-                char_backgrd_feat.setdefault(char_backgrd_details.get("name"), []).append(ft)
+        if feature.get("type") != "feat":
+            continue
+
+        # `crossreferences` from the old code only populated Acolyte, not the other 3
+        feat_name = feature.get("desc", "").split("(", 1)[0].strip()
+
+        if feat_name:
+            char_backgrd_feat.setdefault(
+                char_backgrd_details.get("name"), []
+            ).append(feat_name)
 
     return char_backgrd_feat

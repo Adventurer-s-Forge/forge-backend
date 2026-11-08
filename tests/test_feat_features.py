@@ -49,15 +49,10 @@ def test_available_background_feats():
         "data": {
             "benefits": [
                 {
-                    "type": "feat",
-                    "crossreferences": {
-                        "to": [
-                            {"anchor": "Magic Initiate"}
-                        ]
-                    },
+                    "type": "feat", "desc": "Magic Initiate (Cleric)"
                 }
-            ]
-        },
+            ],
+        }
     }
 
     with patch(
