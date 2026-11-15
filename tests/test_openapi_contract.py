@@ -44,6 +44,20 @@ def test_character_record_uses_canonical_fields():
     assert "createdAt" in schemas["CharacterDocument"]["properties"]
 
 
+def test_randomize_preview_is_a_200_character_record():
+    """The preview is an unsaved record: 200 with the request model, never a 201 document."""
+    schema = client.get("/openapi.json").json()
+    post = schema["paths"]["/characters/randomize"]["post"]
+
+    assert post["operationId"] == "randomize_character"
+    assert "200" in post["responses"]
+    assert "201" not in post["responses"]
+    assert "503" in post["responses"]
+    ref = post["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+    assert ref.endswith("CharacterRecord")
+    assert "ownerUid" not in schema["components"]["schemas"]["CharacterRecord"]["properties"]
+
+
 def test_reference_responses_have_object_schemas():
     schema = client.get("/openapi.json").json()
     record = schema["components"]["schemas"]["ReferenceRecord"]

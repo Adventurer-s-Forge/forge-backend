@@ -30,7 +30,16 @@ def seeded(api_client, redis_conn):
                 "name": "Warden",
                 "document": "srd-2024",
                 "data": {},
-            }
+            },
+            {
+                # A background's Magic Initiate (Cleric) resolves by class name, so the
+                # class has to exist as a record rather than being spelled out of the name.
+                "type": "class",
+                "key": "srd-2024_cleric",
+                "name": "Cleric",
+                "document": "srd-2024",
+                "data": {},
+            },
         ],
     )
     # Seed backgrounds for spell eligibility testing
@@ -85,9 +94,7 @@ def seeded(api_client, redis_conn):
                 "name": "Sacred Flame",
                 "document": "srd-2024",
                 "data": {
-                    "classes": [
-                        {"key": "srd-2024_cleric", "name": "Cleric"}
-                    ],
+                    "classes": [{"key": "srd-2024_cleric", "name": "Cleric"}],
                     "level": 0,
                 },
             },
@@ -337,6 +344,7 @@ def test_reselecting_class_replaces(seeded, redis_conn):
     stored = _stored(redis_conn)
     assert stored["classId"] == "test_rogue"
     assert "class" not in stored
+
 
 @pytest.mark.integration
 def test_spell_allowed_by_background(seeded):

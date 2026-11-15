@@ -238,7 +238,9 @@ def test_filter_using_page_number(api_client, populated):
     expected = [
         ("Magic Lens", "magic_item", "srd-2024_magic-lens"),
     ]
-    response = _public(api_client, "/search", {"q": "Magic", "page": 1, "content_filter": "magic_item"})
+    response = _public(
+        api_client, "/search", {"q": "Magic", "page": 1, "content_filter": "magic_item"}
+    )
     assert response.status_code == 200
     assert len(response.json()["result"]) == 1
     assert _triples(response.json()["result"]) == expected
@@ -255,7 +257,12 @@ def test_filter_invalid_filter(api_client, populated):
 @pytest.mark.test_id("UT-58")
 @pytest.mark.parametrize("page", ["0", "-1", "abc"])
 def test_filter_invalid_page(api_client, populated, page):
-    assert _public(api_client, "/search", {"q": "Magic", "page": page, "content_filter": "magic_item"}).status_code == 422
+    assert (
+        _public(
+            api_client, "/search", {"q": "Magic", "page": page, "content_filter": "magic_item"}
+        ).status_code
+        == 422
+    )
 
 
 QUERY_FOR_COUNTS_TESTS = "a"
@@ -282,7 +289,7 @@ def test_search_return_per_category_counts(api_client, populated):
         "feat": 0,
         "monster": 1,
         "magic_item": 1,
-        "condition": 0
+        "condition": 0,
     }
     response = _public(api_client, "/search", {"q": QUERY_FOR_COUNTS_TESTS})
     assert response.status_code == 200

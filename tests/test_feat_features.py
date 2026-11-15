@@ -39,7 +39,6 @@ def test_available_class_feats_respects_character_level():
     }
 
 
-
 def test_available_background_feats():
     mock_background = {
         "type": "background",
@@ -47,12 +46,8 @@ def test_available_background_feats():
         "name": "Acolyte",
         "document": "srd-2024",
         "data": {
-            "benefits": [
-                {
-                    "type": "feat", "desc": "Magic Initiate (Cleric)"
-                }
-            ],
-        }
+            "benefits": [{"type": "feat", "desc": "Magic Initiate (Cleric)"}],
+        },
     }
 
     with patch(
@@ -63,7 +58,6 @@ def test_available_background_feats():
         result = available_background_feats("srd-2024_acolyte")
 
     assert result == {"Acolyte": ["Magic Initiate"]}
-
 
 
 def test_class_feat_choice_rejected_below_required_level():

@@ -35,6 +35,4 @@ def validate_spell_class_eligibility(
 
         # Spell must be available through class OR background
         if class_id not in keys and not background_allowed:
-            raise ValueError(
-                "The spell isn't available for the selected class or background"
-            )
+            raise ValueError("The spell isn't available for the selected class or background")

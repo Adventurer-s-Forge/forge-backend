@@ -81,7 +81,9 @@ class StubCaller:
         ]
 
     def get_feats(self):
-        return [self._rec("srd-2024_alert", "Alert", "srd-2024"),]
+        return [
+            self._rec("srd-2024_alert", "Alert", "srd-2024"),
+        ]
 
     def get_monsters(self):
         return [
@@ -251,6 +253,90 @@ def test_reseed_removes_old_edition_preserves_character(monkeypatch, redis_conn)
     assert redis_conn.get(f"char:{uid}:{character['id']}") == before
     assert json.loads(before) == character
     assert redis_conn.smembers(f"char:idx:{uid}") == before_idx
+
+
+def test_creation_rules_travel_with_base_classes_and_get_classes(
+    monkeypatch, api_client, redis_conn
+):
+    """Class-choice metadata is seeded onto the envelope; upstream data stays verbatim."""
+    import json
+
+    from forge_backend import ingest_database
+
+    class Classes(StubCaller):
+        def get_classes(self):
+            return [
+                self._rec(
+                    "srd-2024_fighter",
+                    "Fighter",
+                    "srd-2024",
+                    subclass_of=None,
+                    features=[
+                        {"name": "Fighting Style", "desc": "x", "gained_at": [{"level": 1}]},
+                    ],
+                ),
+                self._rec(
+                    "srd-2024_champion",
+                    "Champion",
+                    "srd-2024",
+                    subclass_of={"key": "srd-2024_fighter", "name": "Fighter"},
+                ),
+                self._rec("srd-2024_unknown", "Unknown", "srd-2024", subclass_of=None),
+                self._rec(
+                    "srd-2024_halfstyle",
+                    "Halfstyle",
+                    "srd-2024",
+                    subclass_of=None,
+                    features=[
+                        {"name": "Fighting Style", "desc": "x", "gained_at": [{"level": 2}]},
+                    ],
+                ),
+            ]
+
+    monkeypatch.setattr(ingest_database, "Open5eCaller", Classes)
+    monkeypatch.setattr(ingest_database, "get_redis", lambda: redis_conn)
+    ingest_database.run_ingestion()
+
+    records = {record["key"]: record for record in api_client.get("/classes").json()}
+    stored = json.loads(redis_conn.get("ref:class:srd-2024_fighter"))
+
+    # The upstream payload is carried through untouched, upstream subclass_of included.
+    assert records["srd-2024_fighter"]["data"]["subclass_of"] is None
+
+    fighter = records["srd-2024_fighter"]["creationRules"]
+    assert fighter["skillChoices"] == {
+        "count": 2,
+        "from": [
+            "acrobatics",
+            "animal-handling",
+            "athletics",
+            "history",
+            "insight",
+            "intimidation",
+            "perception",
+            "survival",
+        ],
+    }
+    assert [style["id"] for style in fighter["fightingStyles"]] == [
+        "archery",
+        "defense",
+        "dueling",
+        "great-weapon-fighting",
+        "protection",
+        "two-weapon-fighting",
+    ]
+    assert fighter["fightingStyles"][0]["name"] == "Archery"
+    assert stored["creationRules"] == fighter
+
+    # An unknown base class falls back to the documented default, in data rather than code.
+    assert records["srd-2024_unknown"]["creationRules"] == {
+        "skillChoices": {"count": 2, "from": "any"},
+        "fightingStyles": [],
+    }
+    # A subclass is never a creation candidate and gains no metadata.
+    assert "creationRules" not in records["srd-2024_champion"]
+    # Styles ship only when the class gains the feature at level 1.
+    assert records["srd-2024_halfstyle"]["creationRules"]["fightingStyles"] == []
 
 
 @pytest.mark.parametrize("ref_type", ["skill", "condition"])

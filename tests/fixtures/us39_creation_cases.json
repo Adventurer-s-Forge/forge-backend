@@ -1,0 +1,2916 @@
+{
+  "references": {
+    "race": [
+      {
+        "type": "race",
+        "key": "srd-2024_human",
+        "name": "Human",
+        "document": "srd-2024",
+        "data": {
+          "subspecies_of": null,
+          "is_subspecies": false,
+          "desc": "Human.",
+          "traits": [
+            {
+              "name": "Size",
+              "desc": "Medium (about 4-7 feet tall) or Small (about 2-4 feet tall), chosen when you select this species"
+            },
+            {
+              "name": "Speed",
+              "desc": "30 feet"
+            },
+            {
+              "name": "Skillful",
+              "desc": "You gain proficiency in one skill of your choice."
+            }
+          ]
+        }
+      },
+      {
+        "type": "race",
+        "key": "srd-2024_dwarf",
+        "name": "Dwarf",
+        "document": "srd-2024",
+        "data": {
+          "subspecies_of": null,
+          "is_subspecies": false,
+          "desc": "Dwarf.",
+          "traits": [
+            {
+              "name": "Size",
+              "desc": "Medium (about 4-5 feet tall)"
+            },
+            {
+              "name": "Speed",
+              "desc": "30 feet"
+            },
+            {
+              "name": "Darkvision",
+              "desc": "You have Darkvision with a range of 120 feet."
+            }
+          ]
+        }
+      }
+    ],
+    "class": [
+      {
+        "type": "class",
+        "key": "srd-2024_fighter",
+        "name": "Fighter",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_fighter",
+          "name": "Fighter",
+          "desc": "Fighter.",
+          "subclass_of": null,
+          "hit_dice": "d10",
+          "caster_type": "NONE",
+          "saving_throws": [
+            {
+              "name": "strength"
+            },
+            {
+              "name": "constitution"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Fighter Traits",
+              "desc": "|Skill Proficiencies|Choose 2: Acrobatics, Athletics, History, Insight, Intimidation, Perception, Survival|\n|Saving Throw Proficiencies|Strength and Constitution|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A, B, or C: (A) Chain Mail, Greatsword, Flail, 8 Javelins, Dungeoneer's Pack, and 4 GP; (B) Studded Leather Armor, Scimitar, Shortsword, Longbow, 20 Arrows, Quiver, Dungeoneer's Pack, and 11 GP; or (C) 155 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Second Wind",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Fighting Style",
+              "desc": "You gain a Fighting Style feat of your choice.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 2,
+            "from": [
+              "acrobatics",
+              "athletics",
+              "history",
+              "insight",
+              "intimidation",
+              "perception",
+              "survival"
+            ]
+          },
+          "fightingStyles": [
+            {
+              "id": "archery",
+              "name": "Archery",
+              "note": "+2 to attack rolls with ranged weapons."
+            },
+            {
+              "id": "defense",
+              "name": "Defense",
+              "note": "+1 AC while wearing armor."
+            },
+            {
+              "id": "dueling",
+              "name": "Dueling",
+              "note": "+2 damage with a single one-handed weapon."
+            },
+            {
+              "id": "great-weapon-fighting",
+              "name": "Great Weapon Fighting",
+              "note": "Reroll low damage dice with two-handed weapons."
+            },
+            {
+              "id": "protection",
+              "name": "Protection",
+              "note": "Impose disadvantage on an attack against a nearby ally."
+            },
+            {
+              "id": "two-weapon-fighting",
+              "name": "Two-Weapon Fighting",
+              "note": "Add your ability modifier to the second attack."
+            }
+          ]
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_rogue",
+        "name": "Rogue",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_rogue",
+          "name": "Rogue",
+          "desc": "Rogue.",
+          "subclass_of": null,
+          "hit_dice": "d8",
+          "caster_type": "NONE",
+          "saving_throws": [
+            {
+              "name": "dexterity"
+            },
+            {
+              "name": "intelligence"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Rogue Traits",
+              "desc": "|Skill Proficiencies|Choose 4: Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Persuasion, Sleight of Hand, Stealth|\n|Saving Throw Proficiencies|Dexterity and Intelligence|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons and Martial weapons that have the Finesse or Light property|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Rogue Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Expertise",
+              "desc": "You gain Expertise in two skills of your choice.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 4,
+            "from": [
+              "acrobatics",
+              "athletics",
+              "deception",
+              "insight",
+              "intimidation",
+              "investigation",
+              "perception",
+              "performance",
+              "persuasion",
+              "sleight-of-hand",
+              "stealth"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_wizard",
+        "name": "Wizard",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_wizard",
+          "name": "Wizard",
+          "desc": "Wizard.",
+          "subclass_of": null,
+          "hit_dice": "d6",
+          "caster_type": "FULL",
+          "saving_throws": [
+            {
+              "name": "intelligence"
+            },
+            {
+              "name": "wisdom"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Wizard Traits",
+              "desc": "|Skill Proficiencies|Choose 2: Arcana, History, Insight, Investigation, Medicine, Nature, Religion|\n|Saving Throw Proficiencies|Intelligence and Wisdom|\n|Armor Training|None|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Wizard Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Cantrips",
+              "desc": "You know one cantrip of your choice from the Wizard spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "1"
+                },
+                {
+                  "level": 2,
+                  "column_value": "1"
+                }
+              ]
+            },
+            {
+              "name": "Prepared Spells",
+              "desc": "You prepare one level-one spell from the Wizard spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "1"
+                },
+                {
+                  "level": 2,
+                  "column_value": "1"
+                }
+              ]
+            },
+            {
+              "name": "1st",
+              "desc": "You have two level-one spell slots.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Spellcasting",
+              "desc": "You can cast Wizard spells using Intelligence.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 2,
+            "from": [
+              "arcana",
+              "history",
+              "insight",
+              "investigation",
+              "medicine",
+              "religion"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_cleric",
+        "name": "Cleric",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_cleric",
+          "name": "Cleric",
+          "desc": "Cleric.",
+          "subclass_of": null,
+          "hit_dice": "d8",
+          "caster_type": "FULL",
+          "saving_throws": [
+            {
+              "name": "wisdom"
+            },
+            {
+              "name": "charisma"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Cleric Traits",
+              "desc": "|Skill Proficiencies|Choose 2: History, Insight, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) Chain Shirtless Robe, Mace, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Cleric Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Cantrips",
+              "desc": "You know one cantrip of your choice from the Cleric spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "1"
+                },
+                {
+                  "level": 2,
+                  "column_value": "1"
+                }
+              ]
+            },
+            {
+              "name": "Prepared Spells",
+              "desc": "You prepare one level-one spell from the Cleric spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "1"
+                },
+                {
+                  "level": 2,
+                  "column_value": "1"
+                }
+              ]
+            },
+            {
+              "name": "1st",
+              "desc": "You have two level-one spell slots.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Spellcasting",
+              "desc": "You can cast Cleric spells using Wisdom.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 2,
+            "from": [
+              "history",
+              "insight",
+              "medicine",
+              "persuasion",
+              "religion"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_paladin",
+        "name": "Paladin",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_paladin",
+          "name": "Paladin",
+          "desc": "Paladin.",
+          "subclass_of": null,
+          "hit_dice": "d10",
+          "caster_type": "HALF",
+          "saving_throws": [
+            {
+              "name": "wisdom"
+            },
+            {
+              "name": "charisma"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Paladin Traits",
+              "desc": "|Skill Proficiencies|Choose 2: Athletics, Insight, Intimidation, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Chain Mail, Mace, Shield, Longsword, 6 Javelins, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Paladin Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Prepared Spells",
+              "desc": "You prepare two level-one spells from the Paladin spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "1st",
+              "desc": "You have two level-one spell slots.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Fighting Style",
+              "desc": "You gain a Fighting Style feat of your choice.",
+              "gained_at": [
+                {
+                  "level": 2,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Spellcasting",
+              "desc": "You can cast Paladin spells using Charisma.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 2,
+            "from": [
+              "athletics",
+              "insight",
+              "intimidation",
+              "medicine",
+              "persuasion",
+              "religion"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_ranger",
+        "name": "Ranger",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_ranger",
+          "name": "Ranger",
+          "desc": "Ranger.",
+          "subclass_of": null,
+          "hit_dice": "d10",
+          "caster_type": "HALF",
+          "saving_throws": [
+            {
+              "name": "strength"
+            },
+            {
+              "name": "dexterity"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Ranger Traits",
+              "desc": "|Skill Proficiencies|Choose 3: Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth, Survival|\n|Saving Throw Proficiencies|Strength and Dexterity|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Ranger Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Prepared Spells",
+              "desc": "You prepare two level-one spells from the Ranger spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "1st",
+              "desc": "You have two level-one spell slots.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Fighting Style",
+              "desc": "You gain a Fighting Style feat of your choice.",
+              "gained_at": [
+                {
+                  "level": 2,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Expertise",
+              "desc": "You gain Expertise in two skills of your choice.",
+              "gained_at": [
+                {
+                  "level": 9,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Spellcasting",
+              "desc": "You can cast Ranger spells using Wisdom.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 3,
+            "from": [
+              "animal-handling",
+              "athletics",
+              "insight",
+              "investigation",
+              "nature",
+              "perception",
+              "stealth",
+              "survival"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_warlock",
+        "name": "Warlock",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_warlock",
+          "name": "Warlock",
+          "desc": "Warlock.",
+          "subclass_of": null,
+          "hit_dice": "d8",
+          "caster_type": "PACT",
+          "saving_throws": [
+            {
+              "name": "wisdom"
+            },
+            {
+              "name": "charisma"
+            }
+          ],
+          "features": [
+            {
+              "name": "Core Warlock Traits",
+              "desc": "|Skill Proficiencies|Choose 2: Arcana, Deception, History, Intimidation, Investigation, Nature, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
+              "gained_at": [],
+              "data_for_class_table": null
+            },
+            {
+              "name": "Warlock Feature",
+              "desc": "A level-one feature with enough prose to be shown on the sheet.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "name": "Cantrips",
+              "desc": "You know two cantrips of your choice from the Warlock spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Prepared Spells",
+              "desc": "You prepare two level-one spells from the Warlock spell list.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "2"
+                },
+                {
+                  "level": 2,
+                  "column_value": "2"
+                }
+              ]
+            },
+            {
+              "name": "Spell Slots",
+              "desc": "You have one level-one spell slot.",
+              "gained_at": [],
+              "data_for_class_table": [
+                {
+                  "level": 1,
+                  "column_value": "1"
+                },
+                {
+                  "level": 2,
+                  "column_value": "1"
+                }
+              ]
+            },
+            {
+              "name": "Pact Magic",
+              "desc": "You can cast Warlock spells using Charisma.",
+              "gained_at": [
+                {
+                  "level": 1,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        },
+        "creationRules": {
+          "skillChoices": {
+            "count": 2,
+            "from": [
+              "arcana",
+              "deception",
+              "history",
+              "intimidation",
+              "investigation",
+              "nature",
+              "religion"
+            ]
+          },
+          "fightingStyles": []
+        }
+      },
+      {
+        "type": "class",
+        "key": "srd-2024_champion",
+        "name": "Champion",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_champion",
+          "name": "Champion",
+          "desc": "Pursue Physical Excellence in Combat.",
+          "subclass_of": {
+            "name": "Fighter",
+            "key": "srd-2024_fighter"
+          },
+          "hit_dice": null,
+          "caster_type": "NONE",
+          "saving_throws": [],
+          "features": [
+            {
+              "name": "Improved Critical",
+              "desc": "Your attack rolls can score a Critical Hit on a 19 or 20.",
+              "gained_at": [
+                {
+                  "level": 3,
+                  "detail": null
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "background": [
+      {
+        "type": "background",
+        "key": "srd-2024_acolyte",
+        "name": "Acolyte",
+        "document": "srd-2024",
+        "data": {
+          "benefits": [
+            {
+              "name": "Ability Scores",
+              "type": "ability_score",
+              "desc": "Intelligence, Wisdom, Charisma"
+            },
+            {
+              "name": "Equipment",
+              "type": "equipment",
+              "desc": "*Choose A or B:* (A) Calligrapher's Supplies, Book (prayers), Holy Symbol, Parchment (10 sheets), Robe, 8 GP; or (B) 50 GP"
+            },
+            {
+              "name": "Feat",
+              "type": "feat",
+              "desc": "Magic Initiate (Cleric)"
+            },
+            {
+              "name": "Skill Proficiencies",
+              "type": "skill_proficiency",
+              "desc": "Insight and Religion"
+            },
+            {
+              "name": "Tool Proficiency",
+              "type": "tool_proficiency",
+              "desc": "Calligrapher's Supplies"
+            }
+          ]
+        }
+      },
+      {
+        "type": "background",
+        "key": "srd-2024_soldier",
+        "name": "Soldier",
+        "document": "srd-2024",
+        "data": {
+          "benefits": [
+            {
+              "name": "Ability Scores",
+              "type": "ability_score",
+              "desc": "Strength, Dexterity, Constitution"
+            },
+            {
+              "name": "Equipment",
+              "type": "equipment",
+              "desc": "*Choose A or B:* (A) Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer's Kit, Quiver, Traveler's Clothes, 14 GP; or (B) 50 GP"
+            },
+            {
+              "name": "Feat",
+              "type": "feat",
+              "desc": "Savage Attacker"
+            },
+            {
+              "name": "Skill Proficiencies",
+              "type": "skill_proficiency",
+              "desc": "Athletics and Intimidation"
+            },
+            {
+              "name": "Tool Proficiency",
+              "type": "tool_proficiency",
+              "desc": "Choose one kind of Gaming Set"
+            }
+          ]
+        }
+      }
+    ],
+    "equipment": [
+      {
+        "type": "equipment",
+        "key": "srd-2024_chain-mail",
+        "name": "Chain Mail",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "armor",
+            "name": "Armor"
+          },
+          "desc": "Heavy interlocking rings.",
+          "cost": "75.00",
+          "weapon": null,
+          "armor": {
+            "ac_base": 16,
+            "ac_add_dexmod": false,
+            "ac_cap_dexmod": null,
+            "grants_stealth_disadvantage": true
+          }
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024-greatsword",
+        "name": "Greatsword",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "A heavy blade.",
+          "cost": "50.00",
+          "weapon": {
+            "damage_dice": "2d6",
+            "damage_type": {
+              "name": "Slashing"
+            },
+            "is_martial": true,
+            "properties": [
+              {
+                "property": {
+                  "name": "Heavy",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024-flail",
+        "name": "Flail",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": {
+            "damage_dice": "1d8",
+            "damage_type": {
+              "name": "Bludgeoning"
+            },
+            "is_martial": true,
+            "properties": []
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_javelin",
+        "name": "Javelin",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "0.50",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": false,
+            "properties": [
+              {
+                "property": {
+                  "name": "Thrown",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024-studded-leather-armor",
+        "name": "Studded Leather Armor",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "armor",
+            "name": "Armor"
+          },
+          "desc": "Gear.",
+          "cost": "45.00",
+          "weapon": null,
+          "armor": {
+            "ac_base": 12,
+            "ac_add_dexmod": true,
+            "ac_cap_dexmod": null,
+            "grants_stealth_disadvantage": false
+          }
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_scimitar",
+        "name": "Scimitar",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "25.00",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Slashing"
+            },
+            "is_martial": true,
+            "properties": []
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_shortsword",
+        "name": "Shortsword",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": true,
+            "properties": []
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_longbow",
+        "name": "Longbow",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "50.00",
+          "weapon": {
+            "damage_dice": "1d8",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": true,
+            "properties": [
+              {
+                "property": {
+                  "name": "Ammunition",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_arrows-20",
+        "name": "Arrows (20)",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "ammunition",
+            "name": "Ammunition"
+          },
+          "desc": "Twenty arrows.",
+          "cost": "1.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_quiver",
+        "name": "Quiver",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "1.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_dungeoneers-pack",
+        "name": "Dungeoneer's Pack",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "12.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_leather-armor",
+        "name": "Leather Armor",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "armor",
+            "name": "Armor"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": null,
+          "armor": {
+            "ac_base": 11,
+            "ac_add_dexmod": true,
+            "ac_cap_dexmod": null,
+            "grants_stealth_disadvantage": false
+          }
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_dagger",
+        "name": "Dagger",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "2.00",
+          "weapon": {
+            "damage_dice": "1d4",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": false,
+            "properties": [
+              {
+                "property": {
+                  "name": "Finesse",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_thieves-tools",
+        "name": "Thieves' Tools",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "25.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_burglars-pack",
+        "name": "Burglar's Pack",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "16.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_shortbow",
+        "name": "Shortbow",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "25.00",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": true,
+            "properties": [
+              {
+                "property": {
+                  "name": "Ammunition",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_spellbook",
+        "name": "Spellbook",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "50.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_robe",
+        "name": "Robe",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "1.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_arcane-focus",
+        "name": "Arcane Focus",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_scholars-pack",
+        "name": "Scholar's Pack",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "40.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_spear",
+        "name": "Spear",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "1.00",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Piercing"
+            },
+            "is_martial": false,
+            "properties": []
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_longsword",
+        "name": "Longsword",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "15.00",
+          "weapon": {
+            "damage_dice": "1d8",
+            "damage_type": {
+              "name": "Slashing"
+            },
+            "is_martial": true,
+            "properties": [
+              {
+                "property": {
+                  "name": "Versatile",
+                  "type": null
+                }
+              }
+            ]
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_shield",
+        "name": "Shield",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "shield",
+            "name": "Shield"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": null,
+          "armor": {
+            "ac_base": 2,
+            "ac_add_dexmod": false,
+            "ac_cap_dexmod": null,
+            "grants_stealth_disadvantage": false
+          }
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_mace",
+        "name": "Mace",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "weapon",
+            "name": "Weapon"
+          },
+          "desc": "Gear.",
+          "cost": "5.00",
+          "weapon": {
+            "damage_dice": "1d6",
+            "damage_type": {
+              "name": "Bludgeoning"
+            },
+            "is_martial": false,
+            "properties": []
+          },
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_holy-symbol",
+        "name": "Holy Symbol",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "5.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_priests-pack",
+        "name": "Priest's Pack",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "33.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_calligraphers-supplies",
+        "name": "Calligrapher's Supplies",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "10.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_parchment",
+        "name": "Parchment",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "0.10",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_gaming-set-dice",
+        "name": "Gaming Set, Dice",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "1.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_gaming-set-playing-cards",
+        "name": "Gaming Set, Playing Cards",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "0.50",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_healers-kit",
+        "name": "Healer's Kit",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "5.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_travelers-clothes",
+        "name": "Traveler's Clothes",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "2.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_crowbar",
+        "name": "Crowbar",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "2.00",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_pouch",
+        "name": "Pouch",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "0.50",
+          "weapon": null,
+          "armor": null
+        }
+      },
+      {
+        "type": "equipment",
+        "key": "srd-2024_rope",
+        "name": "Rope (50 feet)",
+        "document": "srd-2024",
+        "data": {
+          "category": {
+            "key": "adventuring-gear",
+            "name": "Adventuring-Gear"
+          },
+          "desc": "Gear.",
+          "cost": "1.00",
+          "weapon": null,
+          "armor": null
+        }
+      }
+    ],
+    "skill": [
+      {
+        "type": "skill",
+        "key": "acrobatics",
+        "name": "Acrobatics",
+        "document": "srd-2024",
+        "data": {
+          "ability": "dex",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Acrobatics skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "animal-handling",
+        "name": "Animal Handling",
+        "document": "srd-2024",
+        "data": {
+          "ability": "wis",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Animal Handling skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "arcana",
+        "name": "Arcana",
+        "document": "srd-2024",
+        "data": {
+          "ability": "int",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Arcana skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "athletics",
+        "name": "Athletics",
+        "document": "srd-2024",
+        "data": {
+          "ability": "str",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Athletics skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "deception",
+        "name": "Deception",
+        "document": "srd-2024",
+        "data": {
+          "ability": "cha",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Deception skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "history",
+        "name": "History",
+        "document": "srd-2024",
+        "data": {
+          "ability": "int",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "History skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "insight",
+        "name": "Insight",
+        "document": "srd-2024",
+        "data": {
+          "ability": "wis",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Insight skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "intimidation",
+        "name": "Intimidation",
+        "document": "srd-2024",
+        "data": {
+          "ability": "cha",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Intimidation skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "investigation",
+        "name": "Investigation",
+        "document": "srd-2024",
+        "data": {
+          "ability": "int",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Investigation skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "medicine",
+        "name": "Medicine",
+        "document": "srd-2024",
+        "data": {
+          "ability": "wis",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Medicine skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "nature",
+        "name": "Nature",
+        "document": "srd-2024",
+        "data": {
+          "ability": "int",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Nature skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "perception",
+        "name": "Perception",
+        "document": "srd-2024",
+        "data": {
+          "ability": "wis",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Perception skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "performance",
+        "name": "Performance",
+        "document": "srd-2024",
+        "data": {
+          "ability": "cha",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Performance skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "persuasion",
+        "name": "Persuasion",
+        "document": "srd-2024",
+        "data": {
+          "ability": "cha",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Persuasion skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "religion",
+        "name": "Religion",
+        "document": "srd-2024",
+        "data": {
+          "ability": "int",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Religion skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "sleight-of-hand",
+        "name": "Sleight of Hand",
+        "document": "srd-2024",
+        "data": {
+          "ability": "dex",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Sleight of Hand skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "stealth",
+        "name": "Stealth",
+        "document": "srd-2024",
+        "data": {
+          "ability": "dex",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Stealth skill."
+            }
+          ]
+        }
+      },
+      {
+        "type": "skill",
+        "key": "survival",
+        "name": "Survival",
+        "document": "srd-2024",
+        "data": {
+          "ability": "wis",
+          "descriptions": [
+            {
+              "document": {
+                "key": "srd-2024"
+              },
+              "text": "Survival skill."
+            }
+          ]
+        }
+      }
+    ],
+    "spell": [
+      {
+        "type": "spell",
+        "key": "srd-2024_sacred-flame",
+        "name": "Sacred Flame",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_sacred-flame",
+          "name": "Sacred Flame",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Sacred Flame spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_guidance",
+        "name": "Guidance",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_guidance",
+          "name": "Guidance",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Guidance spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_spare-the-dying",
+        "name": "Spare The Dying",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_spare-the-dying",
+          "name": "Spare The Dying",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Spare The Dying spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_light",
+        "name": "Light",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_light",
+          "name": "Light",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            },
+            {
+              "name": "Wizard",
+              "key": "srd-2024_wizard"
+            }
+          ],
+          "desc": "Light spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_fire-bolt",
+        "name": "Fire Bolt",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_fire-bolt",
+          "name": "Fire Bolt",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Wizard",
+              "key": "srd-2024_wizard"
+            }
+          ],
+          "desc": "Fire Bolt spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_eldritch-blast",
+        "name": "Eldritch Blast",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_eldritch-blast",
+          "name": "Eldritch Blast",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Warlock",
+              "key": "srd-2024_warlock"
+            }
+          ],
+          "desc": "Eldritch Blast spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_prestidigitation",
+        "name": "Prestidigitation",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_prestidigitation",
+          "name": "Prestidigitation",
+          "level": 0,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Warlock",
+              "key": "srd-2024_warlock"
+            }
+          ],
+          "desc": "Prestidigitation spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_bless",
+        "name": "Bless",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_bless",
+          "name": "Bless",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Bless spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_healing-word",
+        "name": "Healing Word",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_healing-word",
+          "name": "Healing Word",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Healing Word spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_shield-of-faith",
+        "name": "Shield Of Faith",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_shield-of-faith",
+          "name": "Shield Of Faith",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Shield Of Faith spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_guiding-bolt",
+        "name": "Guiding Bolt",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_guiding-bolt",
+          "name": "Guiding Bolt",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Cleric",
+              "key": "srd-2024_cleric"
+            }
+          ],
+          "desc": "Guiding Bolt spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_mage-armor",
+        "name": "Mage Armor",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_mage-armor",
+          "name": "Mage Armor",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Wizard",
+              "key": "srd-2024_wizard"
+            }
+          ],
+          "desc": "Mage Armor spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_magic-missile",
+        "name": "Magic Missile",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_magic-missile",
+          "name": "Magic Missile",
+          "level": 1,
+          "school": {
+            "name": "Abjuration"
+          },
+          "classes": [
+            {
+              "name": "Wizard",
+              "key": "srd-2024_wizard"
+            }
+          ],
+          "desc": "Magic Missile spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_hex",
+        "name": "Hex",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_hex",
+          "name": "Hex",
+          "level": 1,
+          "school": {
+            "name": "Enchantment"
+          },
+          "classes": [
+            {
+              "name": "Warlock",
+              "key": "srd-2024_warlock"
+            }
+          ],
+          "desc": "Hex spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_charm-person",
+        "name": "Charm Person",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_charm-person",
+          "name": "Charm Person",
+          "level": 1,
+          "school": {
+            "name": "Enchantment"
+          },
+          "classes": [
+            {
+              "name": "Warlock",
+              "key": "srd-2024_warlock"
+            }
+          ],
+          "desc": "Charm Person spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_divine-favor",
+        "name": "Divine Favor",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_divine-favor",
+          "name": "Divine Favor",
+          "level": 1,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Paladin",
+              "key": "srd-2024_paladin"
+            }
+          ],
+          "desc": "Divine Favor spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_cure-wounds",
+        "name": "Cure Wounds",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_cure-wounds",
+          "name": "Cure Wounds",
+          "level": 1,
+          "school": {
+            "name": "Evocation"
+          },
+          "classes": [
+            {
+              "name": "Paladin",
+              "key": "srd-2024_paladin"
+            }
+          ],
+          "desc": "Cure Wounds spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_hunters-mark",
+        "name": "Hunters Mark",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_hunters-mark",
+          "name": "Hunters Mark",
+          "level": 1,
+          "school": {
+            "name": "Transmutation"
+          },
+          "classes": [
+            {
+              "name": "Ranger",
+              "key": "srd-2024_ranger"
+            }
+          ],
+          "desc": "Hunters Mark spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      },
+      {
+        "type": "spell",
+        "key": "srd-2024_longstrider",
+        "name": "Longstrider",
+        "document": "srd-2024",
+        "data": {
+          "key": "srd-2024_longstrider",
+          "name": "Longstrider",
+          "level": 1,
+          "school": {
+            "name": "Transmutation"
+          },
+          "classes": [
+            {
+              "name": "Ranger",
+              "key": "srd-2024_ranger"
+            }
+          ],
+          "desc": "Longstrider spell.",
+          "concentration": false,
+          "ritual": false,
+          "casting_time": "action",
+          "range_text": "60 feet",
+          "duration": "instantaneous"
+        }
+      }
+    ],
+    "feat": [
+      {
+        "type": "feat",
+        "key": "srd-2024_alert",
+        "name": "Alert",
+        "document": "srd-2024",
+        "data": {
+          "type": "Origin",
+          "desc": "Always on the lookout.",
+          "benefits": [
+            {
+              "desc": "Add your Proficiency Bonus to Initiative."
+            }
+          ]
+        }
+      },
+      {
+        "type": "feat",
+        "key": "srd-2024_savage-attacker",
+        "name": "Savage Attacker",
+        "document": "srd-2024",
+        "data": {
+          "type": "Origin",
+          "desc": "You have trained to deal devastating blows.",
+          "benefits": [
+            {
+              "desc": "Reroll damage once per turn."
+            }
+          ]
+        }
+      },
+      {
+        "type": "feat",
+        "key": "srd-2024_magic-initiate",
+        "name": "Magic Initiate",
+        "document": "srd-2024",
+        "data": {
+          "type": "Origin",
+          "desc": "You learn spells from another class's list.",
+          "benefits": [
+            {
+              "desc": "Learn two cantrips and one level-one spell."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "validCharacters": {
+    "fighter_soldier": {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "name": "Fixture Fighter",
+      "level": 1,
+      "raceId": "srd-2024_human",
+      "sizeChoice": "Small",
+      "classId": "srd-2024_fighter",
+      "fightingStyleId": "defense",
+      "toolChoiceId": "srd-2024_gaming-set-dice",
+      "backgroundId": "srd-2024_soldier",
+      "equipmentChoice": {
+        "class": {
+          "key": "A",
+          "label": "Chain Mail, Greatsword, Flail, 8 Javelins, Dungeoneer's Pack, and 4 GP",
+          "grants": [
+            {
+              "text": "Chain Mail",
+              "quantity": 1,
+              "itemId": "srd-2024_chain-mail",
+              "choosableFrom": null
+            },
+            {
+              "text": "Greatsword",
+              "quantity": 1,
+              "itemId": "srd-2024-greatsword",
+              "choosableFrom": null
+            },
+            {
+              "text": "Flail",
+              "quantity": 1,
+              "itemId": "srd-2024-flail",
+              "choosableFrom": null
+            },
+            {
+              "text": "8 Javelins",
+              "quantity": 8,
+              "itemId": "srd-2024_javelin",
+              "choosableFrom": null
+            },
+            {
+              "text": "Dungeoneer's Pack",
+              "quantity": 1,
+              "itemId": "srd-2024_dungeoneers-pack",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 400
+        },
+        "background": {
+          "key": "A",
+          "label": "Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer's Kit, Quiver, Traveler's Clothes, 14 GP",
+          "grants": [
+            {
+              "text": "Spear",
+              "quantity": 1,
+              "itemId": "srd-2024_spear",
+              "choosableFrom": null
+            },
+            {
+              "text": "Shortbow",
+              "quantity": 1,
+              "itemId": "srd-2024_shortbow",
+              "choosableFrom": null
+            },
+            {
+              "text": "20 Arrows",
+              "quantity": 1,
+              "itemId": "srd-2024_arrows-20",
+              "choosableFrom": null
+            },
+            {
+              "text": "Gaming Set (same as above)",
+              "quantity": 1,
+              "itemId": null,
+              "choosableFrom": "^srd-2024_gaming-set-"
+            },
+            {
+              "text": "Healer's Kit",
+              "quantity": 1,
+              "itemId": "srd-2024_healers-kit",
+              "choosableFrom": null
+            },
+            {
+              "text": "Quiver",
+              "quantity": 1,
+              "itemId": "srd-2024_quiver",
+              "choosableFrom": null
+            },
+            {
+              "text": "Traveler's Clothes",
+              "quantity": 1,
+              "itemId": "srd-2024_travelers-clothes",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 1400
+        }
+      },
+      "purchasedItemIds": [],
+      "walletCp": 1800,
+      "abilities": {
+        "method": "pointbuy",
+        "base": {
+          "STR": 15,
+          "DEX": 14,
+          "CON": 13,
+          "INT": 12,
+          "WIS": 10,
+          "CHA": 8
+        },
+        "rolled": [],
+        "originBonuses": {
+          "STR": 2,
+          "CON": 1
+        }
+      },
+      "proficientSkillIds": [
+        "perception",
+        "survival"
+      ],
+      "expertiseIds": [],
+      "spellIds": [],
+      "featIds": [
+        "srd-2024_savage-attacker"
+      ],
+      "classFeatChoices": [],
+      "completedSteps": [
+        "name",
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "attributes",
+        "skills"
+      ]
+    },
+    "rogue_acolyte": {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "Fixture Rogue",
+      "level": 1,
+      "raceId": "srd-2024_human",
+      "sizeChoice": "Medium",
+      "classId": "srd-2024_rogue",
+      "fightingStyleId": null,
+      "toolChoiceId": null,
+      "backgroundId": "srd-2024_acolyte",
+      "equipmentChoice": {
+        "class": {
+          "key": "A",
+          "label": "Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP",
+          "grants": [
+            {
+              "text": "Leather Armor",
+              "quantity": 1,
+              "itemId": "srd-2024_leather-armor",
+              "choosableFrom": null
+            },
+            {
+              "text": "2 Daggers",
+              "quantity": 2,
+              "itemId": "srd-2024_dagger",
+              "choosableFrom": null
+            },
+            {
+              "text": "Shortsword",
+              "quantity": 1,
+              "itemId": "srd-2024_shortsword",
+              "choosableFrom": null
+            },
+            {
+              "text": "Shortbow",
+              "quantity": 1,
+              "itemId": "srd-2024_shortbow",
+              "choosableFrom": null
+            },
+            {
+              "text": "20 Arrows",
+              "quantity": 1,
+              "itemId": "srd-2024_arrows-20",
+              "choosableFrom": null
+            },
+            {
+              "text": "Quiver",
+              "quantity": 1,
+              "itemId": "srd-2024_quiver",
+              "choosableFrom": null
+            },
+            {
+              "text": "Thieves' Tools",
+              "quantity": 1,
+              "itemId": "srd-2024_thieves-tools",
+              "choosableFrom": null
+            },
+            {
+              "text": "Burglar's Pack",
+              "quantity": 1,
+              "itemId": "srd-2024_burglars-pack",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 800
+        },
+        "background": {
+          "key": "A",
+          "label": "Calligrapher's Supplies, Book (prayers), Holy Symbol, Parchment (10 sheets), Robe, 8 GP",
+          "grants": [
+            {
+              "text": "Calligrapher's Supplies",
+              "quantity": 1,
+              "itemId": "srd-2024_calligraphers-supplies",
+              "choosableFrom": null
+            },
+            {
+              "text": "Book (prayers)",
+              "quantity": 1,
+              "itemId": null,
+              "choosableFrom": null
+            },
+            {
+              "text": "Holy Symbol",
+              "quantity": 1,
+              "itemId": "srd-2024_holy-symbol",
+              "choosableFrom": null
+            },
+            {
+              "text": "Parchment (10 sheets)",
+              "quantity": 1,
+              "itemId": "srd-2024_parchment",
+              "choosableFrom": null
+            },
+            {
+              "text": "Robe",
+              "quantity": 1,
+              "itemId": "srd-2024_robe",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 800
+        }
+      },
+      "purchasedItemIds": [],
+      "walletCp": 1600,
+      "abilities": {
+        "method": "pointbuy",
+        "base": {
+          "DEX": 15,
+          "CON": 14,
+          "INT": 13,
+          "WIS": 12,
+          "CHA": 10,
+          "STR": 8
+        },
+        "rolled": [],
+        "originBonuses": {
+          "INT": 2,
+          "CHA": 1
+        }
+      },
+      "proficientSkillIds": [
+        "acrobatics",
+        "athletics",
+        "deception",
+        "investigation"
+      ],
+      "expertiseIds": [
+        "athletics",
+        "religion"
+      ],
+      "spellIds": [
+        "srd-2024_bless",
+        "srd-2024_guidance",
+        "srd-2024_sacred-flame"
+      ],
+      "featIds": [
+        "srd-2024_magic-initiate"
+      ],
+      "classFeatChoices": [],
+      "completedSteps": [
+        "name",
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "attributes",
+        "skills",
+        "spells"
+      ]
+    },
+    "wizard_acolyte": {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "name": "Fixture Wizard",
+      "level": 1,
+      "raceId": "srd-2024_human",
+      "sizeChoice": "Medium",
+      "classId": "srd-2024_wizard",
+      "fightingStyleId": null,
+      "toolChoiceId": null,
+      "backgroundId": "srd-2024_acolyte",
+      "equipmentChoice": {
+        "class": {
+          "key": "A",
+          "label": "2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP",
+          "grants": [
+            {
+              "text": "2 Daggers",
+              "quantity": 2,
+              "itemId": "srd-2024_dagger",
+              "choosableFrom": null
+            },
+            {
+              "text": "Arcane Focus (crystal)",
+              "quantity": 1,
+              "itemId": "srd-2024_arcane-focus",
+              "choosableFrom": null
+            },
+            {
+              "text": "Robe",
+              "quantity": 1,
+              "itemId": "srd-2024_robe",
+              "choosableFrom": null
+            },
+            {
+              "text": "Spellbook",
+              "quantity": 1,
+              "itemId": "srd-2024_spellbook",
+              "choosableFrom": null
+            },
+            {
+              "text": "Scholar's Pack",
+              "quantity": 1,
+              "itemId": "srd-2024_scholars-pack",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 500
+        },
+        "background": {
+          "key": "A",
+          "label": "Calligrapher's Supplies, Book (prayers), Holy Symbol, Parchment (10 sheets), Robe, 8 GP",
+          "grants": [
+            {
+              "text": "Calligrapher's Supplies",
+              "quantity": 1,
+              "itemId": "srd-2024_calligraphers-supplies",
+              "choosableFrom": null
+            },
+            {
+              "text": "Book (prayers)",
+              "quantity": 1,
+              "itemId": null,
+              "choosableFrom": null
+            },
+            {
+              "text": "Holy Symbol",
+              "quantity": 1,
+              "itemId": "srd-2024_holy-symbol",
+              "choosableFrom": null
+            },
+            {
+              "text": "Parchment (10 sheets)",
+              "quantity": 1,
+              "itemId": "srd-2024_parchment",
+              "choosableFrom": null
+            },
+            {
+              "text": "Robe",
+              "quantity": 1,
+              "itemId": "srd-2024_robe",
+              "choosableFrom": null
+            }
+          ],
+          "goldCp": 800
+        }
+      },
+      "purchasedItemIds": [],
+      "walletCp": 1300,
+      "abilities": {
+        "method": "pointbuy",
+        "base": {
+          "INT": 15,
+          "DEX": 14,
+          "CON": 13,
+          "WIS": 12,
+          "CHA": 10,
+          "STR": 8
+        },
+        "rolled": [],
+        "originBonuses": {
+          "INT": 2,
+          "WIS": 1
+        }
+      },
+      "proficientSkillIds": [
+        "arcana",
+        "investigation"
+      ],
+      "expertiseIds": [],
+      "spellIds": [
+        "srd-2024_bless",
+        "srd-2024_fire-bolt",
+        "srd-2024_guidance",
+        "srd-2024_light",
+        "srd-2024_mage-armor"
+      ],
+      "featIds": [
+        "srd-2024_magic-initiate"
+      ],
+      "classFeatChoices": [],
+      "completedSteps": [
+        "name",
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "attributes",
+        "skills",
+        "spells"
+      ]
+    },
+    "fighter_acolyte": {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "name": "Fixture Acolyte Fighter",
+      "level": 1,
+      "raceId": "srd-2024_human",
+      "sizeChoice": "Medium",
+      "classId": "srd-2024_fighter",
+      "fightingStyleId": "dueling",
+      "toolChoiceId": null,
+      "backgroundId": "srd-2024_acolyte",
+      "equipmentChoice": {
+        "class": {
+          "key": "C",
+          "label": "155 GP",
+          "grants": [],
+          "goldCp": 15500
+        },
+        "background": {
+          "key": "B",
+          "label": "50 GP",
+          "grants": [],
+          "goldCp": 5000
+        }
+      },
+      "purchasedItemIds": [],
+      "walletCp": 20500,
+      "abilities": {
+        "method": "pointbuy",
+        "base": {
+          "STR": 15,
+          "DEX": 14,
+          "CON": 13,
+          "INT": 12,
+          "WIS": 10,
+          "CHA": 8
+        },
+        "rolled": [],
+        "originBonuses": {
+          "INT": 2,
+          "WIS": 1
+        }
+      },
+      "proficientSkillIds": [
+        "perception",
+        "survival"
+      ],
+      "expertiseIds": [],
+      "spellIds": [
+        "srd-2024_bless",
+        "srd-2024_sacred-flame",
+        "srd-2024_spare-the-dying"
+      ],
+      "featIds": [
+        "srd-2024_magic-initiate"
+      ],
+      "classFeatChoices": [],
+      "completedSteps": [
+        "name",
+        "race",
+        "class",
+        "background",
+        "equipment",
+        "attributes",
+        "skills",
+        "spells"
+      ]
+    }
+  }
+}

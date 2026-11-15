@@ -209,6 +209,42 @@ def list_reference_records(conn: redis.Redis, ref_type: str) -> list[dict[str, A
     return [json.loads(raw) for raw in raws if raw is not None]
 
 
+# The seven reference types the character creator draws from.
+CREATION_REFERENCE_TYPES: Final[tuple[str, ...]] = (
+    "race",
+    "class",
+    "background",
+    "equipment",
+    "skill",
+    "spell",
+    "feat",
+)
+
+
+class ReferenceDataUnavailable(RuntimeError):
+    """The creator's reference content could not be read.
+
+    Raised for a datastore failure (connection, timeout) or a stored record that is not
+    valid JSON. It means "ask again later", not "the caller sent something bad".
+    """
+
+
+def load_creation_references(conn: redis.Redis) -> dict[str, list[dict[str, Any]]]:
+    """Read the seven creator reference types, normalizing datastore failures.
+
+    Read-only and side-effect-free: generation must never rewrite or repair content.
+    """
+    try:
+        return {
+            ref_type: list_reference_records(conn, ref_type)
+            for ref_type in CREATION_REFERENCE_TYPES
+        }
+    except redis.RedisError as exc:
+        raise ReferenceDataUnavailable("reference data is unreachable") from exc
+    except ValueError as exc:  # json.JSONDecodeError: a corrupt stored record
+        raise ReferenceDataUnavailable("reference data is malformed") from exc
+
+
 def list_character_records(conn: redis.Redis, uid: str) -> list[dict[str, Any]]:
     """
     Retrieve all characters for a certain user from the database.
@@ -254,9 +290,7 @@ def sort_and_paginate_search_result(search_result: list[dict[str, Any]], page: i
 
 
 def search_reference_records(
-        conn: redis.Redis,
-        query: str,
-        content_type: str | None = None
+    conn: redis.Redis, query: str, content_type: str | None = None
 ) -> list[dict[str, Any]]:
     """Return full envelopes whose ``name`` contains ``query`` (case-folded literal match).
 
@@ -273,7 +307,7 @@ def search_reference_records(
         for record in list_reference_records(conn, ref_type)
         if needle in record["name"].casefold()
     ]
-    
+
     return matches
 
 

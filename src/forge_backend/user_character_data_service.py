@@ -1,11 +1,20 @@
+import random
+import uuid
 from typing import Any
 
 from forge_backend.character_models import CharacterRecord, utcnow
+from forge_backend.creation_rules import (
+    CREATION_STEPS,
+    normalize_creation_catalog,
+    resolve_background_spell_classes,
+    validate_complete_pointbuy_character,
+)
 from forge_backend.feat_rules import (
     FEATS_BY_TYPE,
     available_background_feats,
     available_class_feats,
 )
+from forge_backend.random_character_rules import generate_random_character
 from forge_backend.spell_rules import validate_spell_class_eligibility
 from forge_backend.storage import (
     add_new_character,
@@ -18,8 +27,13 @@ from forge_backend.storage import (
     list_character_records,
     list_reference_keys,
     list_reference_records,
+    load_creation_references,
     update_character,
 )
+
+# A level-one point-buy sheet is complete once these markers are present; the spells step
+# is appended only when the class or background grants spells.
+REQUIRED_CREATION_MARKERS = frozenset(CREATION_STEPS)
 
 
 class DuplicateCharacterId(Exception):
@@ -36,42 +50,29 @@ class UserCharacterDataService:
     def __init__(self, redis_client=None):
         self.redis_client = redis_client if redis_client is not None else get_redis()
 
-    
-    def _get_background_spell_classes(
-        self, background_id: str | None
-    ) -> set[str]:
+    def _get_background_spell_classes(self, background_id: str | None) -> set[str]:
         """
         Retrieve the additional spell lists granted by a character's background.
 
-        Checks background benefits for Magic Initiate and returns the
-        corresponding class spell list keys. Returns an empty set if
-        the background does not grant any additional spell access.
+        Checks background benefits for Magic Initiate and returns the keys of the
+        loaded class records those benefits name. Returns an empty set if the
+        background does not grant any additional spell access.
         """
         if background_id is None:
             return set()
 
-        background = get_reference(
-            self.redis_client, "background", background_id
-        )
+        background = get_reference(self.redis_client, "background", background_id)
 
         if background is None:
             raise ValueError("unknown backgroundId")
 
-        spell_classes = set()
+        class_records = list_reference_records(self.redis_client, "class")
 
-        for benefit in background.get("data", {}).get("benefits", []):
-            if benefit.get("type") == "feat":
-                desc = benefit.get("desc", "")
+        return resolve_background_spell_classes(background, class_records)
 
-                if desc.startswith("Magic Initiate (") and desc.endswith(")"):
-                    class_name = desc[len("Magic Initiate ("):-1]
-                    class_key = "srd-2024_" + class_name.lower().replace(" ", "-")
-                    spell_classes.add(class_key)
-
-        return spell_classes
-
-
-    def _validate_spell_selection(self, class_id: str | None, background_id: str | None, spell_ids: list[str]) -> None:
+    def _validate_spell_selection(
+        self, class_id: str | None, background_id: str | None, spell_ids: list[str]
+    ) -> None:
         if not spell_ids:
             return
         envelopes = []
@@ -81,22 +82,48 @@ class UserCharacterDataService:
                 raise ValueError("unknown spellIds")
             envelopes.append(envelope)
 
-        background_spell_classes = self._get_background_spell_classes(
-            background_id
-        )
+        background_spell_classes = self._get_background_spell_classes(background_id)
 
         validate_spell_class_eligibility(class_id, envelopes, background_spell_classes)
 
     def validate_character_references(self, character: CharacterRecord) -> None:
         self._validate_class_id(character.classId)
         self._validate_equipment_ids(character.purchasedItemIds)
-        self._validate_spell_selection(character.classId, character.backgroundId, character.spellIds)
+        self._validate_spell_selection(
+            character.classId, character.backgroundId, character.spellIds
+        )
         self._validate_skill_ids(
             character.proficientSkillIds
         )  # validate the list of proficient skills
         self._validate_skill_ids(character.expertiseIds)  # validate the list of expertise skills
         self._validate_feat_ids(character.featIds)
         self._validate_class_feat_choices(character)
+        self._validate_completed_pointbuy_character(character)
+
+    def _validate_completed_pointbuy_character(self, character: CharacterRecord) -> None:
+        """Check a finished level-one point-buy sheet against the creator's rules (US-39).
+
+        Only a record that claims to be finished is held to the full contract: a partial
+        draft, a higher-level character, and the non-point-buy methods keep their existing
+        looser handling.
+        """
+        if character.level != 1 or character.abilities.method != "pointbuy":
+            return
+        if not REQUIRED_CREATION_MARKERS <= set(character.completedSteps):
+            return
+
+        catalog = normalize_creation_catalog(load_creation_references(self.redis_client))
+        validate_complete_pointbuy_character(character, catalog)
+
+    def randomize_character(self) -> CharacterRecord:
+        """Draw a complete, legal level-one character without storing it (US-39).
+
+        The caller reviews the returned record and saves it through the ordinary create
+        endpoint, so generation itself writes nothing.
+        """
+        catalog = normalize_creation_catalog(load_creation_references(self.redis_client))
+        rng = random.SystemRandom()
+        return generate_random_character(catalog, rng, character_id=str(uuid.uuid4()))
 
     def _validate_class_id(self, class_id: str | None) -> None:
         if class_id is None:
@@ -209,7 +236,6 @@ class UserCharacterDataService:
         """
         return count_characters(self.redis_client, user_id)
 
-
     def _get_background_feats(self, background_id: str | None) -> list[str]:
         if background_id is None:
             return []
@@ -222,7 +248,6 @@ class UserCharacterDataService:
 
         return feat_names
 
-
     def _get_class_feats(self, class_id: str | None, level: int) -> dict:
         if class_id is None:
             return {}
@@ -230,7 +255,6 @@ class UserCharacterDataService:
         class_feats = available_class_feats(class_id, level)
 
         return class_feats
-    
 
     def _get_background_feat_ids(self, background_id: str | None) -> list[str]:
         feat_names = self._get_background_feats(background_id)
@@ -246,7 +270,6 @@ class UserCharacterDataService:
                 feat_ids.append(feat["key"])
 
         return feat_ids
-
 
     def _validate_class_feat_choices(self, character: CharacterRecord) -> None:
         if not character.classFeatChoices:
@@ -287,7 +310,6 @@ class UserCharacterDataService:
             if feat_name not in allowed_feat_names:
                 raise ValueError("feat is not available for this class feature")
 
-
     def _set_character_feats(self, character: CharacterRecord) -> None:
         feat_ids = []
 
@@ -304,7 +326,3 @@ class UserCharacterDataService:
                 feat_ids.append(choice.featId)
 
         character.featIds = feat_ids
-
-        
-
-

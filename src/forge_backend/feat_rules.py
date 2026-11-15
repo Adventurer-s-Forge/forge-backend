@@ -7,9 +7,9 @@ FEATS_BY_TYPE = {
         "Savage Attacker",
         "Skilled",
     ],
-    "Ability Score Improvement": [ # added this to deal with inconsistent feat library
-            "Ability Score Improvement",
-            "Grappler",
+    "Ability Score Improvement": [  # added this to deal with inconsistent feat library
+        "Ability Score Improvement",
+        "Grappler",
     ],
     "General": [
         "Ability Score Improvement",
@@ -54,7 +54,6 @@ def available_class_feats(char_class: str, char_level: int):
                 char_class_feat[name] = unlocked_levels
 
     return char_class_feat
-    
 
 
 def available_background_feats(char_backgrd: str, redis_client=None):
@@ -71,8 +70,6 @@ def available_background_feats(char_backgrd: str, redis_client=None):
         feat_name = feature.get("desc", "").split("(", 1)[0].strip()
 
         if feat_name:
-            char_backgrd_feat.setdefault(
-                char_backgrd_details.get("name"), []
-            ).append(feat_name)
+            char_backgrd_feat.setdefault(char_backgrd_details.get("name"), []).append(feat_name)
 
     return char_backgrd_feat

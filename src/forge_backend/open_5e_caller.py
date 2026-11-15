@@ -41,7 +41,7 @@ class Open5eCaller:
 
     def get_feats(self):
         return self.pagination_data("https://api.open5e.com/v2/feats/")
-    
+
     def get_monsters(self) -> list[dict[str, Any]]:
         return self.pagination_data(
             "https://api.open5e.com/v2/creatures/?document__key=srd-2024&limit=100"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,6 +10,8 @@ from pydantic import BaseModel
 
 from forge_backend.auth import current_uid
 from forge_backend.character_models import CharacterDocument, CharacterRecord
+from forge_backend.creation_rules import InvalidCreationReference
+from forge_backend.storage import ReferenceDataUnavailable
 from forge_backend.user_character_data_service import (
     DuplicateCharacterId,
     UserCharacterDataService,
@@ -18,7 +21,17 @@ Uid = Annotated[str, Depends(current_uid)]
 
 router = APIRouter(prefix="/characters", tags=["Characters"])
 
+logger = logging.getLogger(__name__)
+
 _service = UserCharacterDataService()
+
+# One message for every reference-data defect: the caller cannot act on the difference,
+# and the concrete defect goes to the log instead.
+REFERENCE_DATA_DETAIL = (
+    "Random character generation is unavailable because reference data is incomplete."
+)
+
+REFERENCE_DEFECTS = (ReferenceDataUnavailable, InvalidCreationReference)
 
 
 class ErrorResponse(BaseModel):
@@ -30,7 +43,7 @@ class ErrorResponse(BaseModel):
     operation_id="create_character",
     status_code=201,
     response_model=CharacterDocument,
-    responses={409: {"model": ErrorResponse}},
+    responses={409: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
     summary="Create a character",
     description=(
         "Create a full character record. The caller supplies the UUID."
@@ -40,10 +53,35 @@ class ErrorResponse(BaseModel):
 def create_new_character(character: CharacterRecord, uid: Uid):
     try:
         return _service.create_user_character(uid, character)
+    except REFERENCE_DEFECTS as exc:
+        # `InvalidCreationReference` subclasses `ValueError`, so this has to come first or
+        # an incomplete seed would be reported as a bad request.
+        logger.warning("create rejected: reference data incomplete: %s", exc)
+        raise HTTPException(status_code=503, detail=REFERENCE_DATA_DETAIL)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except DuplicateCharacterId:
         raise HTTPException(status_code=409, detail="Character ID collision, retry")
+
+
+@router.post(
+    "/randomize",
+    operation_id="randomize_character",
+    status_code=200,
+    response_model=CharacterRecord,
+    responses={503: {"model": ErrorResponse}},
+    summary="Generate a random character",
+    description=(
+        "Draw one complete, legal level-one character and return it unsaved. Nothing is "
+        "stored: review the response and POST it to /characters to keep it."
+    ),
+)
+def randomize_character(uid: Uid):
+    try:
+        return _service.randomize_character()
+    except REFERENCE_DEFECTS as exc:
+        logger.warning("randomize rejected: reference data incomplete: %s", exc)
+        raise HTTPException(status_code=503, detail=REFERENCE_DATA_DETAIL)
 
 
 @router.get(
@@ -102,7 +140,11 @@ def get_character_by_id(character_id: str, uid: Uid):
     "/{character_id}",
     operation_id="save_character",
     response_model=CharacterDocument,
-    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
+    responses={
+        400: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
     summary="Save a character",
     description=(
         "Full-replacement save of one owned character record. The path ID and "
@@ -114,6 +156,9 @@ def save_character(character_id: str, character: CharacterRecord, uid: Uid):
         return _service.save_character(uid, character_id, character)
     except KeyError:
         raise HTTPException(status_code=404, detail="character not found")
+    except REFERENCE_DEFECTS as exc:
+        logger.warning("save rejected: reference data incomplete: %s", exc)
+        raise HTTPException(status_code=503, detail=REFERENCE_DATA_DETAIL)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

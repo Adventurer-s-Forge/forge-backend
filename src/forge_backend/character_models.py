@@ -59,11 +59,14 @@ class CharacterAbilities(BaseModel):
     rolled: list[StrictInt] = Field(default_factory=list)
     originBonuses: dict[AbilityKey, StrictInt] = Field(default_factory=dict)
 
+
 class ClassFeatChoice(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     level: StrictInt = Field(ge=1, le=20)
     featId: StrictStr = Field(min_length=1)
+
+
 class CharacterRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -119,7 +122,9 @@ class CharacterRecord(BaseModel):
             raise ValueError("reference id must be nonempty or null")
         return v
 
-    @field_validator("proficientSkillIds", "expertiseIds", "spellIds", "purchasedItemIds", "featIds")
+    @field_validator(
+        "proficientSkillIds", "expertiseIds", "spellIds", "purchasedItemIds", "featIds"
+    )
     @classmethod
     def _validate_id_lists(cls, v: list[str]) -> list[str]:
         for entry in v:
