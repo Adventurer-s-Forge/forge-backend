@@ -77,14 +77,14 @@ def test_validate_page_for_search_valid_page():
         validate_page_for_search(1)
     except ValueError as e:
         error_with_page = e
-    assert error_with_page == None
+    assert error_with_page is None
 
 
 @pytest.mark.test_id("UT-58")
 def test_dal_search_invalid_page_raises():
     with pytest.raises(ValueError, match="invalid page"):
         validate_page_for_search(0)
-        
+
 
 # Read in the test search result and expected sorted result from JSON files since they are too large to hard-code into this file [7]
 SEARCH_RESULT = None
@@ -102,9 +102,9 @@ def test_sort_and_paginate_results():
 
 @pytest.mark.test_id("UT-56")
 def test_validate_content_type_valid():
-    assert validate_content_type("magic_item") == True
+    assert validate_content_type("magic_item")
 
 
 @pytest.mark.test_id("UT-55")
 def test_validate_content_type_invalid():
-    assert validate_content_type("fakeContentType") == False
+    assert not validate_content_type("fakeContentType")

@@ -109,7 +109,7 @@ def get_feats():
     return service.get_feats()
 
 
-@router.get(    
+@router.get(
     "/search",
     operation_id="search_reference",
     response_model=dict[str, int | dict[str, int] | list[ReferenceRecord]],
@@ -123,7 +123,12 @@ def search_reference(
     page: Annotated[int, Query(ge=1)] = 1,
     content_filter: Annotated[str | None, Query(min_length=1, pattern=r"\S")] = None,
 ):
-    final_return_response = {"total": 0, "counts": {}, "num items on page": 0, "result": []} # Initialize the final return response
+    final_return_response = {
+        "total": 0,
+        "counts": {},
+        "num items on page": 0,
+        "result": [],
+    }  # Initialize the final return response
 
     service.validate_page_for_search(page)
 
@@ -141,10 +146,12 @@ def search_reference(
 
     """Calculate the total number of results and the number of results for each category"""
     final_return_response["total"] = service.count_total_search_results(all_search_results)
-    final_return_response["counts"] = service.count_matching_searches_per_category(all_search_results)
+    final_return_response["counts"] = service.count_matching_searches_per_category(
+        all_search_results
+    )
 
     sorted_and_paginated_results = service.sort_and_paginate_search_result(all_search_results, page)
     final_return_response["num items on page"] = len(sorted_and_paginated_results)
     final_return_response["result"] = sorted_and_paginated_results
-   
+
     return final_return_response

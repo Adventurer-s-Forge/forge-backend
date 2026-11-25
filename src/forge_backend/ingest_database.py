@@ -11,13 +11,19 @@ only ``srd-2024`` description entries projected (edition-neutral skill
 IDs/metadata; Open5e has no separate top-level 2024 skill records).
 """
 
+import importlib.resources
+import json
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from forge_backend.open_5e_caller import Open5eCaller
 from forge_backend.storage import REF_TYPES, get_redis, refresh_reference_type
+
+# The creator's skill-pool default, used for a base class the packaged data does not
+# describe. A content author adds an entry to ``creation_options.json`` to override it.
+DEFAULT_SKILL_CHOICES: dict[str, Any] = {"count": 2, "from": "any"}
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +76,46 @@ def _document_key(raw: dict[str, Any]) -> str | None:
     return None
 
 
+def _load_creation_options() -> dict[str, Any]:
+    """Read the packaged class-choice data once per ingestion.
+
+    This is seed-time content, not a per-request rule: the class envelopes it decorates
+    are what runtime code reads.
+    """
+    resource = importlib.resources.files("forge_backend").joinpath("creation_options.json")
+    try:
+        options = json.loads(resource.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("invalid creation_options.json") from exc
+    choices = options.get("classSkillChoices")
+    styles = options.get("fightingStyles")
+    if not isinstance(choices, Mapping) or not isinstance(styles, Sequence):
+        # Malformed packaged content, not a misused argument: keep it a ValueError so the
+        # caller reports a reference defect rather than crashing.
+        raise ValueError("invalid creation_options.json")  # noqa: TRY004
+    return options
+
+
+def _gained_level(features: Sequence[Any], name: str) -> int | None:
+    """Lowest level a named feature is gained at, exactly as the client reads it."""
+    levels = [
+        entry.get("level")
+        for feature in features
+        if isinstance(feature, Mapping) and feature.get("name") == name
+        for entry in (feature.get("gained_at") or [])
+        if isinstance(entry, Mapping) and isinstance(entry.get("level"), int)
+    ]
+    return min(levels) if levels else None
+
+
+def _class_creation_rules(raw: Mapping[str, Any], options: Mapping[str, Any]) -> dict[str, Any]:
+    """The creator metadata for one base class: skill pool + level-one fighting styles."""
+    choices = options["classSkillChoices"].get(raw["key"], DEFAULT_SKILL_CHOICES)
+    features = raw.get("features") or []
+    styles = options["fightingStyles"] if _gained_level(features, "Fighting Style") == 1 else []
+    return {"skillChoices": choices, "fightingStyles": list(styles)}
+
+
 def run_ingestion() -> dict[str, int]:
     """Fetch all reference types from Open5e and full-replace them in Redis.
 
@@ -79,6 +125,7 @@ def run_ingestion() -> dict[str, int]:
     """
     caller = Open5eCaller()
     redis_client = get_redis()
+    creation_options = _load_creation_options()
     fetchers: dict[str, Callable[[], list[dict[str, Any]]]] = {
         "race": caller.get_races,
         "class": caller.get_classes,
@@ -105,18 +152,24 @@ def run_ingestion() -> dict[str, int]:
             )
             raise
         fetched = len(raw_records)
-        records = [
-            {
+        records: list[dict[str, Any]] = []
+        for raw in raw_records:
+            if _document_key(raw) != expected_doc:
+                continue
+            if ref_type == "race" and raw.get("is_subspecies", False):
+                continue
+            envelope: dict[str, Any] = {
                 "type": ref_type,
                 "key": raw["key"],
                 "name": raw["name"],
                 "document": _document_key(raw),
                 "data": _reference_data(raw, ref_type),
             }
-            for raw in raw_records
-            if _document_key(raw) == expected_doc
-            and not (ref_type == "race" and raw.get("is_subspecies", False))
-        ]
+            # Only an explicit ``subclass_of: null`` marks a base class; a subclass keeps
+            # its parent and gets no creation metadata (it is never a creation candidate).
+            if ref_type == "class" and raw.get("subclass_of", "absent") is None:
+                envelope["creationRules"] = _class_creation_rules(raw, creation_options)
+            records.append(envelope)
         skipped = fetched - len(records)
         written = refresh_reference_type(redis_client, ref_type, records)
         elapsed_ms = (time.perf_counter() - start) * 1000

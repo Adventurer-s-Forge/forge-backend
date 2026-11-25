@@ -1,4 +1,6 @@
+import json
 import os
+from pathlib import Path
 
 import pytest
 import redis
@@ -8,6 +10,17 @@ TEST_REDIS_URL = os.environ.get("TEST_REDIS_URL", "redis://localhost:6379/15")
 
 UID = "testUserAAA"
 OTHER_UID = "testUserBBB"
+
+FIXTURE_DIR = Path(__file__).parent / "fixtures"
+
+
+def creation_cases() -> dict:
+    """The shared US-39 reference/character fixture.
+
+    One file serves the Python tests and the frontend parity test, so an expectation cannot
+    drift apart from the contract it checks.
+    """
+    return json.loads((FIXTURE_DIR / "us39_creation_cases.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture

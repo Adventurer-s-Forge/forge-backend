@@ -1,0 +1,57 @@
+{
+  "classSkillChoices": {
+    "srd-2024_barbarian": {
+      "count": 2,
+      "from": ["animal-handling", "athletics", "intimidation", "nature", "perception", "survival"]
+    },
+    "srd-2024_bard": { "count": 3, "from": "any" },
+    "srd-2024_cleric": {
+      "count": 2,
+      "from": ["history", "insight", "medicine", "persuasion", "religion"]
+    },
+    "srd-2024_druid": {
+      "count": 2,
+      "from": ["arcana", "animal-handling", "insight", "medicine", "nature", "perception", "religion", "survival"]
+    },
+    "srd-2024_fighter": {
+      "count": 2,
+      "from": ["acrobatics", "animal-handling", "athletics", "history", "insight", "intimidation", "perception", "survival"]
+    },
+    "srd-2024_monk": {
+      "count": 2,
+      "from": ["acrobatics", "athletics", "history", "insight", "religion", "stealth"]
+    },
+    "srd-2024_paladin": {
+      "count": 2,
+      "from": ["athletics", "insight", "intimidation", "medicine", "persuasion", "religion"]
+    },
+    "srd-2024_ranger": {
+      "count": 3,
+      "from": ["animal-handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival"]
+    },
+    "srd-2024_rogue": {
+      "count": 4,
+      "from": ["acrobatics", "athletics", "deception", "insight", "intimidation", "investigation", "perception", "performance", "persuasion", "sleight-of-hand", "stealth"]
+    },
+    "srd-2024_sorcerer": {
+      "count": 2,
+      "from": ["arcana", "deception", "insight", "intimidation", "persuasion", "religion"]
+    },
+    "srd-2024_warlock": {
+      "count": 2,
+      "from": ["arcana", "deception", "history", "intimidation", "investigation", "nature", "religion"]
+    },
+    "srd-2024_wizard": {
+      "count": 2,
+      "from": ["arcana", "history", "insight", "investigation", "medicine", "religion"]
+    }
+  },
+  "fightingStyles": [
+    { "id": "archery", "name": "Archery", "note": "+2 to attack rolls with ranged weapons." },
+    { "id": "defense", "name": "Defense", "note": "+1 AC while wearing armor." },
+    { "id": "dueling", "name": "Dueling", "note": "+2 damage with a single one-handed weapon." },
+    { "id": "great-weapon-fighting", "name": "Great Weapon Fighting", "note": "Reroll low damage dice with two-handed weapons." },
+    { "id": "protection", "name": "Protection", "note": "Impose disadvantage on an attack against a nearby ally." },
+    { "id": "two-weapon-fighting", "name": "Two-Weapon Fighting", "note": "Add your ability modifier to the second attack." }
+  ]
+}
