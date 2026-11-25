@@ -49,6 +49,7 @@ def test_minimal_draft_produces_blank_defaults():
         "equipmentChoice",
         "purchasedItemIds",
         "walletCp",
+        "characterTypePresetChoice",
         "abilities",
         "proficientSkillIds",
         "expertiseIds",
@@ -63,6 +64,7 @@ def test_minimal_draft_produces_blank_defaults():
     assert dumped["fightingStyleId"] is None
     assert dumped["toolChoiceId"] is None
     assert dumped["abilities"] == {"method": None, "base": {}, "rolled": [], "originBonuses": {}}
+    assert dumped["characterTypePresetChoice"] is None
 
 
 def test_full_payload_roundtrips_verbatim():
@@ -79,6 +81,7 @@ def test_full_payload_roundtrips_verbatim():
         "equipmentChoice": {"class": PICK_A, "background": PICK_B},
         "purchasedItemIds": [],
         "walletCp": 0,
+        "characterTypePresetChoice": "Tank",
         "abilities": {
             "method": "roll",
             "base": {"STR": 15, "DEX": 14},

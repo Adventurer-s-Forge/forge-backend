@@ -82,6 +82,7 @@ class CharacterRecord(BaseModel):
     equipmentChoice: EquipmentChoice = Field(default_factory=EquipmentChoice)
     purchasedItemIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     walletCp: int = 0
+    characterTypePresetChoice: str | None = None
     abilities: CharacterAbilities = Field(default_factory=CharacterAbilities)
     proficientSkillIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     expertiseIds: list[StrictStr] = Field(default_factory=list, max_length=100)
