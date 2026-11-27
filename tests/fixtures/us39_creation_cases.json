@@ -76,7 +76,7 @@
           "features": [
             {
               "name": "Core Fighter Traits",
-              "desc": "|Skill Proficiencies|Choose 2: Acrobatics, Athletics, History, Insight, Intimidation, Perception, Survival|\n|Saving Throw Proficiencies|Strength and Constitution|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A, B, or C: (A) Chain Mail, Greatsword, Flail, 8 Javelins, Dungeoneer's Pack, and 4 GP; (B) Studded Leather Armor, Scimitar, Shortsword, Longbow, 20 Arrows, Quiver, Dungeoneer's Pack, and 11 GP; or (C) 155 GP|",
+              "desc": "|Primary Ability|Strength or Dexterity|\n|Skill Proficiencies|Choose 2: Acrobatics, Athletics, History, Insight, Intimidation, Perception, Survival|\n|Saving Throw Proficiencies|Strength and Constitution|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A, B, or C: (A) Chain Mail, Greatsword, Flail, 8 Javelins, Dungeoneer's Pack, and 4 GP; (B) Studded Leather Armor, Scimitar, Shortsword, Longbow, 20 Arrows, Quiver, Dungeoneer's Pack, and 11 GP; or (C) 155 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -172,7 +172,7 @@
           "features": [
             {
               "name": "Core Rogue Traits",
-              "desc": "|Skill Proficiencies|Choose 4: Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Persuasion, Sleight of Hand, Stealth|\n|Saving Throw Proficiencies|Dexterity and Intelligence|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons and Martial weapons that have the Finesse or Light property|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
+              "desc": "|Primary Ability|Dexterity|\n|Skill Proficiencies|Choose 4: Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Persuasion, Sleight of Hand, Stealth|\n|Saving Throw Proficiencies|Dexterity and Intelligence|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons and Martial weapons that have the Finesse or Light property|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -241,7 +241,7 @@
           "features": [
             {
               "name": "Core Wizard Traits",
-              "desc": "|Skill Proficiencies|Choose 2: Arcana, History, Insight, Investigation, Medicine, Nature, Religion|\n|Saving Throw Proficiencies|Intelligence and Wisdom|\n|Armor Training|None|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
+              "desc": "|Primary Ability|Intelligence|\n|Skill Proficiencies|Choose 2: Arcana, History, Insight, Investigation, Medicine, Nature, Religion|\n|Saving Throw Proficiencies|Intelligence and Wisdom|\n|Armor Training|None|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -350,7 +350,7 @@
           "features": [
             {
               "name": "Core Cleric Traits",
-              "desc": "|Skill Proficiencies|Choose 2: History, Insight, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) Chain Shirtless Robe, Mace, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
+              "desc": "|Primary Ability|Wisdom|\n|Skill Proficiencies|Choose 2: History, Insight, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) Chain Shirtless Robe, Mace, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -458,7 +458,7 @@
           "features": [
             {
               "name": "Core Paladin Traits",
-              "desc": "|Skill Proficiencies|Choose 2: Athletics, Insight, Intimidation, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Chain Mail, Mace, Shield, Longsword, 6 Javelins, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
+              "desc": "|Primary Ability|Dexterity|\n|Skill Proficiencies|Choose 2: Athletics, Insight, Intimidation, Medicine, Persuasion, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light, Medium, and Heavy armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Chain Mail, Mace, Shield, Longsword, 6 Javelins, Holy Symbol, Priest's Pack, and 7 GP; or (B) 110 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -562,7 +562,7 @@
           "features": [
             {
               "name": "Core Ranger Traits",
-              "desc": "|Skill Proficiencies|Choose 3: Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth, Survival|\n|Saving Throw Proficiencies|Strength and Dexterity|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
+              "desc": "|Primary Ability|Dexterity|\n|Skill Proficiencies|Choose 3: Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth, Survival|\n|Saving Throw Proficiencies|Strength and Dexterity|\n|Armor Training|Light and Medium armor and Shields|\n|Weapon Proficiencies|Simple and Martial weapons|\n|Starting Equipment|Choose A or B: (A) Leather Armor, 2 Daggers, Shortsword, Shortbow, 20 Arrows, Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },
@@ -678,7 +678,7 @@
           "features": [
             {
               "name": "Core Warlock Traits",
-              "desc": "|Skill Proficiencies|Choose 2: Arcana, Deception, History, Intimidation, Investigation, Nature, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
+              "desc": "|Primary Ability|Dexterity|\n|Skill Proficiencies|Choose 2: Arcana, Deception, History, Intimidation, Investigation, Nature, Religion|\n|Saving Throw Proficiencies|Wisdom and Charisma|\n|Armor Training|Light armor|\n|Weapon Proficiencies|Simple weapons|\n|Starting Equipment|Choose A or B: (A) 2 Daggers, Arcane Focus (crystal), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP|",
               "gained_at": [],
               "data_for_class_table": null
             },

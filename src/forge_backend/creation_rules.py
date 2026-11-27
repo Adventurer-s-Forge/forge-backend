@@ -399,6 +399,27 @@ def _normalize_race(record: Mapping[str, Any]) -> dict[str, Any]:
     return {"id": record["key"], "name": record["name"], "sizes": sizes}
 
 
+def _abilities_named(text: str) -> list[AbilityKey]:
+    return [
+        ABILITY_BY_NAME[word.casefold()]
+        for word in re.findall(r"[A-Za-z]+", text)
+        if word.casefold() in ABILITY_BY_NAME
+    ]
+
+
+def _saving_throws(data: Mapping[str, Any]) -> list[AbilityKey]:
+    abilities = _abilities_named(_core_trait_row(data["features"], "Saving Throw Proficiencies"))
+
+    if abilities:
+        return abilities
+
+    return [
+        ABILITY_BY_NAME[entry["name"].casefold()]
+        for entry in (data.get("saving_throws") or [])
+        if entry["name"].casefold() in ABILITY_BY_NAME
+    ]
+
+
 def _normalize_class(
     record: Mapping[str, Any], equipment: Sequence[Mapping[str, str]]
 ) -> dict[str, Any]:
@@ -418,6 +439,8 @@ def _normalize_class(
     return {
         "id": key,
         "name": record["name"],
+        "primaryAbilities": _abilities_named(_core_trait_row(features, "Primary Ability")),
+        "savingThrows": _saving_throws(data),
         "skillChoices": _skill_choices(record),
         "fightingStyles": _fighting_styles(record),
         "fightingStyleAt": _feature_level(features, "Fighting Style"),

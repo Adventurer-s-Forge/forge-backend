@@ -13,6 +13,7 @@ import random
 import re
 from typing import Any
 
+from forge_backend.ability_optimizer import optimize_abilities
 from forge_backend.character_models import AbilityKey, CharacterRecord
 from forge_backend.creation_rules import (
     ABILITIES,
@@ -22,7 +23,6 @@ from forge_backend.creation_rules import (
     CreationCatalog,
     class_skill_pool,
     expertise_count,
-    origin_maps,
     point_buy_cost,
     preflight_catalog,
     spell_budget,
@@ -59,8 +59,7 @@ def generate_random_character(
     cls = catalog["classes"][rng.choice(sorted(catalog["classes"]))]
     bg = catalog["backgrounds"][rng.choice(sorted(catalog["backgrounds"]))]
 
-    base = sample_pointbuy(rng)
-    bonuses = rng.choice(origin_maps(list(bg["abilityOptions"])))
+    base, bonuses = optimize_abilities(cls, bg, rng)
 
     granted_skills = set(bg["skillIds"])
     pool = [
