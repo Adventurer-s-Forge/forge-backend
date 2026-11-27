@@ -15,6 +15,12 @@ import pytest
 from conftest import creation_cases
 
 from forge_backend import random_character_rules as sampler
+from forge_backend.ability_optimizer import (
+    POINT_BUY_COSTS,
+    class_weights,
+    optimize_abilities,
+    optimize_pointbuy,
+)
 from forge_backend.character_models import CharacterRecord
 from forge_backend.creation_rules import (
     CREATION_STEPS,
@@ -177,18 +183,14 @@ class TestOriginMaps:
         ] == list(itertools.permutations(("INT", "WIS", "CHA"), 2))
         assert list(triples[0]) == ["INT", "WIS", "CHA"]
 
-    def test_every_map_is_reachable_by_its_index(self, catalog):
-        minimum = {ability: 8 for ability in ABILITIES}
-
-        for index in range(7):
-            rng = PinnedRng(seed=3, proposals=[minimum], choice_indices=[0, 0, 0, index])
-            record = generate(catalog, rng)
+    def test_generated_origin_bonuses_are_legal(self, catalog):
+        # US-40: Verify bonus legality now that selection is optimized rather than uniformly random.
+        for seed in range(30):
+            record = generate(catalog, random.Random(seed))
 
             background = catalog["backgrounds"][record.backgroundId]
-            assert (
-                record.abilities.originBonuses
-                == origin_maps(list(background["abilityOptions"]))[index]
-            )
+
+            assert record.abilities.originBonuses in origin_maps(list(background["abilityOptions"]))
 
 
 # --------------------------------------------------------------------------------------
@@ -213,7 +215,8 @@ class TestGeneration:
         assert record.raceId == "srd-2024_dwarf"
         assert record.classId == "srd-2024_fighter"
         assert record.backgroundId == "srd-2024_soldier"
-        assert record.abilities.base == MAX_ARRAY
+        assert point_buy_cost(record.abilities.base) == 27
+        assert all(8 <= score <= 15 for score in record.abilities.base.values())
         assert record.abilities.method == "pointbuy"
         assert record.abilities.rolled == []
         assert record.level == 1
@@ -236,17 +239,25 @@ class TestGeneration:
 
         assert first.model_dump() == second.model_dump()
 
-    def test_scores_are_never_reassigned_across_classes(self, catalog):
+    def test_scores_are_optimized_across_classes(self, catalog):
+        # US-40: Ability scores now reflect the selected class's priorities.
         classes_seen = set()
+        arrays_seen = set()
 
         for seed in range(60):
-            rng = PinnedRng(seed=seed, proposals=[MIXED_ARRAY])
-            record = generate(catalog, rng)
+            record = generate(catalog, random.Random(seed))
 
-            assert record.abilities.base == MIXED_ARRAY
+            base = record.abilities.base
+
+            assert set(base) == set(ABILITIES)
+            assert point_buy_cost(base) == 27
+            assert all(8 <= score <= 15 for score in base.values())
+
             classes_seen.add(record.classId)
+            arrays_seen.add(tuple(base[a] for a in ABILITIES))
 
         assert len(classes_seen) > 1
+        assert len(arrays_seen) > 1
 
     def test_both_size_choices_are_reachable(self, catalog):
         sizes = set()
@@ -378,6 +389,112 @@ class TestNormalization:
     def test_size_words_come_from_the_size_trait(self, catalog):
         assert catalog["races"]["srd-2024_human"]["sizes"] == ["Medium", "Small"]
         assert catalog["races"]["srd-2024_dwarf"]["sizes"] == ["Medium"]
+
+    def test_class_ability_priorities(self, catalog):
+        wizard = catalog["classes"]["srd-2024_wizard"]
+
+        assert wizard["primaryAbilities"] == ["INT"]
+        assert set(wizard["savingThrows"]) == {"INT", "WIS"}
+
+        fighter = catalog["classes"]["srd-2024_fighter"]
+
+        assert set(fighter["primaryAbilities"]) == {"STR", "DEX"}
+        assert set(fighter["savingThrows"]) == {"STR", "CON"}
+
+    def test_all_classes_have_primary_abilities(self, catalog):
+        missing = [
+            class_id for class_id, cls in catalog["classes"].items() if not cls["primaryAbilities"]
+        ]
+
+        assert not missing, f"Missing primary abilities: {missing}"
+
+    def test_class_ability_weights(self, catalog):
+        wizard = catalog["classes"]["srd-2024_wizard"]
+
+        assert class_weights(wizard) == {
+            "STR": 1,
+            "DEX": 1,
+            "CON": 2,
+            "INT": 3,
+            "WIS": 2,
+            "CHA": 1,
+        }
+
+        fighter = catalog["classes"]["srd-2024_fighter"]
+
+        assert class_weights(fighter) == {
+            "STR": 3,
+            "DEX": 3,
+            "CON": 2,
+            "INT": 1,
+            "WIS": 1,
+            "CHA": 1,
+        }
+
+    def test_optimize_pointbuy(self, catalog):
+        wizard = catalog["classes"]["srd-2024_wizard"]
+        weights = class_weights(wizard)
+
+        bonuses = {"INT": 2, "CON": 1}
+
+        scores = optimize_pointbuy(weights, bonuses)
+
+        assert set(scores) == {"STR", "DEX", "CON", "INT", "WIS", "CHA"}
+
+        assert all(8 <= score <= 15 for score in scores.values())
+
+        assert sum(POINT_BUY_COSTS[score] for score in scores.values()) == 27
+
+        assert scores["INT"] == 14 or scores["INT"] == 15
+
+        assert scores["INT"] + bonuses["INT"] == max(
+            score + bonuses.get(ability, 0) for ability, score in scores.items()
+        )
+
+    def test_optimize_abilities(self, catalog):
+        wizard = catalog["classes"]["srd-2024_wizard"]
+        background = catalog["backgrounds"]["srd-2024_acolyte"]
+
+        base, bonuses = optimize_abilities(wizard, background, random.Random(42))
+
+        assert set(base) == set(ABILITIES)
+
+        assert all(8 <= score <= 15 for score in base.values())
+
+        assert point_buy_cost(base) == 27
+
+        assert bonuses in origin_maps(list(background["abilityOptions"]))
+
+        final_scores = {ability: base[ability] + bonuses.get(ability, 0) for ability in ABILITIES}
+
+        assert final_scores["INT"] == max(final_scores.values())
+
+    def test_optimizer_maximizes_weighted_modifiers(self):
+        from itertools import product
+
+        weights = {
+            "STR": 1,
+            "DEX": 1,
+            "CON": 2,
+            "INT": 3,
+            "WIS": 2,
+            "CHA": 1,
+        }
+        bonuses = {"INT": 2, "CON": 1}
+
+        def evaluate(base):
+            return sum(((base[a] + bonuses.get(a, 0) - 10) // 2) * weights[a] for a in ABILITIES)
+
+        optimized = optimize_pointbuy(weights, bonuses)
+
+        # Compare the optimizer against every legal point-buy array.
+        best_value = max(
+            evaluate(dict(zip(ABILITIES, scores)))
+            for scores in product(range(8, 16), repeat=6)
+            if sum(POINT_BUY_COSTS[s] for s in scores) == 27
+        )
+
+        assert evaluate(optimized) == best_value
 
     def test_class_metadata_matches_the_seeded_tables(self, catalog):
         fighter = catalog["classes"]["srd-2024_fighter"]
