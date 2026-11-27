@@ -81,6 +81,7 @@ class TestPreview:
             "equipmentChoice",
             "purchasedItemIds",
             "walletCp",
+            "characterTypePresetChoice",
             "abilities",
             "proficientSkillIds",
             "expertiseIds",

@@ -5,10 +5,11 @@ equipment selections round-trip verbatim, clearing works (including when the
 reference set is empty), and resaving the same body is idempotent.
 """
 
+import copy
 import json
 
 import pytest
-from conftest import UID
+from conftest import UID, creation_cases
 from test_character_contract import CHAR_ID, draft
 
 from forge_backend.storage import refresh_reference_type
@@ -390,3 +391,91 @@ def test_spell_allowed_by_class_without_background(seeded):
 
     assert response.status_code == 200, response.text
     assert response.json()["spellIds"] == ["draft_spell"]
+
+
+# --------------------------------------------------------------------------------------
+# US-42 preset legality on finished sheets
+#
+# The Caster preset needs a class that casts spells. Like every completion rule, it is
+# held only against a finished level-one point-buy sheet; a draft is loosely validated.
+# Expected outcomes follow from the SRD 2024 classes: Fighter has no spellcasting, Wizard
+# is a full caster, and Tank carries no class requirement.
+# --------------------------------------------------------------------------------------
+
+CREATION_REFERENCE_TYPES = ("race", "class", "background", "equipment", "skill", "spell", "feat")
+
+
+@pytest.fixture
+def finished(api_client, redis_conn):
+    """Seed the shared US-39 catalog; ``store(key)`` saves that finished character."""
+    cases = creation_cases()
+    for ref_type in CREATION_REFERENCE_TYPES:
+        refresh_reference_type(redis_conn, ref_type, cases["references"][ref_type])
+
+    def store(key: str) -> dict:
+        body = copy.deepcopy(cases["validCharacters"][key])
+        response = api_client.post("/characters", json=body)
+        assert response.status_code == 201, response.text
+        return body
+
+    return store
+
+
+def _record_key(body: dict) -> str:
+    return f"char:{UID}:{body['id']}"
+
+
+@pytest.mark.integration
+def test_caster_preset_on_a_non_caster_is_rejected_without_mutation(
+    api_client, finished, redis_conn
+):
+    body = finished("fighter_soldier")
+    before = redis_conn.get(_record_key(body))
+    before_idx = redis_conn.smembers(INDEX_KEY)
+
+    resp = api_client.put(
+        f"/characters/{body['id']}", json=body | {"characterTypePresetChoice": "Caster"}
+    )
+
+    assert resp.status_code == 400, resp.text
+    assert resp.json() == {"detail": "the Caster preset needs a class that casts spells"}
+    assert redis_conn.get(_record_key(body)) == before
+    assert redis_conn.smembers(INDEX_KEY) == before_idx
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("key", "preset"),
+    [
+        ("fighter_soldier", "Tank"),
+        ("wizard_acolyte", "Caster"),
+    ],
+)
+def test_a_legal_preset_on_a_finished_sheet_saves(api_client, finished, redis_conn, key, preset):
+    body = finished(key)
+
+    resp = api_client.put(
+        f"/characters/{body['id']}", json=body | {"characterTypePresetChoice": preset}
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["characterTypePresetChoice"] == preset
+    assert json.loads(redis_conn.get(_record_key(body)))["characterTypePresetChoice"] == preset
+
+
+@pytest.mark.integration
+def test_caster_preset_on_a_non_caster_draft_saves(api_client, finished, redis_conn):
+    """Pins the completion boundary: one missing step marker and the Caster rule is not held."""
+    body = finished("fighter_soldier")
+    unfinished = [step for step in body["completedSteps"] if step != "skills"]
+    assert len(unfinished) == len(body["completedSteps"]) - 1
+
+    resp = api_client.put(
+        f"/characters/{body['id']}",
+        json=body | {"completedSteps": unfinished, "characterTypePresetChoice": "Caster"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    stored = json.loads(redis_conn.get(_record_key(body)))
+    assert stored["characterTypePresetChoice"] == "Caster"
+    assert stored["completedSteps"] == unfinished

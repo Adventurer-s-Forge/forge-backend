@@ -6,10 +6,19 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictInt,
+    StrictStr,
+    field_validator,
+    model_validator,
+)
 
 AbilityKey = Literal["STR", "DEX", "CON", "INT", "WIS", "CHA"]
 AbilityMethod = Literal["standard", "pointbuy", "roll"]
+CharacterTypePreset = Literal["Tank", "Striker", "Caster", "Skill-Focused"]
 StepId = Literal[
     "name", "race", "class", "background", "attributes", "skills", "spells", "equipment"
 ]
@@ -82,6 +91,7 @@ class CharacterRecord(BaseModel):
     equipmentChoice: EquipmentChoice = Field(default_factory=EquipmentChoice)
     purchasedItemIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     walletCp: int = 0
+    characterTypePresetChoice: CharacterTypePreset | None = None
     abilities: CharacterAbilities = Field(default_factory=CharacterAbilities)
     proficientSkillIds: list[StrictStr] = Field(default_factory=list, max_length=100)
     expertiseIds: list[StrictStr] = Field(default_factory=list, max_length=100)
@@ -131,6 +141,12 @@ class CharacterRecord(BaseModel):
             if entry == "":
                 raise ValueError("id list entries must be nonempty strings")
         return v
+
+    @model_validator(mode="after")
+    def _preset_needs_point_buy(self) -> CharacterRecord:
+        if self.characterTypePresetChoice is not None and self.abilities.method != "pointbuy":
+            raise ValueError("characterTypePresetChoice needs the point-buy method")
+        return self
 
 
 class CharacterDocument(CharacterRecord):
