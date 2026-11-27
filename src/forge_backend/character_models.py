@@ -143,7 +143,7 @@ class CharacterRecord(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def _preset_needs_point_buy(self) -> "CharacterRecord":
+    def _preset_needs_point_buy(self) -> CharacterRecord:
         if self.characterTypePresetChoice is not None and self.abilities.method != "pointbuy":
             raise ValueError("characterTypePresetChoice needs the point-buy method")
         return self
