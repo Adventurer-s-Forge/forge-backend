@@ -708,6 +708,7 @@ def validate_complete_pointbuy_character(
 
     _validate_size(character, race)
     _validate_class_choices(character, cls)
+    _validate_preset(character, cls)
     _validate_abilities(character, bg)
     _validate_skills(character, cls, bg, catalog)
     _validate_tool(character, bg, catalog)
@@ -728,6 +729,14 @@ def _validate_class_choices(character: CharacterRecord, cls: Mapping[str, Any]) 
         raise ValueError("fightingStyleId is not offered by the selected class")
     if cls["fightingStyleAt"] == 1 and character.fightingStyleId is None:
         raise ValueError("the selected class requires a fighting style")
+
+
+def _validate_preset(character: CharacterRecord, cls: Mapping[str, Any]) -> None:
+    preset = character.characterTypePresetChoice
+    if preset is None:
+        return
+    if preset == "Caster" and cls["casterType"] == "NONE":
+        raise ValueError("the Caster preset needs a class that casts spells")
 
 
 def _validate_abilities(character: CharacterRecord, bg: Mapping[str, Any]) -> None:
